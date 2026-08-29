@@ -90,10 +90,48 @@ pantallas no se tocan.
 > `supabase.ts` está escrito contra este esquema y compila, pero todavía no se
 > ha ejecutado contra una base de datos real.
 
-## Lo que no está en esta fase
+## Fase 2 — Rachas, niveles y celebración
 
-Rachas y celebración (fase 2), el arranque con IA (3), devocionales y versículo
-del día (4), familia y campanita (5), oraciones (6), el Muro (7), ciclo (8),
-amigas (9), cobro (10), fotos (11).
+Cuatro rachas separadas (`src/lib/rachas.ts`), no una: perder cuarenta días de
+devocional por no ordenar el cuarto una vez desanima tanto que la gente deja la
+app. Cada vía tiene su escalera de seis insignias, 24 en total, con nombres
+neutros — la app se vende a familias enteras y a un papá no le puede salir
+«Disciplinada».
+
+- **Un día de gracia al mes**: fallar un día no rompe la racha.
+- **Un día contado no se descuenta**: si lo hiciste, lo hiciste.
+- **Los premios cambian según el tipo.** En quehaceres se premia la rapidez.
+  En estudio, *haber terminado* — premiar la velocidad ahí sería pagar por
+  estudiar menos, así que al marcar antes de tiempo la app pregunta
+  «¿terminaste, o lo dejas para después?». En fe y deporte, el tiempo completo.
+- **La celebración cae por encima de toda la app** (`Celebracion.tsx`), vive en
+  la raíz del enrutador y respeta «menos movimiento» del sistema.
+
+## Crear y modificar
+
+- `app/actividad.tsx` — crear o cambiar una cosa del catálogo.
+- En **Tu rutina**, «+ Añadir algo a este día» elige qué y a qué hora.
+- En **Hoy**, «+ Añadir algo solo para hoy» para lo que no es rutina.
+
+## La base de datos
+
+`../supabase/migrations/` — 0001 (fase 1), 0002 (fase 2) y 0003 (cerrar las
+funciones de trigger). **Aplicadas y verificadas** en un proyecto de Supabase
+propio de GraceDay, aparte de los demás proyectos.
+
+Comprobado contra la base real: los disparadores de alta crean persona, ajustes
+y las cuatro rachas; las restricciones rechazan una duración de cero, un bloque
+que acaba antes de empezar, un día de la semana fuera de 0-6, una tarea «hecha»
+sin fecha y una racha por encima de su récord; borrar la cuenta se lleva todo
+en cascada; y el aislamiento por fila aísla de verdad — una persona no ve ni
+puede tocar nada de otra, y sin sesión no se ve nada.
+
+## Lo que no está todavía
+
+**Leer el horario de una foto** (fase 11) — es lo que más se nota que falta,
+pero necesita la cámara y el modelo de visión.
+
+Y: arranque con IA (3), devocionales y versículo del día (4), familia y
+campanita (5), oraciones (6), el Muro (7), ciclo (8), amigas (9), cobro (10).
 
 El diseño completo: `../docs/dia-de-leonora.html`

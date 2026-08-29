@@ -92,3 +92,19 @@ function desfaseZonaMin(cuando: Date, zonaHoraria: string): number {
     v('hour') % 24, v('minute'), v('second'));
   return (local - Math.floor(cuando.getTime() / 1000) * 1000) / 60_000;
 }
+
+/** Cuántos días hay de una fecha a otra. Positivo si `b` es posterior. */
+export function diasEntre(a: Fecha, b: Fecha): number {
+  const dia = 86_400_000;
+  return Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / dia);
+}
+
+export function sumarDias(fecha: Fecha, dias: number): Fecha {
+  const d = new Date(Date.parse(`${fecha}T00:00:00Z`) + dias * 86_400_000);
+  return d.toISOString().slice(0, 10);
+}
+
+/** El primer día del mes de una fecha. Sirve de marca del día de gracia. */
+export function mesDe(fecha: Fecha): Fecha {
+  return `${fecha.slice(0, 7)}-01`;
+}

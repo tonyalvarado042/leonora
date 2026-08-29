@@ -1,16 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 
 import { AnilloProgreso } from '@/componentes/AnilloProgreso';
+import { useCelebrar } from '@/componentes/Celebracion';
 import { Enlace } from '@/componentes/Enlace';
+import { PreguntaTerminaste } from '@/componentes/PreguntaTerminaste';
+import { SelectorHora } from '@/componentes/SelectorHora';
 import { FilaTarea } from '@/componentes/FilaTarea';
 import { TarjetaAhora } from '@/componentes/TarjetaAhora';
 import { avisosDelDia } from '@/lib/avisos';
 import { prepararAvisos, reprogramar } from '@/lib/avisosTelefono';
 import { foco as calcularFoco, resumenAvance } from '@/lib/dia';
+import { aHora, aMinutos } from '@/lib/fechas';
 import { fechaLarga, fechaLocal, horaLocal } from '@/lib/fechas';
+import { preguntarSiTermino, type Marcado, type Racha } from '@/lib/rachas';
 import { repositorio, type DiaCompleto } from '@/lib/repositorio';
 import { usarPaleta } from '@/lib/tema';
 import type { Actividad, Ajustes, Persona } from '@/lib/tipos';
@@ -21,6 +26,11 @@ export default function Hoy() {
   const [ajustes, setAjustes] = useState<Ajustes | null>(null);
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [dia, setDia] = useState<DiaCompleto | null>(null);
+  const [rachas, setRachas] = useState<Racha[]>([]);
+  const [chispas, setChispas] = useState(0);
+  const [preguntando, setPreguntando] = useState<string | null>(null);
+  const [suelta, setSuelta] = useState<{ titulo: string; hora: string } | null>(null);
+  const celebrar = useCelebrar();
   // Se guarda el minuto para que «lo que toca ahora» se mueva solo con el reloj.
   const [ahora, setAhora] = useState(() => new Date());
 
@@ -34,6 +44,8 @@ export default function Hoy() {
     ]);
     setPersona(pe); setAjustes(aj); setActividades(ac);
     setDia(await repositorio.dia(fechaLocal(new Date(), pe.zona_horaria)));
+    setRachas(await repositorio.rachas());
+    setChispas(await repositorio.chispasTotales());
   }, []);
 
   // Al volver de Rutina o Ajustes hay que releer: el día pudo cambiar.
@@ -45,6 +57,25 @@ export default function Hoy() {
   }, []);
 
   useEffect(() => { void prepararAvisos(); }, []);
+
+  // Abrir la app cuenta para su propia racha. `avanzar` ignora el día repetido,
+  // así que volver a llamarlo no suma dos veces; el guardia es para no escribir
+  // en el almacén cada vez que la pantalla recupera el foco.
+  const aperturaHecha = useRef(false);
+  useEffect(() => {
+    if (!persona || aperturaHecha.current) return;
+    aperturaHecha.current = true;
+    let vivo = true;
+    void repositorio.registrarApertura(fechaLocal(new Date(), persona.zona_horaria))
+      .then(async (premio) => {
+        if (!vivo) return;
+        // Siempre se releen: la racha puede haber subido aunque no desbloquee
+        // ninguna insignia, y la banda tiene que enseñarlo hoy, no mañana.
+        setRachas(await repositorio.rachas());
+        celebrar(premio.celebracion, textoPremio(premio));
+      });
+    return () => { vivo = false; };
+  }, [persona, celebrar]);
 
   // Cada vez que cambia lo pendiente se vuelve a dejar la agenda al día: así
   // marcar una tarea calla su alarma.
@@ -68,8 +99,29 @@ export default function Hoy() {
     return act?.avisar_antes_min ?? ajustes.avisar_antes_min;
   }, [foco, actividades, ajustes]);
 
-  async function marcar(id: string, estado: 'hecha' | 'pendiente' | 'omitida') {
-    setDia(await repositorio.marcarTarea(fecha, id, estado));
+  async function marcar(id: string, estado: 'hecha' | 'pendiente' | 'omitida', m?: Marcado) {
+    const t = dia?.tareas.find((x) => x.id === id);
+
+    // Al marcar estudio antes de tiempo hay que preguntar: la respuesta decide
+    // el premio, y premiar la velocidad ahí sería pagar por estudiar menos.
+    if (t && estado === 'hecha' && !m) {
+      const act = actividades.find((a) => a.id === t.actividad_id);
+      const reales = Math.max(0, aMinutos(hora) - aMinutos(t.hora_inicio));
+      if (preguntarSiTermino(t, act, reales)) { setPreguntando(id); return; }
+    }
+
+    const minutos = t && estado === 'hecha'
+      ? Math.max(0, aMinutos(hora) - aMinutos(t.hora_inicio))
+      : null;
+
+    const r = await repositorio.marcarTarea(fecha, id, estado, {
+      minutos_reales: m?.minutos_reales ?? minutos,
+      termino_de_verdad: m?.termino_de_verdad ?? null,
+    });
+    setDia(r.dia);
+    setRachas(await repositorio.rachas());
+    setChispas(await repositorio.chispasTotales());
+    celebrar(r.premio.celebracion, textoPremio(r.premio));
   }
 
   if (!persona || !ajustes || !dia || !foco) {
@@ -127,6 +179,20 @@ export default function Hoy() {
           ))
         )}
 
+        <Pressable
+          role="button"
+          onPress={() => setSuelta({ titulo: '', hora: hora })}
+          style={[e.anadir, { borderColor: p.alba, backgroundColor: p.albaPiso }]}
+        >
+          <Text style={[e.anadirTexto, { color: p.alba }]}>+ Añadir algo solo para hoy</Text>
+        </Pressable>
+
+        <Enlace href="/rachas" estilo={[e.enlace, { borderColor: p.linea, marginTop: 12 }]}>
+          <Text style={[e.enlaceTexto, { color: p.fuego }]}>
+            {rachaFuerte(rachas)} · {chispas} chispas →
+          </Text>
+        </Enlace>
+
         <Enlace href="/rutina" estilo={[e.enlace, { borderColor: p.linea }]}>
           <Text style={[e.enlaceTexto, { color: p.alba }]}>Editar mi rutina de la semana →</Text>
         </Enlace>
@@ -135,8 +201,84 @@ export default function Hoy() {
           Toca para marcar. Mantén pulsado si te la saltaste.
         </Text>
       </ScrollView>
+
+      <Modal
+        visible={suelta !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSuelta(null)}
+      >
+        <View style={e.fondo}>
+          <View style={[e.hoja, { backgroundColor: p.papel }]}>
+            <Text style={[e.hojaTitulo, { color: p.tinta }]}>Algo solo para hoy</Text>
+            <Text style={[e.hojaAyuda, { color: p.tintaSuave }]}>
+              No entra en tu rutina: aparece hoy y ya está.
+            </Text>
+            <TextInput
+              value={suelta?.titulo ?? ''}
+              onChangeText={(t) => setSuelta((s) => (s ? { ...s, titulo: t } : s))}
+              placeholder="Llamar a la abuela, comprar pan…"
+              placeholderTextColor={p.tintaTenue}
+              aria-label="Qué hay que hacer"
+              style={[e.entrada, { color: p.tinta, backgroundColor: p.tarjeta, borderColor: p.linea }]}
+            />
+            <SelectorHora
+              etiqueta="¿A qué hora?"
+              valor={suelta?.hora ?? '12:00'}
+              onCambiar={(h) => setSuelta((s) => (s ? { ...s, hora: h } : s))}
+            />
+            <Pressable
+              role="button"
+              disabled={!suelta?.titulo.trim()}
+              onPress={async () => {
+                const s = suelta;
+                setSuelta(null);
+                if (!s?.titulo.trim()) return;
+                setDia(await repositorio.anadirTareaHoy(fecha, {
+                  titulo: s.titulo.trim(), emoji: '⭐', tipo: 'casa',
+                  hora_inicio: s.hora, hora_fin: aHora(aMinutos(s.hora) + 30),
+                }));
+              }}
+              style={[
+                e.hojaBoton,
+                { backgroundColor: suelta?.titulo.trim() ? p.alba : p.linea },
+              ]}
+            >
+              <Text style={e.hojaBotonTexto}>Añadir a hoy</Text>
+            </Pressable>
+            <Pressable role="button" onPress={() => setSuelta(null)} style={e.cerrar}>
+              <Text style={[e.cerrarTexto, { color: p.tintaSuave }]}>Cancelar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      <PreguntaTerminaste
+        visible={preguntando !== null}
+        onResponder={(termino) => {
+          const id = preguntando;
+          setPreguntando(null);
+          if (id) void marcar(id, 'hecha', { minutos_reales: null, termino_de_verdad: termino });
+        }}
+      />
     </SafeAreaView>
   );
+}
+
+/** La racha más alta, para enseñarla en la banda. */
+function rachaFuerte(rachas: Racha[]): string {
+  const mejor = [...rachas].sort((a, b) => b.racha_actual - a.racha_actual)[0];
+  if (!mejor || mejor.racha_actual === 0) return '🔥 Empieza tu racha';
+  return `🔥 ${mejor.racha_actual} ${mejor.racha_actual === 1 ? 'día' : 'días'}`;
+}
+
+function textoPremio(premio: { logros: { nombre: string; emoji: string }[]; dia_perfecto: boolean; chispas: number }): string | undefined {
+  if (premio.logros.length > 0) {
+    const l = premio.logros[premio.logros.length - 1];
+    return `${l.emoji}  ¡${l.nombre}!`;
+  }
+  if (premio.dia_perfecto) return '⭐  ¡Día completo!';
+  return undefined;
 }
 
 function saludo(hora: string): string {
@@ -171,4 +313,21 @@ const e = StyleSheet.create({
   },
   enlaceTexto: { fontSize: 15, fontWeight: '600' },
   pista: { fontSize: 12, textAlign: 'center', marginTop: 16 },
+  anadir: {
+    marginTop: 14, borderRadius: 12, paddingVertical: 14,
+    alignItems: 'center', borderWidth: 1.5, borderStyle: 'dashed',
+  },
+  anadirTexto: { fontSize: 15.5, fontWeight: '700' },
+  fondo: { flex: 1, backgroundColor: 'rgba(20,16,36,0.55)', justifyContent: 'flex-end' },
+  hoja: { borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 20, paddingBottom: 34, gap: 12 },
+  hojaTitulo: { fontSize: 19, fontWeight: '700' },
+  hojaAyuda: { fontSize: 13.5, marginTop: -6 },
+  entrada: {
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 13, fontSize: 16,
+  },
+  hojaBoton: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 6 },
+  hojaBotonTexto: { color: '#FFF', fontWeight: '700', fontSize: 16 },
+  cerrar: { paddingVertical: 10, alignItems: 'center' },
+  cerrarTexto: { fontSize: 15, fontWeight: '600' },
 });

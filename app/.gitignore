@@ -5,7 +5,6 @@ node_modules/
 
 # Expo
 .expo/
-dist/
 web-build/
 expo-env.d.ts
 
@@ -43,4 +42,5 @@ yarn-error.*
 # Salida de la compilación web y capturas de la verificación
 dist/
 capturas/
+publicado/
 .env

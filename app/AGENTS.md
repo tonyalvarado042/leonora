@@ -20,6 +20,11 @@ escribir código.** Si están bloqueados por red, la fuente de verdad son los
   react-native-web no traduce `accessibilityState`.
 - **Enlaces con `<Enlace>`**, no con `<Link asChild>` a pelo: en web el estilo
   acaba en un `<a>` del DOM y un array de estilos revienta ahí.
+- **Navegar no cierra un `Modal`.** Hay que bajarlo antes de empujar una
+  pantalla, o se queda flotando encima de la nueva.
+- **`app/+not-found.tsx` enseña Hoy a propósito**, para que la app arranque
+  aunque se sirva en una ruta que no sea la raíz (vista previa, artefacto,
+  subcarpeta).
 
 ## Antes de dar algo por hecho
 

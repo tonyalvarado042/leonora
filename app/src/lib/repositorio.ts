@@ -9,6 +9,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { generarDia, porcentajeCumplido, type TareaNueva } from './dia';
+import {
+  avanzar, celebracionPor, chispas, CHISPAS_BASE, CHISPAS_DIA_PERFECTO,
+  cumplioHoy, rachaVacia,
+  type Celebracion, type Logro, type Marcado, type Racha, type Via,
+} from './rachas';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, EstadoTarea, Fecha, Persona, Tarea,
 } from './tipos';
@@ -16,9 +21,29 @@ import {
   actividadesIniciales, ajustesIniciales, personaInicial, PERSONA_LOCAL, rutinaInicial,
 } from '@/datos/semilla';
 
+export interface TareaSuelta {
+  titulo: string;
+  emoji: string;
+  tipo: Tarea['tipo'];
+  hora_inicio: string;
+  hora_fin: string;
+}
+
 export interface DiaCompleto {
   dia: Dia;
   tareas: Tarea[];
+  /** Vías que ya se contaron hoy. Un día contado no se descuenta: si lo
+   *  hiciste, lo hiciste, aunque después desmarques. */
+  vias_contadas: Via[];
+}
+
+/** Lo que hay que enseñar después de marcar una tarea. */
+export interface Premio {
+  chispas: number;
+  logros: Logro[];
+  rachas_avanzadas: Via[];
+  dia_perfecto: boolean;
+  celebracion: Celebracion | null;
 }
 
 export interface Repositorio {
@@ -27,14 +52,26 @@ export interface Repositorio {
   ajustes(): Promise<Ajustes>;
   guardarAjustes(cambios: Partial<Ajustes>): Promise<Ajustes>;
   actividades(): Promise<Actividad[]>;
+  guardarActividad(actividad: Actividad): Promise<Actividad>;
+  borrarActividad(id: string): Promise<void>;
   rutina(): Promise<BloqueRutina[]>;
   guardarBloque(bloque: BloqueRutina): Promise<void>;
   borrarBloque(id: string): Promise<void>;
+  /** Una tarea que solo existe hoy y no toca la rutina. */
+  anadirTareaHoy(fecha: Fecha, tarea: TareaSuelta): Promise<DiaCompleto>;
+  borrarTarea(fecha: Fecha, tareaId: string): Promise<DiaCompleto>;
   /** Devuelve el día. Si no existía, lo genera desde la rutina y lo guarda. */
   dia(fecha: Fecha): Promise<DiaCompleto>;
   /** Vuelve a generarlo desde la rutina, perdiendo lo marcado ese día. */
   regenerarDia(fecha: Fecha): Promise<DiaCompleto>;
-  marcarTarea(fecha: Fecha, tareaId: string, estado: EstadoTarea): Promise<DiaCompleto>;
+  marcarTarea(
+    fecha: Fecha, tareaId: string, estado: EstadoTarea, marcado?: Marcado,
+  ): Promise<{ dia: DiaCompleto; premio: Premio }>;
+  rachas(): Promise<Racha[]>;
+  logrosGanados(): Promise<string[]>;
+  chispasTotales(): Promise<number>;
+  /** Suma el día a la racha de abrir la app. Se llama una vez al arrancar. */
+  registrarApertura(fecha: Fecha): Promise<Premio>;
 }
 
 const CLAVE = 'graceday.v1';
@@ -45,6 +82,9 @@ interface Almacen {
   actividades: Actividad[];
   rutina: BloqueRutina[];
   dias: Record<Fecha, DiaCompleto>;
+  rachas: Record<Via, Racha>;
+  logros_ganados: string[];
+  chispas: number;
 }
 
 function almacenInicial(): Almacen {
@@ -54,6 +94,12 @@ function almacenInicial(): Almacen {
     actividades: actividadesIniciales.map((a) => ({ ...a, persona_id: PERSONA_LOCAL })),
     rutina: rutinaInicial().map((b) => ({ ...b, persona_id: PERSONA_LOCAL })),
     dias: {},
+    rachas: {
+      apertura: rachaVacia('apertura'), dia: rachaVacia('dia'),
+      devocional: rachaVacia('devocional'), oracion: rachaVacia('oracion'),
+    },
+    logros_ganados: [],
+    chispas: 0,
   };
 }
 
@@ -104,6 +150,58 @@ export class RepositorioLocal implements Repositorio {
     return this.escribir((a) => { a.ajustes = { ...a.ajustes, ...cambios }; return a.ajustes; });
   }
 
+  guardarActividad(actividad: Actividad) {
+    return this.escribir((a) => {
+      const conocida = a.actividades.some((x) => x.id === actividad.id);
+      a.actividades = conocida
+        ? a.actividades.map((x) => (x.id === actividad.id ? actividad : x))
+        : [...a.actividades, actividad];
+      return { ...actividad };
+    });
+  }
+
+  borrarActividad(id: string) {
+    return this.escribir<void>((a) => {
+      a.actividades = a.actividades.filter((x) => x.id !== id);
+      // Un bloque huérfano no produce nada, pero dejarlo ensucia la rutina.
+      a.rutina = a.rutina.filter((b) => b.actividad_id !== id);
+    });
+  }
+
+  anadirTareaHoy(fecha: Fecha, t: TareaSuelta) {
+    return this.escribir((a) => {
+      const d = a.dias[fecha] ?? construirDia(a, fecha);
+      const tareas = [...d.tareas, {
+        id: `${d.dia.id}-suelta-${Date.now()}`,
+        dia_id: d.dia.id,
+        actividad_id: null,
+        titulo: t.titulo, emoji: t.emoji, tipo: t.tipo,
+        hora_inicio: t.hora_inicio, hora_fin: t.hora_fin,
+        orden: 0, es_fijo: false, origen: 'manual' as const,
+        estado: 'pendiente' as const, completado_en: null, nota: null,
+        minutos_reales: null, termino_de_verdad: null, puntos: 0,
+      }].sort((x, y) => x.hora_inicio.localeCompare(y.hora_inicio))
+        .map((x, i) => ({ ...x, orden: i }));
+
+      const despues: DiaCompleto = { ...d, tareas };
+      a.dias[fecha] = despues;
+      return copia(despues);
+    });
+  }
+
+  borrarTarea(fecha: Fecha, tareaId: string) {
+    return this.escribir((a) => {
+      const d = a.dias[fecha] ?? construirDia(a, fecha);
+      const tareas = d.tareas.filter((t) => t.id !== tareaId);
+      const despues: DiaCompleto = {
+        ...d, tareas,
+        dia: { ...d.dia, porcentaje_cumplido: porcentajeCumplido(tareas) },
+      };
+      a.dias[fecha] = despues;
+      return copia(despues);
+    });
+  }
+
   guardarBloque(bloque: BloqueRutina) {
     return this.escribir<void>((a) => {
       const conocido = a.rutina.some((b) => b.id === bloque.id);
@@ -128,9 +226,17 @@ export class RepositorioLocal implements Repositorio {
     });
   }
 
-  marcarTarea(fecha: Fecha, tareaId: string, estado: EstadoTarea) {
+  marcarTarea(fecha: Fecha, tareaId: string, estado: EstadoTarea, marcado?: Marcado) {
     return this.escribir((a) => {
       const antes = a.dias[fecha] ?? construirDia(a, fecha);
+      const original = antes.tareas.find((t) => t.id === tareaId);
+      const act = a.actividades.find((x) => x.id === original?.actividad_id);
+
+      const m: Marcado = marcado ?? { minutos_reales: null, termino_de_verdad: null };
+      const gana = estado === 'hecha' && original?.estado !== 'hecha';
+      const puntos = gana && original
+        ? chispas(original.tipo, act?.duracion_min ?? 0, m)
+        : 0;
 
       const tareas = antes.tareas.map((t) =>
         t.id !== tareaId ? t : {
@@ -139,15 +245,81 @@ export class RepositorioLocal implements Repositorio {
           // La restricción `completado_coherente` de la base de datos dice lo
           // mismo: hecha lleva fecha, cualquier otro estado no.
           completado_en: estado === 'hecha' ? new Date().toISOString() : null,
+          minutos_reales: gana ? m.minutos_reales : t.minutos_reales,
+          termino_de_verdad: gana ? m.termino_de_verdad : t.termino_de_verdad,
+          puntos: gana ? puntos : t.puntos,
         },
       );
 
+      a.chispas += puntos;
+
+      // Las rachas del día se miran después de marcar, no antes.
+      const contadas = new Set(antes.vias_contadas);
+      const logros: Logro[] = [];
+      const avanzadas: Via[] = [];
+      for (const via of ['dia', 'devocional'] as const) {
+        if (contadas.has(via) || !cumplioHoy(via, tareas)) continue;
+        const av = avanzar(a.rachas[via], fecha, new Set(a.logros_ganados));
+        a.rachas[via] = av.racha;
+        a.logros_ganados.push(...av.logros.map((l) => l.id));
+        logros.push(...av.logros);
+        avanzadas.push(via);
+        contadas.add(via);
+      }
+
+      const pct = porcentajeCumplido(tareas);
       const despues: DiaCompleto = {
-        dia: { ...antes.dia, porcentaje_cumplido: porcentajeCumplido(tareas) },
+        dia: { ...antes.dia, porcentaje_cumplido: pct },
         tareas,
+        vias_contadas: [...contadas],
       };
       a.dias[fecha] = despues;
-      return copia(despues);
+
+      const diaPerfecto = avanzadas.includes('dia');
+      if (diaPerfecto) a.chispas += CHISPAS_DIA_PERFECTO;
+
+      const premio: Premio = {
+        chispas: puntos + (diaPerfecto ? CHISPAS_DIA_PERFECTO : 0),
+        logros,
+        rachas_avanzadas: avanzadas,
+        dia_perfecto: diaPerfecto,
+        celebracion: celebracionPor({
+          logros, diaPerfecto,
+          rachaAvanzo: avanzadas.length > 0,
+          chispasExtra: puntos > CHISPAS_BASE,
+        }),
+      };
+
+      return { dia: copia(despues), premio };
+    });
+  }
+
+  async rachas(): Promise<Racha[]> {
+    const a = await this.cargar();
+    return (['devocional', 'dia', 'apertura', 'oracion'] as const).map((v) => ({ ...a.rachas[v] }));
+  }
+
+  async logrosGanados(): Promise<string[]> {
+    return [...(await this.cargar()).logros_ganados];
+  }
+
+  async chispasTotales(): Promise<number> {
+    return (await this.cargar()).chispas;
+  }
+
+  registrarApertura(fecha: Fecha) {
+    return this.escribir<Premio>((a) => {
+      const av = avanzar(a.rachas.apertura, fecha, new Set(a.logros_ganados));
+      a.rachas.apertura = av.racha;
+      a.logros_ganados.push(...av.logros.map((l) => l.id));
+      return {
+        chispas: 0,
+        logros: av.logros,
+        rachas_avanzadas: av.repetido ? [] : ['apertura'],
+        dia_perfecto: false,
+        // Abrir la app no merece confeti todos los días; solo si desbloqueó algo.
+        celebracion: av.logros.length > 0 ? 'confeti' : null,
+      };
     });
   }
 
@@ -166,7 +338,11 @@ export class RepositorioLocal implements Repositorio {
  * queda igual aunque el dato ya sea otro.
  */
 function copia(d: DiaCompleto): DiaCompleto {
-  return { dia: { ...d.dia }, tareas: d.tareas.map((t) => ({ ...t })) };
+  return {
+    dia: { ...d.dia },
+    tareas: d.tareas.map((t) => ({ ...t })),
+    vias_contadas: [...d.vias_contadas],
+  };
 }
 
 function construirDia(a: Almacen, fecha: Fecha): DiaCompleto {
@@ -192,7 +368,7 @@ function construirDia(a: Almacen, fecha: Fecha): DiaCompleto {
     ...t, id: `${diaId}-${i}`, dia_id: diaId,
   }));
 
-  const completo: DiaCompleto = { dia, tareas };
+  const completo: DiaCompleto = { dia, tareas, vias_contadas: [] };
   a.dias[fecha] = completo;
   return completo;
 }

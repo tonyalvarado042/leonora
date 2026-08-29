@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
+import { SelectorHora } from '@/componentes/SelectorHora';
 import { colorDeTipo, usarPaleta } from '@/lib/tema';
 import { repositorio } from '@/lib/repositorio';
 import { aHora, aMinutos, duracionMin } from '@/lib/fechas';
-import type { Actividad, BloqueRutina } from '@/lib/tipos';
+import type { Actividad, BloqueRutina, Hora } from '@/lib/tipos';
 
 const DIAS = [
   { n: 1, corto: 'L', largo: 'lunes', plural: 'lunes' },
@@ -26,6 +27,10 @@ export default function Rutina() {
   });
   const [bloques, setBloques] = useState<BloqueRutina[]>([]);
   const [actividades, setActividades] = useState<Actividad[]>([]);
+  // null = cerrado; una actividad = eligiendo su hora.
+  const [anadiendo, setAnadiendo] = useState<Actividad | null>(null);
+  const [eligiendo, setEligiendo] = useState(false);
+  const [inicio, setInicio] = useState<Hora>('08:00');
 
   const cargar = useCallback(async () => {
     setBloques(await repositorio.rutina());
@@ -50,6 +55,34 @@ export default function Rutina() {
 
   async function quitar(b: BloqueRutina) {
     await repositorio.borrarBloque(b.id);
+    await repositorio.regenerarDia(hoyLocal());
+    await cargar();
+  }
+
+  function empezarAAnadir(act: Actividad) {
+    setEligiendo(false);
+    // Se propone la hora siguiente a lo último del día, que casi siempre es
+    // donde la persona quiere ponerlo.
+    const ultimo = delDia[delDia.length - 1];
+    setInicio(ultimo ? aHora(aMinutos(ultimo.hora_fin)) : '08:00');
+    setAnadiendo(act);
+  }
+
+  async function confirmarAnadir() {
+    const act = anadiendo;
+    if (!act) return;
+    setAnadiendo(null);
+    const persona = await repositorio.persona();
+    await repositorio.guardarBloque({
+      id: `rut-${dia}-${act.id}-${Date.now()}`,
+      persona_id: persona.id,
+      actividad_id: act.id,
+      modo: 'escolar',
+      dia_semana: dia,
+      hora_inicio: inicio,
+      hora_fin: aHora(aMinutos(inicio) + act.duracion_min),
+      activo: true,
+    });
     await repositorio.regenerarDia(hoyLocal());
     await cargar();
   }
@@ -135,11 +168,85 @@ export default function Rutina() {
       })}
 
       <Pressable
+        role="button"
+        onPress={() => setEligiendo(true)}
+        style={[e.anadir, { borderColor: p.alba, backgroundColor: p.albaPiso }]}
+      >
+        <Text style={[e.anadirTexto, { color: p.alba }]}>
+          + Añadir algo a este día
+        </Text>
+      </Pressable>
+
+      <Pressable
         onPress={() => router.back()}
         style={[e.listo, { backgroundColor: p.alba }]}
       >
         <Text style={e.listoTexto}>Listo</Text>
       </Pressable>
+
+      {/* Elegir qué añadir */}
+      <Modal visible={eligiendo} transparent animationType="slide" onRequestClose={() => setEligiendo(false)}>
+        <View style={e.fondo}>
+          <View style={[e.hoja, { backgroundColor: p.papel }]}>
+            <Text style={[e.hojaTitulo, { color: p.tinta }]}>¿Qué quieres añadir?</Text>
+            <ScrollView style={{ maxHeight: 320 }}>
+              {actividades.map((a) => (
+                <Pressable
+                  key={a.id}
+                  role="button"
+                  onPress={() => empezarAAnadir(a)}
+                  style={[e.opcionAct, { backgroundColor: p.tarjeta, borderColor: p.linea }]}
+                >
+                  <View style={[e.puntoTipo, { backgroundColor: colorDeTipo(a.tipo, p) }]} />
+                  <Text style={[e.opcionTexto, { color: p.tinta }]}>{a.emoji}  {a.nombre}</Text>
+                  <Text style={[e.opcionDur, { color: p.tintaTenue }]}>{a.duracion_min} min</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            {/* Navegar no cierra un Modal por sí solo: si no se baja antes, la
+                hoja se queda flotando encima de la pantalla nueva. */}
+            <Pressable
+              role="button"
+              aria-label="Crear una cosa nueva"
+              onPress={() => { setEligiendo(false); router.push('/actividad'); }}
+              style={[e.crearNueva, { borderColor: p.alba }]}
+            >
+              <Text style={[e.crearTexto, { color: p.alba }]}>+ Crear una cosa nueva</Text>
+            </Pressable>
+
+            <Pressable role="button" onPress={() => setEligiendo(false)} style={e.cerrar}>
+              <Text style={[e.cerrarTexto, { color: p.tintaSuave }]}>Cancelar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Elegir a qué hora */}
+      <Modal visible={anadiendo !== null} transparent animationType="fade" onRequestClose={() => setAnadiendo(null)}>
+        <View style={e.fondo}>
+          <View style={[e.hoja, { backgroundColor: p.papel }]}>
+            <Text style={[e.hojaTitulo, { color: p.tinta }]}>
+              {anadiendo?.emoji}  {anadiendo?.nombre}
+            </Text>
+            <Text style={[e.hojaAyuda, { color: p.tintaSuave }]}>
+              Dura {anadiendo?.duracion_min} min, así que acabaría a las{' '}
+              {aHora(aMinutos(inicio) + (anadiendo?.duracion_min ?? 0))}.
+            </Text>
+            <SelectorHora etiqueta="Empieza a las" valor={inicio} onCambiar={setInicio} />
+            <Pressable
+              role="button"
+              onPress={confirmarAnadir}
+              style={[e.listo, { backgroundColor: p.alba, marginTop: 18 }]}
+            >
+              <Text style={e.listoTexto}>Añadir</Text>
+            </Pressable>
+            <Pressable role="button" onPress={() => setAnadiendo(null)} style={e.cerrar}>
+              <Text style={[e.cerrarTexto, { color: p.tintaSuave }]}>Cancelar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -170,6 +277,29 @@ const e = StyleSheet.create({
     minWidth: 38, height: 32, borderRadius: 9, borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6,
   },
-  listo: { marginTop: 22, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  listo: { marginTop: 12, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   listoTexto: { color: '#FFF', fontWeight: '700', fontSize: 16 },
+  anadir: {
+    marginTop: 14, borderRadius: 12, paddingVertical: 14,
+    alignItems: 'center', borderWidth: 1.5, borderStyle: 'dashed',
+  },
+  anadirTexto: { fontSize: 15.5, fontWeight: '700' },
+  fondo: { flex: 1, backgroundColor: 'rgba(20,16,36,0.55)', justifyContent: 'flex-end' },
+  hoja: { borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 20, paddingBottom: 34 },
+  hojaTitulo: { fontSize: 19, fontWeight: '700', marginBottom: 6 },
+  hojaAyuda: { fontSize: 13.5, marginBottom: 16 },
+  opcionAct: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, padding: 13,
+    borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, marginBottom: 7,
+  },
+  puntoTipo: { width: 9, height: 9, borderRadius: 5 },
+  opcionTexto: { flex: 1, fontSize: 15, fontWeight: '600' },
+  opcionDur: { fontSize: 12 },
+  crearNueva: {
+    marginTop: 10, borderRadius: 12, paddingVertical: 13,
+    alignItems: 'center', borderWidth: 1.5, borderStyle: 'dashed',
+  },
+  crearTexto: { fontSize: 15, fontWeight: '700' },
+  cerrar: { marginTop: 8, paddingVertical: 12, alignItems: 'center' },
+  cerrarTexto: { fontSize: 15, fontWeight: '600' },
 });

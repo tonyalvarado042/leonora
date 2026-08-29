@@ -17,14 +17,17 @@ export function AnilloProgreso({ hechas, total }: { hechas: number; total: numbe
         <View style={[e.riel, { backgroundColor: p.linea }]}>
           <View style={[e.relleno, { width: `${Math.round(parte * 100)}%`, backgroundColor: p.alba }]} />
         </View>
-        <Text style={[e.pie, { color: p.tintaTenue }]}>
-          {total === 0
-            ? 'Hoy no tienes nada puesto'
-            : `Te faltan ${total - hechas} ${total - hechas === 1 ? 'cosa' : 'cosas'}`}
-        </Text>
+        <Text style={[e.pie, { color: p.tintaTenue }]}>{pie(hechas, total)}</Text>
       </View>
     </View>
   );
+}
+
+function pie(hechas: number, total: number): string {
+  if (total === 0) return 'Hoy no tienes nada puesto';
+  const faltan = total - hechas;
+  if (faltan === 0) return 'No te queda nada 🎉';
+  return `Te ${faltan === 1 ? 'falta' : 'faltan'} ${faltan} ${faltan === 1 ? 'cosa' : 'cosas'}`;
 }
 
 function titulo(hechas: number, total: number): string {
