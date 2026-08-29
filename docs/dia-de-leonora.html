@@ -307,6 +307,32 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
 .btn-demo.fuego{border-color:var(--fuego);color:var(--fuego);background:var(--fuego-piso)}
 .btn-demo.confe{border-color:var(--alba);color:var(--alba);background:var(--alba-piso)}
 .btn-demo.estrella{border-color:var(--tarde);color:var(--tarde);background:var(--tarde-piso)}
+/* ---- ajustes ---- */
+.aj-grupo{font-family:var(--reloj);font-size:9px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--tinta-tenue);margin:13px 0 6px}
+.aj-lista{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;overflow:hidden}
+.aj-fila{display:grid;grid-template-columns:22px 1fr auto;gap:9px;align-items:center;
+  padding:9px 11px;border-top:1px solid var(--linea);font-size:12.5px}
+.aj-fila:first-child{border-top:none}
+.aj-fila .ic{font-size:14px;text-align:center}
+.aj-fila .val{font-family:var(--reloj);font-size:11px;color:var(--tinta-tenue);
+  display:flex;align-items:center;gap:5px}
+.sw{width:32px;height:19px;border-radius:12px;background:var(--linea-fuerte);
+  position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;
+  border-radius:50%;background:#fff}
+.sw.on{background:var(--verde)}
+.sw.on::after{left:auto;right:2px}
+.avatares{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:7px}
+.av-op{aspect-ratio:1;border-radius:12px;display:grid;place-items:center;font-size:19px;
+  background:var(--tarjeta-2);border:1px solid var(--linea)}
+.av-op.puesto{border:2px solid var(--alba);background:var(--alba-piso)}
+.av-op.camara{background:var(--tarjeta);color:var(--tinta-tenue);font-size:15px}
+.son-fila{display:grid;grid-template-columns:20px 1fr auto;gap:9px;align-items:center;
+  padding:8px 11px;border-top:1px solid var(--linea);font-size:12.5px}
+.son-fila:first-child{border-top:none}
+.son-fila .pl{font-size:11px;color:var(--alba)}
+.son-fila .tk{color:var(--verde);font-size:13px}
 </style>
 
 <div class="envoltura">
@@ -381,7 +407,7 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
 
   <section class="seccion">
     <div class="rotulo">Lo que pediste</div>
-    <h2>Dieciséis cambios</h2>
+    <h2>Diecisiete cambios</h2>
     <div class="cambios">
       <div class="cambio"><div class="cambio-n">01</div><div>
         <h3>Alarmas que dicen qué hacer</h3>
@@ -431,6 +457,9 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
       <div class="cambio"><div class="cambio-n">16</div><div>
         <h3>Premios y celebración en pantalla</h3>
         <p>Terminas antes de tiempo y ganas puntos. Y cuando desbloqueas algo, cae fuego o confeti por encima de toda la app.</p></div></div>
+      <div class="cambio"><div class="cambio-n">17</div><div>
+        <h3>Ajustes de verdad</h3>
+        <p>Tu foto o tu ícono, el sonido de cada aviso, el tema claro u oscuro, tu color, y quién ve qué. Todo en un solo sitio y sin una sola tabla nueva.</p></div></div>
     </div>
   </section>
 
@@ -1058,6 +1087,146 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
   </section>
 
   <section class="seccion">
+    <div class="rotulo">Cambio 17</div>
+    <h2>Ajustes</h2>
+    <div class="prosa">
+      <p>Todo lo que la app te deja cambiar, en un solo sitio y ordenado por temas. Lo primero es tu cara, porque es lo que ves cada vez que abres.</p>
+    </div>
+
+    <div class="tira" style="grid-template-columns:repeat(auto-fit,minmax(272px,1fr));max-width:640px">
+
+      <!-- ===== AJUSTES ===== -->
+      <div class="columna-pantalla">
+        <div class="telefono"><div class="pantalla">
+          <div class="barra"><span>20:15</span><span>▮▮▮</span></div>
+          <div class="barra-app">
+            <div class="boton-barra">←</div>
+            <div class="titulo">Ajustes</div>
+          </div>
+
+          <div class="aj-grupo">Tú</div>
+          <div class="aj-lista">
+            <div class="aj-fila"><span class="ic">👧</span><span>Tu ícono</span><span class="val">Cambiar ›</span></div>
+            <div class="aj-fila"><span class="ic">✏️</span><span>Tu nombre</span><span class="val">Leonora ›</span></div>
+            <div class="aj-fila"><span class="ic">🎨</span><span>Tu color</span><span class="val">Morado ›</span></div>
+            <div class="aj-fila"><span class="ic">🎂</span><span>Tu cumpleaños</span><span class="val">14 mar ›</span></div>
+          </div>
+
+          <div class="aj-grupo">Avisos y sonidos</div>
+          <div class="aj-lista">
+            <div class="aj-fila"><span class="ic">🔔</span><span>Avisarme</span><span class="sw on"></span></div>
+            <div class="aj-fila"><span class="ic">⏱️</span><span>Con cuánto tiempo antes</span><span class="val">10 min ›</span></div>
+            <div class="aj-fila"><span class="ic">🎵</span><span>Sonido normal</span><span class="val">Campana ›</span></div>
+            <div class="aj-fila"><span class="ic">💜</span><span>Sonido del devocional</span><span class="val">Arpa ›</span></div>
+            <div class="aj-fila"><span class="ic">📳</span><span>Vibrar</span><span class="sw on"></span></div>
+            <div class="aj-fila"><span class="ic">🌙</span><span>No molestar</span><span class="val">22:00–6:00 ›</span></div>
+          </div>
+
+          <div class="aj-grupo">Tu día</div>
+          <div class="aj-lista">
+            <div class="aj-fila"><span class="ic">☀️</span><span>Me levanto</span><span class="val">6:00 ›</span></div>
+            <div class="aj-fila"><span class="ic">😴</span><span>Me acuesto</span><span class="val">21:30 ›</span></div>
+            <div class="aj-fila"><span class="ic">📘</span><span>Colegio o trabajo</span><span class="val">Colegio ›</span></div>
+            <div class="aj-fila"><span class="ic">🏁</span><span>Termino de estudiar</span><span class="val">14:00 ›</span></div>
+            <div class="aj-fila"><span class="ic">🙏</span><span>Mis devocionales</span><span class="val">2 al día ›</span></div>
+          </div>
+
+          <div class="aj-grupo">Cómo se ve</div>
+          <div class="aj-lista">
+            <div class="aj-fila"><span class="ic">🌗</span><span>Tema</span><span class="val">Automático ›</span></div>
+            <div class="aj-fila"><span class="ic">🔠</span><span>Tamaño de letra</span><span class="val">Normal ›</span></div>
+            <div class="aj-fila"><span class="ic">🎉</span><span>Celebraciones</span><span class="sw on"></span></div>
+          </div>
+
+          <div class="aj-grupo">Quién ve qué</div>
+          <div class="aj-lista">
+            <div class="aj-fila"><span class="ic">📅</span><span>Mi calendario</span><span class="val">2 grupos ›</span></div>
+            <div class="aj-fila"><span class="ic">🌍</span><span>Publicar en el Muro</span><span class="val">Con permiso ›</span></div>
+            <div class="aj-fila"><span class="ic">🌸</span><span>Mi calendario personal</span><span class="sw on"></span></div>
+          </div>
+        </div></div>
+        <div class="pie-pantalla">
+          <h3>Ajustes</h3>
+          <p>Cinco grupos, en el orden en que se usan. Cada fila muestra su valor de una vez — no hay que entrar para saber a qué hora te avisa.</p>
+        </div>
+      </div>
+
+      <!-- ===== ÍCONO Y SONIDOS ===== -->
+      <div class="columna-pantalla">
+        <div class="telefono"><div class="pantalla">
+          <div class="barra"><span>20:16</span><span>▮▮▮</span></div>
+          <div class="barra-app">
+            <div class="boton-barra">←</div>
+            <div class="titulo">Tu ícono</div>
+          </div>
+
+          <div style="text-align:center;margin:6px 0 14px">
+            <div style="width:74px;height:74px;border-radius:50%;background:var(--alba-piso);
+              border:2px solid var(--alba);display:grid;place-items:center;font-size:36px;margin:0 auto">👧</div>
+            <div style="font-size:11.5px;color:var(--tinta-tenue);margin-top:8px">Así te ven tu familia y tus grupos</div>
+          </div>
+
+          <div class="aj-grupo">Elige uno</div>
+          <div class="avatares">
+            <div class="av-op puesto">👧</div><div class="av-op">🦊</div><div class="av-op">🌻</div>
+            <div class="av-op">🦋</div><div class="av-op">🐢</div>
+            <div class="av-op">🌙</div><div class="av-op">⭐</div><div class="av-op">🎸</div>
+            <div class="av-op">🐨</div><div class="av-op">🍓</div>
+          </div>
+
+          <div class="aj-grupo">O usa una foto</div>
+          <div class="avatares" style="grid-template-columns:repeat(2,1fr)">
+            <div class="av-op camara" style="aspect-ratio:2.4">📷 Tomar foto</div>
+            <div class="av-op camara" style="aspect-ratio:2.4">🖼️ De la galería</div>
+          </div>
+          <div class="aviso-pie" style="margin-top:9px">🔒 Tu foto solo la ven tu familia y tus grupos. En el Muro nunca sale — ahí va tu ícono o nada.</div>
+
+          <div class="aj-grupo">Sonido del aviso</div>
+          <div class="aj-lista">
+            <div class="son-fila"><span class="pl">▶</span><span>Campana</span><span class="tk">✓</span></div>
+            <div class="son-fila"><span class="pl">▶</span><span>Agua</span><span></span></div>
+            <div class="son-fila"><span class="pl">▶</span><span>Pájaros</span><span></span></div>
+            <div class="son-fila"><span class="pl">▶</span><span>Arpa</span><span></span></div>
+            <div class="son-fila"><span class="pl">▶</span><span>Marimba</span><span></span></div>
+            <div class="son-fila"><span class="pl">▶</span><span>Solo vibrar</span><span></span></div>
+          </div>
+        </div></div>
+        <div class="pie-pantalla">
+          <h3>Tu ícono y tus sonidos</h3>
+          <p>Un dibujito o una foto tuya. Y cada sonido se oye antes de elegirlo, tocando el play — nadie escoge un sonido de alarma a ciegas.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="dos">
+      <div class="destacado">
+        <h3>El devocional suena distinto</h3>
+        <p>Tiene su propio sonido, aparte del de todo lo demás. Suena el arpa y ya sabes qué es sin sacar el teléfono del bolsillo.</p>
+        <p>Es un detalle chico que hace mucho: separa el aviso que te llama a orar del que te recuerda sacar la basura.</p>
+      </div>
+      <div class="destacado privado">
+        <h3>Tu foto no va al Muro</h3>
+        <p>Puedes poner una foto tuya y la ven tu familia y tus grupos — gente que ya te conoce. <strong>En el Muro nunca aparece</strong>, aunque publiques con tu nombre: ahí va tu ícono, o nada si publicas sin nombre.</p>
+        <p>Por eso el ícono es lo que viene puesto de fábrica y la foto es opcional. Para una niña de 13 en una página abierta al mundo, esa tiene que ser la posición por defecto.</p>
+      </div>
+      <div class="destacado">
+        <h3>Cada cosa puede llevar la contraria</h3>
+        <p>Lo de Ajustes es la regla general. Después, en cada actividad, puedes cambiarla solo para esa: el devocional te avisa 15 minutos antes aunque el resto sea 10, y ordenar el cuarto no te avisa nada.</p>
+      </div>
+      <div class="destacado">
+        <h3>Las celebraciones se pueden apagar</h3>
+        <p>A alguna gente el confeti le encanta y a otra le estorba. Se apaga en un toque. Y si tu teléfono está puesto en «menos movimiento», la app lo respeta sola sin que tengas que decírselo.</p>
+      </div>
+    </div>
+
+    <div class="destacado" style="margin-top:26px">
+      <h3>Y no cuesta ninguna tabla</h3>
+      <p>Todo esto son <strong>columnas</strong> en dos tablas que ya existen: lo tuyo en <code>personas</code>, el resto en <code>ajustes</code>. La lista de sonidos viene dentro de la app, no en la base de datos. Seguimos en 27.</p>
+    </div>
+  </section>
+
+  <section class="seccion">
     <div class="rotulo">Cambio 13</div>
     <h2>Deja de ser una web</h2>
     <div class="prosa">
@@ -1113,8 +1282,8 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
         <thead><tr><th>Tabla</th><th>Qué guarda</th><th>Lo importante</th></tr></thead>
         <tbody>
           <tr class="grupo-cab"><td colspan="3">El día — Fase 1</td></tr>
-          <tr><td><code>personas</code></td><td class="que">Cada persona, su rol y su sexo.</td><td class="que"><code>sexo</code> activa el ciclo · <code>tipo_cuenta</code>: invitada o completa</td></tr>
-          <tr><td><code>ajustes</code></td><td class="que">Despertar, dormir, avisos, ocupación.</td><td class="que"><code>ocupacion</code>: colegio o trabajo · <code>avisar_antes_min</code> = 10</td></tr>
+          <tr><td><code>personas</code></td><td class="que">Cada persona, su ícono, su rol y su sexo.</td><td class="que"><code>avatar_tipo</code> + <code>avatar_valor</code> · <code>foto_url</code> (nunca en el Muro) · <code>tipo_cuenta</code></td></tr>
+          <tr><td><code>ajustes</code></td><td class="que">Despertar, dormir, avisos, sonidos, tema.</td><td class="que"><code>ocupacion</code> · <code>avisar_antes_min</code> = 10 · <code>sonido_aviso</code> · <code>sonido_devocional</code> · <code>tema</code> · <code>celebraciones</code></td></tr>
           <tr><td><code>actividades</code></td><td class="que">La lista única de cosas.</td><td class="que"><code>tipo</code> + <code>es_habito</code> + <code>avisar_antes_min</code> propio</td></tr>
           <tr><td><code>rutina</code></td><td class="que">Los bloques de la semana normal.</td><td class="que">Varias filas de tipo fe = varios devocionales</td></tr>
           <tr><td><code>dias</code></td><td class="que">El plan de una fecha.</td><td class="que"><code>nota_ia</code> explica el cambio · <code>porcentaje_cumplido</code></td></tr>

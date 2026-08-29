@@ -2,7 +2,7 @@
 
 App de horario, hábitos de fe y organización del tiempo, para una familia y sus grupos.
 
-**Versión 5 del diseño.** Todavía no hay código.
+**Versión 6 del diseño.** Todavía no hay código.
 Página visual: `docs/dia-de-leonora.html`
 
 ---
@@ -27,6 +27,7 @@ Página visual: `docs/dia-de-leonora.html`
 | 14 | Invitados con funciones básicas; el resto se paga | `personas.tipo_cuenta`, `miembros_grupo.nivel_acceso`, tabla `suscripciones` |
 | 15 | **Cuatro rachas separadas** con niveles desbloqueables | tablas `rachas`, `logros`, `logros_ganados` |
 | 16 | Premios por terminar + celebración a pantalla completa | `tareas_dia.minutos_reales/termino_de_verdad/puntos`, `dias.porcentaje_cumplido` |
+| 17 | **Ajustes**: ícono o foto, sonidos, tema, privacidad | solo columnas en `personas` y `ajustes` — **cero tablas nuevas** |
 
 **`familias` desapareció:** una familia es un `grupo` de tipo familia. Todo lo que
 sirve para la familia sirve igual para las amigas.
@@ -46,8 +47,15 @@ La capa 3 es una copia: mover algo hoy no daña la rutina.
 ## 3. Las 27 tablas
 
 ### El día — Fase 1
-- **`personas`** — `id`, `nombre`, `avatar`, `fecha_nacimiento`, `email`, `rol` (tutor|hijo|adulto), `sexo`, `zona_horaria`, **`tipo_cuenta`** (invitada|completa), `tutor_email`
-- **`ajustes`** — `persona_id`, `hora_despertar`, `hora_dormir`, `ocupacion` (**colegio|trabajo|ambos|ninguno**), `hora_fin_ocupacion` (14:00), `avisar_antes_min` (**10**), `avisos_activos`, `silencio_desde/hasta`, `dias_ocupados`, `idioma`
+- **`personas`** — `id`, `nombre`, `fecha_nacimiento`, `email`, `rol` (tutor|hijo|adulto),
+  `sexo`, `zona_horaria`, **`tipo_cuenta`** (invitada|completa), `tutor_email`,
+  **`avatar_tipo`** (emoji|ilustracion|foto), **`avatar_valor`**, **`foto_url`**
+- **`ajustes`** — `persona_id`, `hora_despertar`, `hora_dormir`,
+  `ocupacion` (**colegio|trabajo|ambos|ninguno**), `hora_fin_ocupacion` (14:00),
+  `avisar_antes_min` (**10**), `avisos_activos`, `silencio_desde/hasta`, `dias_ocupados`,
+  **`sonido_aviso`**, **`sonido_devocional`**, **`vibrar`**,
+  **`tema`** (claro|oscuro|auto), **`color_acento`**, **`tamano_letra`**,
+  **`celebraciones`**, `idioma`
 - **`actividades`** — `id`, `nombre`, `emoji`, `tipo` (**fe|estudio|casa|deporte|familia|descanso**), `duracion_min`, `es_habito`, `meta_semanal`, `es_fijo`, `avisar`, `avisar_antes_min`, `creada_por`
 - **`rutina`** — `persona_id`, `modo` (escolar|vacaciones), `dia_semana`, `hora_inicio`, `hora_fin`, `actividad_id`, `es_fijo`
 - **`dias`** — `persona_id`, `fecha`, `tipo_dia`, `modo_usado`, `nota_ia`, `estado`, **`porcentaje_cumplido`**
@@ -188,7 +196,37 @@ sola. Tres formas distintas para que se sepa qué pasó sin leer:
 
 ---
 
-## 7. El modelo de invitados
+## 7. Ajustes
+
+Cinco grupos, en el orden en que se usan:
+
+| Grupo | Qué tiene |
+|---|---|
+| **Tú** | Ícono o foto, nombre, color, cumpleaños |
+| **Avisos y sonidos** | Avisar sí/no, minutos antes, sonido normal, **sonido del devocional**, vibrar, no molestar |
+| **Tu día** | Despertar, dormir, colegio o trabajo, hora de fin, cuántos devocionales |
+| **Cómo se ve** | Tema claro/oscuro/auto, tamaño de letra, celebraciones sí/no |
+| **Quién ve qué** | Mi calendario por grupo, publicar en el Muro, calendario personal |
+
+### Decisiones
+- **Diez íconos ilustrados o una foto.** El ícono viene por defecto; la foto es
+  opcional.
+- **La foto nunca sale en el Muro.** La ven la familia y los grupos — gente que
+  ya la conoce. En la página pública va el ícono, o nada si publica sin nombre.
+  Para una menor en una página abierta, esa es la posición por defecto.
+- **El devocional tiene su propio sonido.** Separa el aviso que llama a orar
+  del que recuerda sacar la basura, sin sacar el teléfono del bolsillo.
+- **Cada sonido se oye antes de elegirlo** (play en la lista).
+- **Ajustes es la regla general**; cada actividad puede llevarle la contraria
+  con su `avisar_antes_min` propio.
+- **Las celebraciones se apagan en un toque**, y se respeta
+  `prefers-reduced-motion` del sistema sin que haya que configurarlo.
+
+La lista de sonidos va dentro de la app, no en la base de datos.
+
+---
+
+## 8. El modelo de invitados
 
 Cuando Leonora invita a Emma, Emma entra **a lo que la invitaron**, no a toda
 la app. Su horario es asunto de su familia, y esa familia todavía no está aquí.
@@ -211,7 +249,7 @@ Dos notas:
 
 ---
 
-## 8. Fases
+## 9. Fases
 
 | Fase | Qué se construye | Tablas |
 |---|---|---|
@@ -233,11 +271,11 @@ a nadie.
 
 ---
 
-## 9. Guardado para fases posteriores
+## 10. Guardado para fases posteriores
 
 **No entra ahora.** Escrito aquí para no perderlo.
 
-### 9.1 Entrenar el cuerpo y el espíritu
+### 10.1 Entrenar el cuerpo y el espíritu
 - La persona elige **cuántos minutos de deporte** al día (15, 30, los que sean)
   y si de día o de noche, en el arranque — igual que el devocional.
 - Después puede **mover ese bloque** en su horario como cualquier otra cosa.
@@ -248,25 +286,25 @@ a nadie.
 - Datos: `ajustes.minutos_deporte`, `ajustes.momento_deporte`, y un enlace
   entre la actividad de tipo `deporte` y la de tipo `fe`.
 
-### 9.2 El entrenamiento en sí
+### 10.2 El entrenamiento en sí
 - Al tocar el bloque de deporte, sale la rutina del día.
 - **Todo funcional**, con lo que hay en casa: un par de mancuernas y un banco o
   una mesa firme. Sin gimnasio ni máquinas.
 - Tono: cuidar el cuerpo porque es prestado, no por vanidad.
 - Datos: +2 tablas (`ejercicios`, `entrenamientos`).
 
-### 9.3 Nutrición
+### 10.3 Nutrición
 - Después del entrenamiento, porque comparten la misma idea y sin la parte de
   deporte no tiene dónde apoyarse.
 
-### 9.4 Widget de iOS
+### 10.4 Widget de iOS
 - En la pantalla de inicio: devocional del día, lo que toca hoy, y el versículo.
 - Se hace cuando las fases 1 a 3 estén andando: el widget solo muestra datos
   que ya deben existir.
 
 ---
 
-## 10. Tecnología — ahora nativa
+## 11. Tecnología — ahora nativa
 
 Que sea app nativa cambia una cosa de raíz: **los avisos ahora sí sirven.**
 Una web no despierta el teléfono con la pantalla apagada; una app nativa sí.
@@ -289,7 +327,7 @@ debería depender de una descarga.
 
 ---
 
-## 11. El nombre
+## 12. El nombre
 
 Veinte candidatos en `docs/dia-de-leonora.html`. Mi recomendación:
 
@@ -304,7 +342,7 @@ Veinte candidatos en `docs/dia-de-leonora.html`. Mi recomendación:
 
 ---
 
-## 12. Pendiente de decidir
+## 13. Pendiente de decidir
 
 1. **¿Cómo se llama?** Sin nombre no hay ícono, bienvenida ni video.
 2. ¿Fases 1 a 3 juntas (la primera versión enseñable)?
