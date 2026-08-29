@@ -228,19 +228,118 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
   border:1px solid var(--linea);border-radius:12px;background:var(--tarjeta);font-size:15.5px}
 .pregunta span{font-family:var(--reloj);font-size:12px;color:var(--alba);padding-top:3px;flex:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.chip.publica{background:var(--fuego-piso);color:var(--fuego)}
+.amenes{display:flex;align-items:center;gap:5px;margin-top:7px;
+  font-family:var(--reloj);font-size:10.5px;color:var(--fuego)}
+.pulso{width:6px;height:6px;border-radius:50%;background:var(--verde);flex:none}
+.contador-muro{display:flex;align-items:center;gap:6px;font-size:11px;
+  color:var(--tinta-suave);margin-bottom:11px}
+.video-marco{position:relative;border-radius:13px;overflow:hidden;margin-bottom:13px;
+  background:linear-gradient(150deg,var(--alba),var(--dia));aspect-ratio:16/10;
+  display:grid;place-items:center}
+.play{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.94);
+  display:grid;place-items:center;font-size:15px;color:var(--alba);padding-left:3px}
+.video-pie{position:absolute;left:0;right:0;bottom:0;padding:9px 11px;
+  background:linear-gradient(transparent,rgba(0,0,0,.55));color:#fff;
+  font-family:var(--reloj);font-size:10px}
+.punto-lista{display:flex;gap:9px;align-items:flex-start;margin-bottom:9px;font-size:12.5px;
+  line-height:1.45}
+.punto-lista .ico{font-size:15px;flex:none;line-height:1.2}
+.boton-grande{margin-top:13px;text-align:center;background:var(--alba);color:#fff;
+  border-radius:11px;padding:11px;font-size:14px;font-weight:700}
+.nombres{margin-top:32px;display:grid;gap:12px;
+  grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.nombre{background:var(--tarjeta);border:1px solid var(--linea);border-radius:13px;
+  padding:15px 17px}
+.nombre .n{font-family:var(--display);font-size:23px;font-weight:600;letter-spacing:-.01em;
+  margin-bottom:5px}
+.nombre p{font-size:13.5px;color:var(--tinta-suave);line-height:1.5}
+.nombre.top{border-color:var(--alba);background:var(--alba-piso)}
+.nombre.top .n{color:var(--alba)}
+.nombre .puesto{font-family:var(--reloj);font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--alba);display:block;margin-bottom:6px}
+.familia-nombres{font-family:var(--reloj);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--tinta-tenue);margin:30px 0 -18px}
+.planes{overflow-x:auto;margin-top:28px;border:1px solid var(--linea);
+  border-radius:12px;background:var(--tarjeta)}
+.si-no{font-family:var(--reloj);font-size:15px}
+.si-no.si{color:var(--verde)}
+.si-no.no{color:var(--tinta-tenue)}
 </style>
 
 <div class="envoltura">
 
   <header class="portada">
-    <div class="marca">Diseño · versión 3</div>
+    <div class="marca">Diseño · versión 4</div>
     <h1>El día de <em>Leonora</em></h1>
-    <p class="entradilla">Tu día, tu fe y tu gente en una sola app. Te avisa lo que toca, te acompaña en el devocional, guarda tus oraciones y te conecta con tu familia y tus amigas.</p>
+    <p class="entradilla">Tu día, tu fe y tu gente en una app nativa para iPhone y Android. Te avisa lo que toca, te acompaña en el devocional, guarda tus oraciones — y las lleva a un muro donde el mundo entero puede orar contigo.</p>
   </header>
 
   <section class="seccion">
+    <div class="rotulo">Lo primero</div>
+    <h2>Veinte nombres</h2>
+    <div class="prosa">
+      <p>Buscamos el que al oírlo se entienda solo, sin explicación, y que sirva igual para la app y para el muro de oración. Los tres primeros son mi recomendación.</p>
+    </div>
+
+    <div class="nombres">
+      <div class="nombre top">
+        <span class="puesto">Mi favorito</span>
+        <div class="n">Maná</div>
+        <p>Lo que caía cada mañana y <em>no se podía guardar</em>: había que salir a recogerlo de nuevo cada día. Eso es exactamente una app de hábitos diarios. Corto, cálido, todo el mundo sabe qué es, y se puede registrar como marca.</p>
+      </div>
+      <div class="nombre top">
+        <span class="puesto">El más directo</span>
+        <div class="n">Amén</div>
+        <p>Lo que dices cuando alguien más ora. En el muro, el botón de «oré por esto» <em>es</em> un amén — el nombre y la acción principal son la misma palabra. Una sílaba, nadie necesita que se la expliquen. Difícil de registrar, eso sí.</p>
+      </div>
+      <div class="nombre top">
+        <span class="puesto">El más vendible</span>
+        <div class="n">Primera Hora</div>
+        <p>Dice la promesa entera en dos palabras: dale a Dios la primera hora del día. Y se entiende aunque no sepas nada de la Biblia, que es lo que hace falta para vender fuera de la iglesia.</p>
+      </div>
+    </div>
+
+    <div class="familia-nombres">Del lado del día</div>
+    <div class="nombres">
+      <div class="nombre"><div class="n">Primicia</div><p>Lo primero de la cosecha, lo que se aparta antes que nada.</p></div>
+      <div class="nombre"><div class="n">Amanece</div><p>Un verbo, no un sustantivo. La app que empieza contigo.</p></div>
+      <div class="nombre"><div class="n">Alba</div><p>Corto y bonito. Suena a nombre de persona, se recuerda.</p></div>
+      <div class="nombre"><div class="n">Madruga</div><p>Con carácter. El que madruga… y también el que ora temprano.</p></div>
+      <div class="nombre"><div class="n">Cada Día</div><p>«El pan nuestro de cada día.» Nadie tiene que preguntarlo.</p></div>
+      <div class="nombre"><div class="n">Pan de Hoy</div><p>Del Padre Nuestro. Cálido, cotidiano, sin solemnidad.</p></div>
+      <div class="nombre"><div class="n">Vigilia</div><p>La guardia de la noche. Serio y bello, un poco más adulto.</p></div>
+      <div class="nombre"><div class="n">Kairós</div><p>El tiempo de Dios, distinto del reloj. El más profundo y el que más hay que explicar.</p></div>
+    </div>
+
+    <div class="familia-nombres">Del lado del muro de oración</div>
+    <div class="nombres">
+      <div class="nombre"><div class="n">Clamor</div><p>Una oración que se oye. El muro es literalmente eso.</p></div>
+      <div class="nombre"><div class="n">Te Escucho</div><p>Lo que Dios hace, y lo que hace la persona que lee tu petición.</p></div>
+      <div class="nombre"><div class="n">Juntos</div><p>Simple hasta el hueso. Es lo que pasa en el muro.</p></div>
+      <div class="nombre"><div class="n">Oremos</div><p>Una invitación, no una descripción. Difícil de olvidar.</p></div>
+      <div class="nombre"><div class="n">El Muro</div><p>Directo. Funciona mejor como nombre de la sección que de la app.</p></div>
+    </div>
+
+    <div class="familia-nombres">Del lado de lo que sostiene</div>
+    <div class="nombres">
+      <div class="nombre"><div class="n">Altar</div><p>Levantar un altar cada día. Visual y fuerte.</p></div>
+      <div class="nombre"><div class="n">Ancla</div><p>Hebreos 6:19. Lo que te sostiene y lo que fija tu día.</p></div>
+      <div class="nombre"><div class="n">Norte</div><p>«Perdí el norte.» Todo el mundo sabe qué significa.</p></div>
+      <div class="nombre"><div class="n">Raíz</div><p>Lo que no se ve y sostiene todo lo que sí.</p></div>
+      <div class="nombre"><div class="n">Firme</div><p>Una palabra, una postura. Suena a decisión tomada.</p></div>
+    </div>
+
+    <div class="destacado" style="margin-top:32px">
+      <h3>Cómo los combinaría</h3>
+      <p>La app se llama <strong>Maná</strong> y el muro público se llama <strong>El Muro</strong>, con un botón que dice <strong>Amén</strong>. Así el nombre de marca es registrable, la sección se explica sola y la acción que más se va a tocar en toda la app es la palabra más conocida del idioma de la fe.</p>
+      <p>En este documento sigo diciendo «la app» porque el nombre lo eliges tú.</p>
+    </div>
+  </section>
+
+  <section class="seccion">
     <div class="rotulo">Lo que pediste</div>
-    <h2>Diez cambios</h2>
+    <h2>Catorce cambios</h2>
     <div class="cambios">
       <div class="cambio"><div class="cambio-n">01</div><div>
         <h3>Alarmas que dicen qué hacer</h3>
@@ -272,6 +371,18 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
       <div class="cambio"><div class="cambio-n">10</div><div>
         <h3>Calendario de periodo, privado</h3>
         <p>Si eres mujer, la app te pregunta tu último periodo y lleva el calendario. Un puntito discreto que solo tú entiendes.</p></div></div>
+      <div class="cambio"><div class="cambio-n">11</div><div>
+        <h3>El Muro: oración pública para todo el mundo</h3>
+        <p>Una oración que sale de tu familia y de tus grupos, y la puede ver cualquiera. Hay una página web abierta donde se ven todas las peticiones de todas las personas, sin descargar nada.</p></div></div>
+      <div class="cambio"><div class="cambio-n">12</div><div>
+        <h3>Bienvenida con video, antes de configurar</h3>
+        <p>Lo primero que ves no es un formulario: es una explicación corta y un video de cómo funciona la app. Después sí, la configuración.</p></div></div>
+      <div class="cambio"><div class="cambio-n">13</div><div>
+        <h3>App nativa de iPhone y Android</h3>
+        <p>Deja de ser una web. Eso da avisos de verdad en el celular — los que suenan con la pantalla apagada — y abre la puerta al widget.</p></div></div>
+      <div class="cambio"><div class="cambio-n">14</div><div>
+        <h3>Invitados con funciones básicas</h3>
+        <p>A quien invitas entra gratis a chatear contigo y al devocional al que lo llamaste. Para tener su propio horario y todo lo demás, su familia paga.</p></div></div>
     </div>
   </section>
 
@@ -507,6 +618,115 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
   </section>
 
   <section class="seccion">
+    <div class="rotulo">Cambios 11 y 12</div>
+    <h2>Dos pantallas más</h2>
+    <div class="prosa">
+      <p>La primera es lo primero que ve alguien que abre la app recién bajada. La segunda es la única parte que se ve <strong>sin tener la app</strong> — es la puerta de entrada de todo el mundo.</p>
+    </div>
+
+    <div class="tira" style="grid-template-columns:repeat(auto-fit,minmax(272px,1fr));max-width:640px">
+
+      <!-- ===== BIENVENIDA ===== -->
+      <div class="columna-pantalla">
+        <div class="telefono"><div class="pantalla">
+          <div class="barra"><span>19:02</span><span>▮▮▮</span></div>
+
+          <div style="text-align:center;margin-bottom:14px">
+            <div style="font-family:var(--display);font-size:26px;font-weight:600;letter-spacing:-.01em">Maná</div>
+            <div style="font-size:12px;color:var(--tinta-suave);margin-top:3px">Tu día, tu fe y tu gente</div>
+          </div>
+
+          <div class="video-marco">
+            <div class="play">▶</div>
+            <div class="video-pie">Cómo funciona · 1:40</div>
+          </div>
+
+          <div class="punto-lista"><span class="ico">⏰</span><div><strong>Te avisa lo que toca.</strong> Sin que tengas que acordarte de nada.</div></div>
+          <div class="punto-lista"><span class="ico">💜</span><div><strong>Te acompaña en el devocional.</strong> Con el pasaje del día y espacio para escribir.</div></div>
+          <div class="punto-lista"><span class="ico">🙏</span><div><strong>Nadie ora solo.</strong> Tu familia, tus amigas y el Muro.</div></div>
+
+          <div class="boton-grande">Empezar</div>
+          <div style="text-align:center;font-size:11px;color:var(--tinta-tenue);margin-top:9px">
+            Ver el Muro sin registrarme →
+          </div>
+        </div></div>
+        <div class="pie-pantalla">
+          <h3>Bienvenida</h3>
+          <p>Antes del formulario: qué es la app y un video corto. Y una salida al Muro para quien solo quiere mirar — el que mira hoy se registra mañana.</p>
+        </div>
+      </div>
+
+      <!-- ===== EL MURO ===== -->
+      <div class="columna-pantalla">
+        <div class="telefono"><div class="pantalla">
+          <div class="barra"><span>19:04</span><span>▮▮▮</span></div>
+
+          <div class="barra-app">
+            <div class="boton-barra">←</div>
+            <div class="titulo">El Muro</div>
+            <div class="boton-barra">＋</div>
+          </div>
+
+          <div class="contador-muro"><span class="pulso"></span> 1.284 personas orando hoy</div>
+
+          <div class="solapas">
+            <div class="solapa viva">Todas</div>
+            <div class="solapa">Recientes</div>
+            <div class="solapa">Las mías</div>
+          </div>
+
+          <div class="ficha">
+            <div class="cabeza"><span class="quien">Por mi papá</span>
+              <span class="chip publica">Pública</span><span class="hace">2 min</span></div>
+            <div class="cuerpo">Perdió el trabajo hace tres semanas. Que se abra una puerta pronto.</div>
+            <div class="amenes">🙏 Amén · 47 personas</div>
+          </div>
+
+          <div class="ficha">
+            <div class="cabeza"><span class="quien">Anónimo</span>
+              <span class="chip sola">Sin nombre</span><span class="hace">11 min</span></div>
+            <div class="cuerpo">Tengo mucho miedo y no se lo puedo decir a nadie de mi casa.</div>
+            <div class="amenes">🙏 Amén · 213 personas</div>
+          </div>
+
+          <div class="ficha">
+            <div class="cabeza"><span class="quien">Leonora</span>
+              <span class="chip publica">Pública</span><span class="hace">1 h</span></div>
+            <div class="cuerpo">Por mi abuela, que la operan el jueves de la rodilla.</div>
+            <div class="amenes">🙏 Amén · 9 personas</div>
+          </div>
+
+          <div class="ficha" style="background:var(--verde-piso);border-color:color-mix(in srgb,var(--verde) 28%,transparent)">
+            <div class="cabeza"><span class="quien">Marcos</span>
+              <span class="chip contestada">Contestada</span><span class="hace">Ayer</span></div>
+            <div class="cuerpo">«Pedí trabajo aquí en enero. Empiezo el lunes. Gracias a los 300 que oraron.»</div>
+          </div>
+        </div></div>
+        <div class="pie-pantalla">
+          <h3>El Muro</h3>
+          <p>Abierto a todo el mundo, también desde una página web sin descargar nada. Se puede publicar con tu nombre o sin él, y las contestadas se quedan a la vista.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="dos">
+      <div class="destacado">
+        <h3>El Muro también es una página web</h3>
+        <p>Vive en una dirección normal que se puede abrir desde cualquier teléfono o computadora, sin bajar nada y sin cuenta. Alguien comparte una oración por WhatsApp, la abren treinta personas, y algunas se quedan.</p>
+        <p>Es la mejor puerta de entrada que puede tener esta app, y la más barata: <strong>una sola página web alimentada de la misma base de datos.</strong></p>
+      </div>
+      <div class="destacado privado">
+        <h3>Lo que hay que cuidar</h3>
+        <p>Publicar en el Muro es una decisión aparte, distinta de compartir con tu familia o tu grupo. Tres protecciones que meto desde el diseño, no después:</p>
+        <p><strong>1. Se puede publicar sin nombre.</strong> Contar algo difícil no debería costarte quedar expuesta.</p>
+        <p><strong>2. Todo pasa por revisión antes de salir.</strong> La IA lee cada oración en segundos y detiene lo que tenga insultos, datos de contacto, direcciones o cosas que no deberían estar ahí. Y cualquiera puede reportar.</p>
+        <p><strong>3. Un menor necesita permiso de su tutor</strong> para publicar en el Muro. Puede leer y decir amén desde el primer día; publicar es un permiso que se activa aparte. Y nunca se muestra apellido, ciudad ni forma de contactar a nadie.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion">
     <div class="rotulo">Cambio 01</div>
     <h2>Cómo funcionan los avisos</h2>
     <div class="prosa">
@@ -560,6 +780,53 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
         <p>Le llega la invitación y elige cómo: <strong>dentro de la app</strong>, o <strong>por una llamada de WhatsApp</strong> a la hora acordada.</p>
       </div>
     </div>
+
+    <div class="rotulo" style="margin-top:52px">Cambio 14</div>
+    <h2>Qué pasa cuando invitas a alguien que no tiene la app</h2>
+    <div class="prosa">
+      <p>Aquí hay algo importante que hay que separar bien. Cuando Leonora invita a Emma, Emma <strong>entra</strong> — pero entra a lo que Leonora la invitó, no a toda la app. El horario de Emma no es asunto de Leonora: es de la familia de Emma, y esa familia todavía no está aquí.</p>
+      <p>Así que Emma llega como <strong>invitada</strong>. Puede chatear con Leonora y entrar al devocional al que la llamaron. Con eso ya vio de qué se trata. Para tener su propio día, sus hábitos, sus recados y su familia, sus papás compran la app.</p>
+    </div>
+
+    <div class="planes">
+      <table>
+        <thead><tr><th>Qué puede hacer</th><th>Invitada (gratis)</th><th>Con la app completa</th></tr></thead>
+        <tbody>
+          <tr><td class="que">Chatear en el grupo al que la invitaron</td><td class="si-no si">✓</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Entrar al devocional al que la invitaron</td><td class="si-no si">✓</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Ver el Muro y decir amén</td><td class="si-no si">✓</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Ver el versículo del día</td><td class="si-no si">✓</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Responder al plan del grupo (¿cine el jueves?)</td><td class="si-no si">✓</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Tener su propio horario y su rutina</td><td class="si-no no">—</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Sus hábitos, sus rachas, sus oraciones</td><td class="si-no no">—</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Avisos y alarmas en su celular</td><td class="si-no no">—</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Su familia, sus recados, sus propios grupos</td><td class="si-no no">—</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Compartir su calendario con Leonora</td><td class="si-no no">—</td><td class="si-no si">✓</td></tr>
+          <tr><td class="que">Subir fotos de su horario</td><td class="si-no no">—</td><td class="si-no si">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="dos">
+      <div class="destacado">
+        <h3>Por qué esta línea y no otra</h3>
+        <p>Lo gratis es todo lo que Leonora ya le está dando: la conversación y el devocional. Lo que se paga es <em>tener tu propia vida adentro</em> — tu día, tus avisos, tu familia.</p>
+        <p>La invitada no se topa con un muro que le pide dinero antes de entender nada. Entra, chatea, hace un devocional con su amiga, ve que está bueno — y entonces le pide a sus papás.</p>
+      </div>
+      <div class="destacado">
+        <h3>Un detalle que te conviene</h3>
+        <p>Emma tiene 13 años, así que su cuenta necesita el correo de un tutor para activarse. Eso es obligatorio en las tiendas de Apple y Google para menores, y no se puede saltar.</p>
+        <p>Fíjate en lo que pasa ahí: <strong>la persona que la ley obliga a meter en el proceso es exactamente la misma que va a pagar.</strong> El requisito legal y el momento de venta son el mismo paso. No hay que forzar nada.</p>
+      </div>
+      <div class="destacado">
+        <h3>Quién paga</h3>
+        <p>Paga el <strong>grupo de tipo familia</strong>, no la persona. Una suscripción cubre a papá, mamá y los hijos. Es lo que hace que el precio se sienta razonable y lo que evita cobrar por separado a un niño de 8 años.</p>
+      </div>
+      <div class="destacado">
+        <h3>Cómo se cobra</h3>
+        <p>Siendo app nativa, el pago va por <strong>la tienda de Apple y la de Google</strong>. Se quedan con su parte, pero a cambio el cobro es de un toque y no hay que pedirle la tarjeta a nadie.</p>
+      </div>
+    </div>
   </section>
 
   <section class="seccion">
@@ -569,9 +836,9 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
     <div class="dos">
       <div class="destacado">
         <h3>Oraciones por los demás</h3>
-        <p>Escribes una necesidad y eliges quién la ve: <strong>solo yo</strong>, <strong>mi familia</strong>, <strong>un grupo</strong> o <strong>todas mis personas</strong>.</p>
-        <p>Los que la ven pueden tocar «oré por esto», y a ti te aparece <em>«Papá, mamá y 2 más oraron por esto»</em>. Saber que alguien oró por ti cambia el día.</p>
-        <p><strong>Nota:</strong> «todas mis personas» significa tu familia y tus grupos, nunca internet abierto. Una necesidad personal tuya no debería quedar a la vista de desconocidos.</p>
+        <p>Escribes una necesidad y eliges quién la ve, en cinco niveles: <strong>solo yo</strong>, <strong>mi familia</strong>, <strong>un grupo</strong>, <strong>todas mis personas</strong>, o <strong>el Muro</strong> — que lo ve el mundo entero.</p>
+        <p>Los que la ven pueden tocar «Amén», y a ti te aparece <em>«Papá, mamá y 2 más oraron por esto»</em>. Saber que alguien oró por ti cambia el día.</p>
+        <p>Los cuatro primeros niveles son un interruptor normal. <strong>El quinto es una decisión aparte</strong>, con su propia pantalla de confirmación, la opción de publicar sin nombre, y revisión antes de salir. Subir de «mi grupo» a «el Muro» nunca debería pasar por accidente.</p>
       </div>
       <div class="destacado">
         <h3>Oraciones contestadas</h3>
@@ -592,12 +859,54 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
     </div>
   </section>
 
+  <section class="seccion">
+    <div class="rotulo">Cambio 13</div>
+    <h2>Deja de ser una web</h2>
+    <div class="prosa">
+      <p>Que sea app nativa de iPhone y Android cambia una cosa de raíz: <strong>los avisos ahora sí sirven</strong>. Una web no puede despertarte el teléfono con la pantalla apagada; una app nativa sí. Y como toda la app se apoya en avisar a tiempo, esto no era negociable.</p>
+      <p>Lo que sigo recomendando es <strong>un solo código para las dos tiendas</strong>. Se escribe una vez y sale en iPhone y en Android, con avisos nativos de verdad, cámara para las fotos del horario, y el widget cuando llegue el momento.</p>
+    </div>
+
+    <div class="rejilla">
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--alba)"></span><h3>La app</h3></div>
+        <p>React Native con Expo. Un código, dos tiendas. Avisos nativos, cámara y widget de iOS más adelante sin empezar de cero.</p>
+      </div>
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--dia)"></span><h3>El Muro, en web</h3></div>
+        <p>Una página aparte, abierta, sin cuenta ni descarga. Misma base de datos. Es lo que la gente comparte por WhatsApp.</p>
+      </div>
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--verde)"></span><h3>Los datos</h3></div>
+        <p>Supabase: base de datos, cuentas, fotos y el chat en tiempo real. Mismo servidor para la app y para el Muro.</p>
+      </div>
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--tarde)"></span><h3>Los avisos</h3></div>
+        <p>Los canales oficiales de Apple y Google. Un servicio que revisa cada minuto qué avisos toca mandar.</p>
+      </div>
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--fuego)"></span><h3>El cobro</h3></div>
+        <p>Compras dentro de la app, por la tienda de Apple y la de Google. Se llevan su parte, pero el cobro es de un toque.</p>
+      </div>
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--tinta-tenue)"></span><h3>La IA</h3></div>
+        <p>Claude, para armar la semana, leer las fotos del horario y revisar lo que se publica en el Muro.</p>
+      </div>
+    </div>
+
+    <div class="destacado" style="margin-top:28px">
+      <h3>Lo que esto cuesta</h3>
+      <p>Ser nativa tiene un precio que la web no tiene: <strong>99 dólares al año</strong> por la cuenta de Apple, 25 una sola vez por la de Google, y cada versión pasa por revisión antes de publicarse — de horas a un par de días. Es un peaje real, y lo pagas a cambio de los avisos, del cobro de un toque y de poder estar en las tiendas.</p>
+      <p>Por eso el Muro va en web: <strong>lo que tiene que llegar a todo el mundo no debería depender de una descarga.</strong></p>
+    </div>
+  </section>
+
   <section class="tecnico">
    <div class="interior">
     <div class="rotulo">Para papá</div>
-    <h2>Las 22 tablas</h2>
+    <h2>Las 24 tablas</h2>
     <div class="prosa">
-      <p>La app pasó de «horario con hábitos» a «horario + fe + gente». Eso son 11 tablas más. Donde se pudo, seguí quitando: <strong>familias desapareció</strong> (una familia es un grupo), <strong>las rachas y las oraciones contestadas son consultas</strong>, no tablas, y <strong>el chat leído es una columna</strong> en miembros_grupo.</p>
+      <p>El Muro y el cobro suman dos tablas más, y tres columnas nuevas hacen el resto del trabajo. Sigue en pie lo de antes: <strong>familias no existe</strong> (una familia es un grupo), <strong>las rachas y las oraciones contestadas son consultas</strong>, y <strong>el chat leído es una columna</strong>. El nivel de acceso de un invitado también es una columna, no una tabla de permisos.</p>
     </div>
 
     <div class="marco-tabla">
@@ -605,7 +914,7 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
         <thead><tr><th>Tabla</th><th>Qué guarda</th><th>Lo importante</th></tr></thead>
         <tbody>
           <tr class="grupo-cab"><td colspan="3">El día — Fase 1</td></tr>
-          <tr><td><code>personas</code></td><td class="que">Cada persona, su rol y su sexo.</td><td class="que"><code>sexo</code> activa el calendario de ciclo</td></tr>
+          <tr><td><code>personas</code></td><td class="que">Cada persona, su rol y su sexo.</td><td class="que"><code>sexo</code> activa el ciclo · <code>tipo_cuenta</code>: invitada o completa</td></tr>
           <tr><td><code>ajustes</code></td><td class="que">Despertar, dormir, avisos, ocupación.</td><td class="que"><code>ocupacion</code>: colegio o trabajo · <code>avisar_antes_min</code> = 10</td></tr>
           <tr><td><code>actividades</code></td><td class="que">La lista única de cosas.</td><td class="que"><code>tipo</code> + <code>es_habito</code> + <code>avisar_antes_min</code> propio</td></tr>
           <tr><td><code>rutina</code></td><td class="que">Los bloques de la semana normal.</td><td class="que">Varias filas de tipo fe = varios devocionales</td></tr>
@@ -621,30 +930,36 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
 
           <tr class="grupo-cab"><td colspan="3">La gente — Fase 4</td></tr>
           <tr class="nueva"><td><code>grupos</code></td><td class="que">Familia, amigas, iglesia.</td><td class="que"><code>tipo</code>: la familia es un grupo más</td></tr>
-          <tr class="nueva"><td><code>miembros_grupo</code></td><td class="que">Quién está en cada grupo.</td><td class="que"><code>ve_mi_calendario</code>: el interruptor de Emma</td></tr>
+          <tr class="nueva"><td><code>miembros_grupo</code></td><td class="que">Quién está en cada grupo.</td><td class="que"><code>ve_mi_calendario</code>: el interruptor de Emma · <code>nivel_acceso</code></td></tr>
           <tr><td><code>encargos</code></td><td class="que">Recados de papá y mamá.</td><td class="que"><code>respuesta</code> + <code>respondido_en</code>: ella contesta</td></tr>
           <tr><td><code>eventos</code></td><td class="que">Feriados, exámenes, cumpleaños, planes.</td><td class="que"><code>confirmado</code>: nada de una foto entra sin aprobar</td></tr>
 
           <tr class="grupo-cab"><td colspan="3">Oración — Fase 5</td></tr>
-          <tr class="nueva"><td><code>oraciones</code></td><td class="que">Peticiones y testimonios.</td><td class="que"><code>visibilidad</code> y <code>estado</code>; contestadas = un filtro</td></tr>
+          <tr class="nueva"><td><code>oraciones</code></td><td class="que">Peticiones y testimonios.</td><td class="que"><code>visibilidad</code> con 5 niveles · <code>es_anonima</code> · <code>estado_moderacion</code></td></tr>
           <tr class="nueva"><td><code>oraciones_apoyo</code></td><td class="que">Quién oró por qué.</td><td class="que">De aquí sale «4 personas oraron por esto»</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">Lo privado — Fase 6</td></tr>
+          <tr class="grupo-cab"><td colspan="3">Lo privado — Fase 7</td></tr>
           <tr class="nueva"><td><code>ciclo</code></td><td class="que">Fechas de periodo.</td><td class="que"><strong>Única tabla sin excepción de tutor.</strong> Solo ella</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">Social — Fase 7</td></tr>
+          <tr class="grupo-cab"><td colspan="3">Social — Fase 8</td></tr>
           <tr class="nueva"><td><code>invitaciones</code></td><td class="que">A un grupo o a un devocional.</td><td class="que"><code>medio</code>: app o llamada de WhatsApp</td></tr>
           <tr class="nueva"><td><code>mensajes</code></td><td class="que">El chat de cada grupo.</td><td class="que">Sin tabla de chats: el grupo <em>es</em> el chat</td></tr>
           <tr class="nueva"><td><code>respuestas_evento</code></td><td class="que">Sí, no o tal vez al plan del grupo.</td><td class="que">Es el «¿pueden el jueves?»</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">Fotos — Fase 8</td></tr>
+          <tr class="grupo-cab"><td colspan="3">El Muro — Fase 6</td></tr>
+          <tr class="nueva"><td><code>reportes</code></td><td class="que">Oraciones marcadas por alguien.</td><td class="que">La revisión de la IA corre antes; esto es la segunda red</td></tr>
+
+          <tr class="grupo-cab"><td colspan="3">Dinero — Fase 9</td></tr>
+          <tr class="nueva"><td><code>suscripciones</code></td><td class="que">Qué familia pagó y hasta cuándo.</td><td class="que">Paga el <code>grupo</code>, no la persona · <code>proveedor</code>: apple o google</td></tr>
+
+          <tr class="grupo-cab"><td colspan="3">Fotos — Fase 10</td></tr>
           <tr><td><code>fotos</code></td><td class="que">Horarios y calendarios subidos.</td><td class="que">Lo leído va a <code>eventos</code> sin confirmar</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="prosa" style="margin-top:26px">
-      <p><strong>Privacidad, ahora que hay gente de fuera.</strong> Aislamiento por fila en las 22, con tres reglas duras: un tutor ve a sus hijos <em>menos</em> <code>ciclo</code>; una oración se ve según su <code>visibilidad</code> y nada más; y un calendario solo se ve si el dueño puso <code>ve_mi_calendario</code> en verdadero para ese grupo.</p>
+      <p><strong>Privacidad, ahora que el Muro es público.</strong> Aislamiento por fila en las 24, con cuatro reglas duras: un tutor ve a sus hijos <em>menos</em> <code>ciclo</code>; una oración se ve según su <code>visibilidad</code> y nada más; un calendario solo se ve si su dueño puso <code>ve_mi_calendario</code> para ese grupo; y en el Muro <strong>solo salen oraciones con <code>visibilidad = publica</code> y <code>estado_moderacion = aprobada</code></strong> — nunca el apellido, la ciudad ni forma de contactar a nadie.</p>
       <p><strong>Gasto de IA.</strong> No cambia: nueve de cada diez días no la necesitan. Los versículos, los devocionales y las oraciones son datos, no llamadas al modelo.</p>
     </div>
    </div>
@@ -652,8 +967,8 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
 
   <section class="seccion">
     <div class="rotulo">El camino</div>
-    <h2>Ocho fases</h2>
-    <div class="prosa"><p>Creció bastante, así que el orden importa más que antes. Cada fase deja algo que ya sirve por sí solo. Lo que pediste de deporte y nutrición va justo después de estas, en la sección siguiente.</p></div>
+    <h2>Diez fases</h2>
+    <div class="prosa"><p>Cada fase deja algo que ya sirve por sí solo. Las tres primeras son la app que se puede enseñar; la sexta es la que la hace crecer sola; la novena es la que empieza a cobrar.</p></div>
 
     <div class="fases">
       <div class="fase primera">
@@ -664,8 +979,8 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
       </div>
       <div class="fase">
         <div class="fase-n">Fase 2</div>
-        <div><h3>El arranque con IA</h3>
-          <p>Las cinco preguntas y la semana propuesta. Aquí deja de ser una agenda.</p></div>
+        <div><h3>Bienvenida y arranque con IA</h3>
+          <p>El video de cómo funciona, las cinco preguntas y la semana propuesta. Aquí deja de ser una agenda.</p></div>
         <div class="cuenta">+0</div>
       </div>
       <div class="fase">
@@ -686,20 +1001,32 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
           <p>Peticiones con visibilidad, «oré por esto» y las contestadas.</p></div>
         <div class="cuenta">+2</div>
       </div>
-      <div class="fase">
+      <div class="fase primera">
         <div class="fase-n">Fase 6</div>
+        <div><h3>El Muro</h3>
+          <p>Oración pública, la página web abierta, publicar sin nombre y la revisión automática. Es la fase que hace que la app se conozca sola.</p></div>
+        <div class="cuenta">+1</div>
+      </div>
+      <div class="fase">
+        <div class="fase-n">Fase 7</div>
         <div><h3>Lo tuyo y de nadie más</h3>
           <p>Calendario de ciclo, privado incluso de los tutores.</p></div>
         <div class="cuenta">+1</div>
       </div>
       <div class="fase">
-        <div class="fase-n">Fase 7</div>
+        <div class="fase-n">Fase 8</div>
         <div><h3>Amigas: invitar, planear, chatear</h3>
           <p>Invitaciones, calendario del grupo con sí/no/tal vez, y el chat.</p></div>
         <div class="cuenta">+3</div>
       </div>
       <div class="fase">
-        <div class="fase-n">Fase 8</div>
+        <div class="fase-n">Fase 9</div>
+        <div><h3>Invitados y cobro</h3>
+          <p>La cuenta de invitada con funciones básicas, y la suscripción de la familia por las tiendas.</p></div>
+        <div class="cuenta">+1</div>
+      </div>
+      <div class="fase">
+        <div class="fase-n">Fase 10</div>
         <div><h3>Las fotos</h3>
           <p>Subir el horario de clases y el calendario escolar y que se lean solos.</p></div>
         <div class="cuenta">+1</div>
@@ -745,13 +1072,14 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
   <section class="cierre">
     <div class="rotulo">Antes de escribir código</div>
     <div class="prosa">
-      <p>Con esto ya está el diseño completo. Cuatro decisiones y arrancamos con la Fase 1.</p>
+      <p>El diseño ya está completo. Cinco decisiones y empezamos a programar.</p>
     </div>
     <div class="preguntas">
-      <div class="pregunta"><span>01</span><div>¿Arrancamos con la Fase 1 sola, o quieres las fases 1 a 3 juntas — que es la app con fe adentro, y la primera que de verdad se puede enseñar?</div></div>
-      <div class="pregunta"><span>02</span><div>Los devocionales y los versículos, ¿los cargamos de una fuente pública, los escribe papá, o los propone la IA?</div></div>
-      <div class="pregunta"><span>03</span><div>Para invitar amigas por correo hace falta que la app mande correos. ¿Empezamos solo con enlace para compartir por WhatsApp, que es gratis y más simple?</div></div>
-      <div class="pregunta"><span>04</span><div>¿Cuántas personas van a estar desde el principio — solo Leonora, o toda la familia?</div></div>
+      <div class="pregunta"><span>01</span><div><strong>¿Cómo se va a llamar?</strong> Sin nombre no hay ícono, ni pantalla de bienvenida, ni video. Es lo primero que se traba si no está decidido.</div></div>
+      <div class="pregunta"><span>02</span><div>¿Arrancamos con las fases 1 a 3 — el día, el arranque con IA y la fe? Es la primera versión que de verdad se puede enseñar.</div></div>
+      <div class="pregunta"><span>03</span><div>El Muro necesita oraciones desde el primer día o se ve vacío y muerto. ¿De dónde salen las primeras cien — de tu iglesia, de conocidos?</div></div>
+      <div class="pregunta"><span>04</span><div>Los devocionales y los versículos, ¿de una fuente pública, escritos por ti, o propuestos por la IA?</div></div>
+      <div class="pregunta"><span>05</span><div>¿Cuánto va a costar la suscripción de la familia al mes? Eso decide si el plan gratis puede ser tan generoso como lo diseñé.</div></div>
     </div>
   </section>
 
