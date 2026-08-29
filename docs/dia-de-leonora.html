@@ -1,16 +1,16 @@
 <title>El día de Leonora</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,600;9..144,1,600&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
 <style>
 :root{
   --papel:#FAF8FB; --tarjeta:#FFFFFF; --tarjeta-2:#F3F0F7;
   --tinta:#241F38; --tinta-suave:#655E7D; --tinta-tenue:#918AA8;
   --linea:#E6E1EC; --linea-fuerte:#D3CCDD;
   --alba:#6C5CD4; --dia:#2A768F; --tarde:#C0743A;
-  --verde:#3F8468; --fuego:#CF5734;
+  --verde:#3F8468; --fuego:#CF5734; --rosa:#B4497A;
   --alba-piso:#EFECFC; --dia-piso:#E5F1F5; --tarde-piso:#F8EDE3;
-  --verde-piso:#E6F2EC; --fuego-piso:#FBEBE5;
+  --verde-piso:#E6F2EC; --fuego-piso:#FBEBE5; --rosa-piso:#FAEBF2;
   --sombra:0 1px 2px rgba(36,31,56,.06), 0 8px 24px -12px rgba(36,31,56,.18);
   --display:"Fraunces",Georgia,"Times New Roman",serif;
   --texto:"Karla","Helvetica Neue",Arial,sans-serif;
@@ -22,9 +22,9 @@
     --tinta:#EDE9F5; --tinta-suave:#A9A1C2; --tinta-tenue:#7C7498;
     --linea:#322C4D; --linea-fuerte:#453D66;
     --alba:#A092F2; --dia:#63B6CF; --tarde:#E5A06A;
-    --verde:#71C29C; --fuego:#F08661;
+    --verde:#71C29C; --fuego:#F08661; --rosa:#E58CB4;
     --alba-piso:#272049; --dia-piso:#1B303B; --tarde-piso:#3A2A1D;
-    --verde-piso:#1B3830; --fuego-piso:#3B2119;
+    --verde-piso:#1B3830; --fuego-piso:#3B2119; --rosa-piso:#371F2C;
     --sombra:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
   }
 }
@@ -33,223 +33,199 @@
   --tinta:#EDE9F5; --tinta-suave:#A9A1C2; --tinta-tenue:#7C7498;
   --linea:#322C4D; --linea-fuerte:#453D66;
   --alba:#A092F2; --dia:#63B6CF; --tarde:#E5A06A;
-  --verde:#71C29C; --fuego:#F08661;
+  --verde:#71C29C; --fuego:#F08661; --rosa:#E58CB4;
   --alba-piso:#272049; --dia-piso:#1B303B; --tarde-piso:#3A2A1D;
-  --verde-piso:#1B3830; --fuego-piso:#3B2119;
+  --verde-piso:#1B3830; --fuego-piso:#3B2119; --rosa-piso:#371F2C;
   --sombra:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
 }
 *{box-sizing:border-box}
-body{
-  background:var(--papel); color:var(--tinta);
-  font-family:var(--texto); font-size:17px; line-height:1.65;
-  -webkit-font-smoothing:antialiased;
-}
-.envoltura{max-width:1080px;margin:0 auto;padding:0 24px 96px}
+body{background:var(--papel);color:var(--tinta);font-family:var(--texto);
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.envoltura{max-width:1180px;margin:0 auto;padding:0 24px 96px}
 h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
 p{margin:0}
 .prosa{max-width:62ch}
 .prosa p + p{margin-top:1em}
 
-/* ---- portada ---- */
 .portada{padding:88px 0 56px;border-bottom:1px solid var(--linea)}
-.marca{
-  font-family:var(--reloj); font-size:12px; letter-spacing:.16em;
-  text-transform:uppercase; color:var(--alba); margin-bottom:22px;
-}
+.marca{font-family:var(--reloj);font-size:12px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--alba);margin-bottom:22px}
 .portada h1{font-size:clamp(42px,7.5vw,76px);font-weight:600;letter-spacing:-.02em}
 .portada h1 em{font-style:italic;color:var(--alba)}
-.entradilla{margin-top:22px;font-size:20px;color:var(--tinta-suave);max-width:54ch}
+.entradilla{margin-top:22px;font-size:20px;color:var(--tinta-suave);max-width:56ch}
 
-/* ---- secciones ---- */
 .seccion{padding:64px 0;border-bottom:1px solid var(--linea)}
-.rotulo{
-  font-family:var(--reloj); font-size:11.5px; letter-spacing:.16em;
-  text-transform:uppercase; color:var(--tinta-tenue); margin-bottom:14px;
-}
+.rotulo{font-family:var(--reloj);font-size:11.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--tinta-tenue);margin-bottom:14px}
 .seccion h2{font-size:clamp(28px,4vw,38px);font-weight:600;letter-spacing:-.015em}
 .seccion > .prosa{margin-top:18px}
 
-/* ---- teléfono ---- */
-.escenario{
-  margin-top:40px; display:grid; gap:44px;
-  grid-template-columns:minmax(0,320px) minmax(0,1fr); align-items:start;
-}
-@media (max-width:820px){.escenario{grid-template-columns:1fr}}
-.telefono{
-  background:var(--tarjeta); border:1px solid var(--linea-fuerte);
-  border-radius:30px; padding:10px; box-shadow:var(--sombra); overflow:hidden;
-}
-.pantalla{background:var(--papel);border-radius:22px;padding:20px 16px 18px;overflow:hidden}
-.barra{
-  display:flex;justify-content:space-between;font-family:var(--reloj);
-  font-size:11px;color:var(--tinta-tenue);margin-bottom:20px;
-}
-.saludo{font-family:var(--display);font-size:25px;font-weight:600;letter-spacing:-.01em}
-.fecha{font-family:var(--reloj);font-size:12px;color:var(--tinta-tenue);margin-top:4px}
-.avance{margin:18px 0 8px;display:flex;align-items:center;gap:12px}
-.aro{
-  width:46px;height:46px;border-radius:50%;flex:none;
-  background:conic-gradient(var(--alba) 0 37.5%, var(--linea) 37.5% 100%);
-  display:grid;place-items:center;
-}
-.aro span{
-  width:34px;height:34px;border-radius:50%;background:var(--papel);
-  display:grid;place-items:center;font-family:var(--reloj);font-size:11px;font-weight:500;
-}
-.avance-txt{font-size:14px;line-height:1.35}
-.avance-txt b{font-weight:700}
-.avance-txt small{display:block;color:var(--tinta-tenue);font-size:12.5px}
+/* lista de cambios */
+.cambios{margin-top:34px;display:grid;gap:0}
+.cambio{display:grid;grid-template-columns:44px 1fr;gap:16px;
+  padding:15px 0;border-top:1px solid var(--linea)}
+.cambio:last-child{border-bottom:1px solid var(--linea)}
+.cambio-n{font-family:var(--reloj);font-size:12px;color:var(--alba);
+  padding-top:4px;font-variant-numeric:tabular-nums}
+.cambio h3{font-family:var(--texto);font-size:16px;font-weight:700;margin-bottom:2px}
+.cambio p{font-size:15px;color:var(--tinta-suave);max-width:62ch}
 
-.linea-dia{margin-top:16px;display:flex;flex-direction:column;gap:7px}
-.item{
-  display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;
-  background:var(--tarjeta);border:1px solid var(--linea);border-radius:13px;
-  padding:10px 11px;
-}
-.item .hora{font-family:var(--reloj);font-size:11.5px;color:var(--tinta-tenue);font-variant-numeric:tabular-nums}
-.item .nombre{font-size:14.5px;font-weight:500;line-height:1.25}
-.item .sub{font-size:11.5px;color:var(--tinta-tenue);margin-top:1px}
-.marca-check{
-  width:23px;height:23px;border-radius:50%;border:1.5px solid var(--linea-fuerte);
-  display:grid;place-items:center;font-size:12px;color:transparent;flex:none;
-}
-.hecho{opacity:.62}
+/* ---- teléfonos ---- */
+.tira{margin-top:40px;display:grid;gap:26px;
+  grid-template-columns:repeat(auto-fit,minmax(272px,1fr))}
+.columna-pantalla{display:flex;flex-direction:column;gap:13px}
+.pie-pantalla{padding:0 4px}
+.pie-pantalla h3{font-size:17px;font-weight:600;margin-bottom:4px}
+.pie-pantalla p{font-size:14.5px;color:var(--tinta-suave)}
+.telefono{background:var(--tarjeta);border:1px solid var(--linea-fuerte);
+  border-radius:28px;padding:9px;box-shadow:var(--sombra)}
+.pantalla{background:var(--papel);border-radius:21px;padding:14px 13px 15px;overflow:hidden}
+.barra{display:flex;justify-content:space-between;font-family:var(--reloj);
+  font-size:10px;color:var(--tinta-tenue);margin-bottom:12px}
+
+.barra-app{display:flex;align-items:center;gap:8px;margin-bottom:13px}
+.avatar{width:29px;height:29px;border-radius:50%;background:var(--alba-piso);
+  display:grid;place-items:center;font-size:14px;flex:none}
+.barra-app .titulo{font-family:var(--display);font-size:17px;font-weight:600;flex:1}
+.boton-barra{position:relative;width:29px;height:29px;border-radius:9px;
+  background:var(--tarjeta);border:1px solid var(--linea);
+  display:grid;place-items:center;font-size:13px;flex:none}
+.globo{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;
+  border-radius:9px;background:var(--fuego);color:#fff;font-family:var(--reloj);
+  font-size:9.5px;display:grid;place-items:center;font-weight:500}
+
+.fecha-fila{display:flex;align-items:center;gap:6px;margin-bottom:11px}
+.fecha{font-family:var(--reloj);font-size:11px;color:var(--tinta-tenue)}
+.punto-privado{width:6px;height:6px;border-radius:50%;background:var(--rosa);flex:none}
+
+.versiculo{background:linear-gradient(135deg,var(--alba-piso),var(--dia-piso));
+  border-radius:13px;padding:11px 13px;margin-bottom:12px;
+  border:1px solid color-mix(in srgb,var(--alba) 18%,transparent)}
+.versiculo .ref{font-family:var(--reloj);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--alba);margin-bottom:4px}
+.versiculo .txt{font-family:var(--display);font-size:14px;font-style:italic;line-height:1.42}
+.versiculo .mas{font-size:10.5px;color:var(--tinta-tenue);margin-top:6px}
+
+.ahora-grande{background:var(--alba-piso);border:1.5px solid var(--alba);
+  border-radius:15px;padding:13px;margin-bottom:12px}
+.ahora-grande .etiq{font-family:var(--reloj);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--alba);font-weight:500;margin-bottom:5px}
+.ahora-grande .qué{font-size:17px;font-weight:700;line-height:1.25}
+.ahora-grande .cuando{font-family:var(--reloj);font-size:11px;color:var(--tinta-suave);margin-top:5px}
+.ahora-grande .alarma{font-size:10.5px;color:var(--alba);margin-top:7px;
+  padding-top:7px;border-top:1px solid color-mix(in srgb,var(--alba) 22%,transparent)}
+
+.linea-dia{display:flex;flex-direction:column;gap:6px}
+.item{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;
+  background:var(--tarjeta);border:1px solid var(--linea);border-radius:11px;padding:8px 9px}
+.item .hora{font-family:var(--reloj);font-size:10.5px;color:var(--tinta-tenue);
+  font-variant-numeric:tabular-nums}
+.item .nombre{font-size:13.5px;font-weight:500;line-height:1.25}
+.item .sub{font-size:10.5px;color:var(--tinta-tenue);margin-top:1px}
+.marca-check{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--linea-fuerte);
+  display:grid;place-items:center;font-size:11px;color:transparent;flex:none}
+.hecho{opacity:.6}
 .hecho .nombre{text-decoration:line-through;text-decoration-color:var(--tinta-tenue)}
 .hecho .marca-check{background:var(--verde);border-color:var(--verde);color:#fff}
-.ahora{
-  border-color:var(--alba);background:var(--alba-piso);
-  box-shadow:0 0 0 3px color-mix(in srgb, var(--alba) 14%, transparent);
-}
-.ahora .nombre{font-weight:700}
-.etiqueta-ahora{
-  font-family:var(--reloj);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--alba);font-weight:500;
-}
-.racha{
-  font-family:var(--reloj);font-size:10.5px;color:var(--fuego);
-  background:var(--fuego-piso);padding:2px 6px;border-radius:20px;white-space:nowrap;
-}
 .recado{border-color:var(--tarde);background:var(--tarde-piso)}
-.recado .de{
-  font-family:var(--reloj);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--tarde);font-weight:500;
-}
-.aviso{
-  margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--tarjeta-2);
-  font-size:12.5px;color:var(--tinta-suave);border:1px solid var(--linea);
-}
+.de{font-family:var(--reloj);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tarde);font-weight:500}
+.mini-btn{font-size:9.5px;color:var(--alba);background:var(--alba-piso);
+  border:1px solid color-mix(in srgb,var(--alba) 28%,transparent);
+  border-radius:20px;padding:2px 7px;margin-top:4px;display:inline-block}
+.aviso-pie{margin-top:11px;padding:9px 11px;border-radius:11px;background:var(--tarjeta-2);
+  font-size:11.5px;color:var(--tinta-suave);border:1px solid var(--linea)}
 
-/* ---- notas al lado ---- */
-.notas{display:flex;flex-direction:column;gap:26px}
-.nota h3{font-size:19px;font-weight:600;margin-bottom:7px}
-.nota p{color:var(--tinta-suave);font-size:15.5px}
-.nota-num{
-  font-family:var(--reloj);font-size:11px;color:var(--alba);
-  letter-spacing:.1em;display:block;margin-bottom:5px;
-}
+/* fichas dentro de pantallas */
+.solapas{display:flex;gap:5px;margin-bottom:11px}
+.solapa{font-size:11.5px;padding:5px 11px;border-radius:20px;background:var(--tarjeta);
+  border:1px solid var(--linea);color:var(--tinta-suave)}
+.solapa.viva{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
+.ficha{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;
+  padding:10px 11px;margin-bottom:7px}
+.ficha .cabeza{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.ficha .quien{font-size:12.5px;font-weight:700}
+.ficha .hace{font-family:var(--reloj);font-size:9.5px;color:var(--tinta-tenue);margin-left:auto}
+.ficha .cuerpo{font-size:12.5px;line-height:1.45;color:var(--tinta-suave)}
+.ficha.sin-leer{border-left:3px solid var(--fuego)}
+.mi-respuesta{margin-top:7px;padding:7px 9px;border-radius:9px;background:var(--alba-piso);
+  font-size:11.5px;color:var(--tinta)}
+.mi-respuesta .yo{font-family:var(--reloj);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--alba);display:block;margin-bottom:2px}
+.chip{display:inline-block;font-family:var(--reloj);font-size:9px;letter-spacing:.07em;
+  text-transform:uppercase;padding:2px 7px;border-radius:20px}
+.chip.familia{background:var(--tarde-piso);color:var(--tarde)}
+.chip.grupo{background:var(--dia-piso);color:var(--dia)}
+.chip.todos{background:var(--alba-piso);color:var(--alba)}
+.chip.sola{background:var(--tarjeta-2);color:var(--tinta-tenue)}
+.chip.contestada{background:var(--verde-piso);color:var(--verde)}
+.oraron{font-size:10.5px;color:var(--tinta-tenue);margin-top:6px}
+.rsvp{display:flex;gap:6px;margin-top:9px}
+.rsvp div{flex:1;text-align:center;font-size:11.5px;padding:6px;border-radius:9px;
+  border:1px solid var(--linea);background:var(--tarjeta)}
+.rsvp .si{background:var(--verde);color:#fff;border-color:var(--verde);font-weight:700}
+.ya-dijeron{font-size:10.5px;color:var(--tinta-tenue);margin-top:7px}
+.burbuja{max-width:82%;padding:7px 10px;border-radius:13px;font-size:12px;
+  line-height:1.4;margin-bottom:5px}
+.burbuja.otra{background:var(--tarjeta);border:1px solid var(--linea)}
+.burbuja.mia{background:var(--alba);color:#fff;margin-left:auto}
+.burbuja .nom{font-family:var(--reloj);font-size:9px;color:var(--tinta-tenue);
+  display:block;margin-bottom:2px}
 
-/* ---- pasos ---- */
-.pasos{margin-top:36px;display:flex;flex-direction:column;gap:0}
-.paso{
-  display:grid;grid-template-columns:52px 1fr;gap:20px;
-  padding:22px 0;border-top:1px solid var(--linea);
-}
-.paso:last-child{border-bottom:1px solid var(--linea)}
-.paso-n{
-  font-family:var(--reloj);font-size:13px;color:var(--alba);
-  padding-top:3px;font-variant-numeric:tabular-nums;
-}
-.paso h3{font-size:20px;font-weight:600;margin-bottom:6px}
-.paso p{color:var(--tinta-suave);font-size:16px;max-width:56ch}
-.opciones{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.opcion{
-  font-size:13.5px;padding:7px 13px;border-radius:9px;
-  border:1px solid var(--linea-fuerte);background:var(--tarjeta);
-}
-.opcion.recomendada{border-color:var(--alba);color:var(--alba);background:var(--alba-piso);font-weight:500}
-.resultado{
-  margin-top:26px;padding:22px 24px;border-radius:16px;
-  background:var(--alba-piso);border:1px solid color-mix(in srgb, var(--alba) 30%, transparent);
-}
-.resultado h3{font-size:19px;font-weight:600;margin-bottom:8px;color:var(--alba)}
-.resultado p{color:var(--tinta-suave);font-size:15.5px;max-width:58ch}
-
-/* ---- clases de cosas ---- */
-.rejilla{
-  margin-top:34px;display:grid;gap:14px;
-  grid-template-columns:repeat(auto-fill,minmax(215px,1fr));
-}
-.clase{
-  background:var(--tarjeta);border:1px solid var(--linea);
-  border-radius:14px;padding:17px 18px;
-}
-.clase-tope{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+/* rejillas */
+.rejilla{margin-top:32px;display:grid;gap:14px;
+  grid-template-columns:repeat(auto-fill,minmax(232px,1fr))}
+.tarjeta-info{background:var(--tarjeta);border:1px solid var(--linea);
+  border-radius:14px;padding:17px 18px}
+.tarjeta-info h3{font-family:var(--texto);font-size:15.5px;font-weight:700;margin-bottom:6px}
+.tarjeta-info p{font-size:14.5px;color:var(--tinta-suave);line-height:1.5}
+.tarjeta-info .arriba{display:flex;align-items:center;gap:8px;margin-bottom:7px}
 .punto{width:9px;height:9px;border-radius:50%;flex:none}
-.clase h3{font-family:var(--texto);font-size:15px;font-weight:700;letter-spacing:.01em}
-.clase p{font-size:14px;color:var(--tinta-suave);line-height:1.5}
-.clase .marca-habito{
-  display:inline-block;margin-top:10px;font-family:var(--reloj);font-size:10.5px;
-  letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-tenue);
-}
 
-/* ---- familia ---- */
-.caras{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap}
-.cara{
-  background:var(--tarjeta);border:1px solid var(--linea);border-radius:14px;
-  padding:16px 18px;min-width:145px;
-}
-.circulo{
-  width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
-  font-size:19px;margin-bottom:10px;
-}
-.cara strong{display:block;font-size:15px}
-.cara span{font-size:13px;color:var(--tinta-suave)}
+.dos{display:grid;gap:26px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:32px}
+.destacado{border-radius:16px;padding:22px 24px;border:1px solid var(--linea);background:var(--tarjeta)}
+.destacado.privado{background:var(--rosa-piso);border-color:color-mix(in srgb,var(--rosa) 30%,transparent)}
+.destacado.privado h3{color:var(--rosa)}
+.destacado.despues{background:var(--tarjeta-2);border-style:dashed}
+.destacado h3{font-size:19px;font-weight:600;margin-bottom:9px}
+.destacado p{font-size:15.5px;color:var(--tinta-suave)}
+.destacado p + p{margin-top:.8em}
 
-/* ---- tablas ---- */
+/* tabla */
 .tecnico{background:var(--tarjeta-2);margin:0 -24px;padding:64px 24px}
-.tecnico .envoltura-int{max-width:1032px;margin:0 auto}
-.marco-tabla{overflow-x:auto;margin-top:28px;border:1px solid var(--linea);border-radius:12px;background:var(--tarjeta)}
-table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px}
-th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--linea);vertical-align:top}
-th{
-  font-family:var(--reloj);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--tinta-tenue);font-weight:400;
-}
+.tecnico .interior{max-width:1132px;margin:0 auto}
+.marco-tabla{overflow-x:auto;margin-top:26px;border:1px solid var(--linea);
+  border-radius:12px;background:var(--tarjeta)}
+table{border-collapse:collapse;width:100%;min-width:700px;font-size:14.5px}
+th,td{text-align:left;padding:10px 16px;border-bottom:1px solid var(--linea);vertical-align:top}
+th{font-family:var(--reloj);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tinta-tenue);font-weight:400}
 tr:last-child td{border-bottom:none}
 td code{font-family:var(--reloj);font-size:13.5px;color:var(--alba);white-space:nowrap}
 td.que{color:var(--tinta-suave)}
-.antes-despues{
-  display:grid;gap:14px;margin-top:30px;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-}
-.ad{border-radius:13px;padding:17px 19px;border:1px solid var(--linea);background:var(--tarjeta)}
-.ad .rotulo{margin-bottom:9px}
-.ad p{font-size:14.5px;color:var(--tinta-suave)}
-.ad .cifra{font-family:var(--display);font-size:31px;font-weight:600;line-height:1;margin-bottom:7px}
-.ad.nueva{border-color:var(--verde)}
-.ad.nueva .cifra{color:var(--verde)}
+tr.nueva code{color:var(--verde)}
+tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-tenue);padding:8px 16px}
 
-/* ---- fases ---- */
-.fases{margin-top:34px;display:flex;flex-direction:column;gap:0}
-.fase{
-  display:grid;grid-template-columns:78px 1fr auto;gap:20px;align-items:baseline;
-  padding:18px 0;border-top:1px solid var(--linea);
-}
+/* fases */
+.fases{margin-top:32px}
+.fase{display:grid;grid-template-columns:74px 1fr auto;gap:20px;align-items:baseline;
+  padding:17px 0;border-top:1px solid var(--linea)}
 .fase:last-child{border-bottom:1px solid var(--linea)}
 .fase-n{font-family:var(--reloj);font-size:12px;color:var(--tinta-tenue);letter-spacing:.08em}
 .fase h3{font-size:18px;font-weight:600}
-.fase p{font-size:15px;color:var(--tinta-suave);margin-top:3px;max-width:52ch}
+.fase p{font-size:15px;color:var(--tinta-suave);margin-top:3px;max-width:56ch}
 .fase .cuenta{font-family:var(--reloj);font-size:12px;color:var(--tinta-tenue);white-space:nowrap}
-.fase.primera{background:var(--verde-piso);margin:0 -16px;padding:18px 16px;border-radius:11px;border-color:transparent}
+.fase.primera{background:var(--verde-piso);margin:0 -16px;padding:17px 16px;
+  border-radius:11px;border-color:transparent}
 .fase.primera h3{color:var(--verde)}
+.fase.luego{opacity:.7}
+.fase.luego .fase-n{color:var(--alba)}
 
 .cierre{padding:60px 0 0}
-.cierre .prosa p{font-size:17.5px}
-.preguntas{margin-top:26px;display:flex;flex-direction:column;gap:11px;max-width:60ch}
-.pregunta{
-  display:flex;gap:13px;align-items:flex-start;padding:14px 16px;
-  border:1px solid var(--linea);border-radius:12px;background:var(--tarjeta);font-size:15.5px;
-}
+.preguntas{margin-top:26px;display:flex;flex-direction:column;gap:11px;max-width:62ch}
+.pregunta{display:flex;gap:13px;align-items:flex-start;padding:14px 16px;
+  border:1px solid var(--linea);border-radius:12px;background:var(--tarjeta);font-size:15.5px}
 .pregunta span{font-family:var(--reloj);font-size:12px;color:var(--alba);padding-top:3px;flex:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -257,63 +233,95 @@ td.que{color:var(--tinta-suave)}
 <div class="envoltura">
 
   <header class="portada">
-    <div class="marca">Diseño · versión 2</div>
+    <div class="marca">Diseño · versión 3</div>
     <h1>El día de <em>Leonora</em></h1>
-    <p class="entradilla">Una app que arma tu día y te ayuda a cumplirlo: tu devocional, tu estudio, lo que te toca en casa y las fechas que no se te pueden olvidar.</p>
+    <p class="entradilla">Tu día, tu fe y tu gente en una sola app. Te avisa lo que toca, te acompaña en el devocional, guarda tus oraciones y te conecta con tu familia y tus amigas.</p>
   </header>
 
   <section class="seccion">
-    <div class="rotulo">Lo que cambió</div>
-    <h2>Ahora es más simple</h2>
-    <div class="prosa">
-      <p>En el primer diseño había cosas separadas que en realidad eran la misma cosa: una lista de «actividades» por un lado y una lista de «hábitos» por otro. Pero un hábito no es otra cosa — <strong>es una actividad que se repite</strong>. Tu devocional es una actividad; lo que lo vuelve un hábito es que lo haces todos los días.</p>
-      <p>Así que ahora hay <strong>una sola lista de cosas</strong>. Cada cosa tiene un tipo (fe, estudio, casa, deporte…) y una marca que dice si se repite. Las rachas salen solas de las casillas que vas marcando: no hay que guardarlas aparte.</p>
+    <div class="rotulo">Lo que pediste</div>
+    <h2>Diez cambios</h2>
+    <div class="cambios">
+      <div class="cambio"><div class="cambio-n">01</div><div>
+        <h3>Alarmas que dicen qué hacer</h3>
+        <p>Te avisa antes de cada cosa, con el nombre de lo que toca. Viene activado por defecto y lo puedes cambiar — para toda la app o para una cosa en particular.</p></div></div>
+      <div class="cambio"><div class="cambio-n">02</div><div>
+        <h3>Varios devocionales al día</h3>
+        <p>Uno en la mañana y otro en la noche, o los que quieras. Ya no es un solo bloque.</p></div></div>
+      <div class="cambio"><div class="cambio-n">03</div><div>
+        <h3>Colegio o trabajo</h3>
+        <p>La misma app sirve para una estudiante y para un adulto que trabaja. Cambia la palabra, no el funcionamiento.</p></div></div>
+      <div class="cambio"><div class="cambio-n">04</div><div>
+        <h3>Campanita de avisos, con respuesta</h3>
+        <p>Un botón arriba junta todos los recados y avisos. Y puedes contestarle a tu mamá desde ahí: tu respuesta se guarda y ella la ve.</p></div></div>
+      <div class="cambio"><div class="cambio-n">05</div><div>
+        <h3>Grupos, no solo familia</h3>
+        <p>Invitas a Emma y a Sofía. Cada una decide si tú ves su calendario o no. Y hay un calendario del grupo donde una propone algo y las demás contestan.</p></div></div>
+      <div class="cambio"><div class="cambio-n">06</div><div>
+        <h3>Chat de familia y de grupo</h3>
+        <p>Un botón de chat arriba, al lado de la campanita. Cada grupo tiene el suyo.</p></div></div>
+      <div class="cambio"><div class="cambio-n">07</div><div>
+        <h3>Invitar a alguien a tu devocional</h3>
+        <p>Tocas el devocional de las 6:30, pones un correo y la invitas. Pueden hacerlo dentro de la app o por una llamada de WhatsApp.</p></div></div>
+      <div class="cambio"><div class="cambio-n">08</div><div>
+        <h3>Oraciones, y oraciones contestadas</h3>
+        <p>Escribes una necesidad y eliges quién la puede ver. Cuando Dios contesta, la pasas a «contestadas» y queda guardada.</p></div></div>
+      <div class="cambio"><div class="cambio-n">09</div><div>
+        <h3>Versículo del día</h3>
+        <p>Arriba en tu pantalla. Si lo tocas, lo ves en varias versiones y con una imagen linda para compartir.</p></div></div>
+      <div class="cambio"><div class="cambio-n">10</div><div>
+        <h3>Calendario de periodo, privado</h3>
+        <p>Si eres mujer, la app te pregunta tu último periodo y lleva el calendario. Un puntito discreto que solo tú entiendes.</p></div></div>
     </div>
   </section>
 
   <section class="seccion">
-    <div class="rotulo">La primera pantalla</div>
-    <h2>Hoy</h2>
-    <div class="prosa"><p>Esta es la pantalla que abres apenas entras. Es la única que necesitas para funcionar en el día.</p></div>
+    <div class="rotulo">Las pantallas</div>
+    <h2>Cómo se va a ver</h2>
+    <div class="prosa"><p>Cuatro pantallas. La de <strong>Hoy</strong> es la que abres siempre; a las otras tres llegas desde los botones de arriba.</p></div>
 
-    <div class="escenario">
-      <div class="telefono">
-        <div class="pantalla">
-          <div class="barra"><span>9:41</span><span>▮▮▮</span></div>
+    <div class="tira">
 
-          <div class="saludo">Buenos días, Leonora</div>
-          <div class="fecha">Miércoles 3 de septiembre</div>
+      <!-- ============ HOY ============ -->
+      <div class="columna-pantalla">
+        <div class="telefono"><div class="pantalla">
+          <div class="barra"><span>14:05</span><span>▮▮▮</span></div>
 
-          <div class="avance">
-            <div class="aro"><span>3/8</span></div>
-            <div class="avance-txt">
-              <b>Vas bien</b>
-              <small>Te faltan 5 cosas hoy</small>
-            </div>
+          <div class="barra-app">
+            <div class="avatar">👧</div>
+            <div class="titulo">Hoy</div>
+            <div class="boton-barra">💬<div class="globo">2</div></div>
+            <div class="boton-barra">🔔<div class="globo">3</div></div>
+          </div>
+
+          <div class="fecha-fila">
+            <span class="fecha">Miércoles 3 de septiembre</span>
+            <span class="punto-privado"></span>
+          </div>
+
+          <div class="versiculo">
+            <div class="ref">Versículo de hoy</div>
+            <div class="txt">«Todo lo puedo en Cristo que me fortalece.»</div>
+            <div class="mas">Filipenses 4:13 · Tocar para ver y compartir</div>
+          </div>
+
+          <div class="ahora-grande">
+            <div class="etiq">Ahora te toca</div>
+            <div class="qué">📘 Terminar de estudiar</div>
+            <div class="cuando">14:00 — 14:30 · faltan 25 min</div>
+            <div class="alarma">⏰ Te avisé a las 13:50</div>
           </div>
 
           <div class="linea-dia">
             <div class="item hecho">
               <div class="hora">6:30</div>
-              <div><div class="nombre">💜 Devocional</div><div class="sub">1 hora · Salmos 23</div></div>
-              <div class="marca-check">✓</div>
-            </div>
-            <div class="item hecho">
-              <div class="hora">7:30</div>
-              <div><div class="nombre">🏠 Tender la cama</div></div>
+              <div><div class="nombre">💜 Devocional</div>
+                <div class="sub">1 h · con papá 🔥 12 días</div></div>
               <div class="marca-check">✓</div>
             </div>
             <div class="item hecho">
               <div class="hora">8:00</div>
-              <div><div class="nombre">📘 Colegio</div><div class="sub">Hasta las 13:30</div></div>
-              <div class="marca-check">✓</div>
-            </div>
-            <div class="item ahora">
-              <div class="hora">14:00</div>
-              <div>
-                <div class="etiqueta-ahora">Ahora</div>
-                <div class="nombre">📘 Terminar de estudiar</div>
-              </div>
+              <div><div class="nombre">📘 Colegio</div></div>
               <div class="marca-check">✓</div>
             </div>
             <div class="item">
@@ -323,10 +331,7 @@ td.que{color:var(--tinta-suave)}
             </div>
             <div class="item recado">
               <div class="hora">17:00</div>
-              <div>
-                <div class="de">Recado de papá</div>
-                <div class="nombre">Sacar la basura</div>
-              </div>
+              <div><div class="de">Recado de papá</div><div class="nombre">Sacar la basura</div></div>
               <div class="marca-check">✓</div>
             </div>
             <div class="item">
@@ -335,278 +340,404 @@ td.que{color:var(--tinta-suave)}
               <div class="marca-check">✓</div>
             </div>
             <div class="item">
-              <div class="hora">21:30</div>
-              <div><div class="nombre">🌙 Dormir</div></div>
+              <div class="hora">21:00</div>
+              <div><div class="nombre">💜 Devocional de la noche</div>
+                <div class="sub">20 min</div>
+                <span class="mini-btn">+ Invitar a alguien</span></div>
               <div class="marca-check">✓</div>
             </div>
           </div>
 
-          <div class="aviso">🎂 Mañana es el cumpleaños de la abuela</div>
+          <div class="aviso-pie">🎂 Mañana: cumpleaños de la abuela</div>
+        </div></div>
+        <div class="pie-pantalla">
+          <h3>Hoy</h3>
+          <p>Lo de ahora, arriba y grande. Dos devocionales. El recado de papá en naranja. El puntito rosa junto a la fecha solo lo entiendes tú.</p>
         </div>
       </div>
 
-      <div class="notas">
-        <div class="nota">
-          <span class="nota-num">Lo primero que ves</span>
-          <h3>Solo el día de hoy</h3>
-          <p>No una semana entera ni un calendario lleno. Una lista de arriba abajo, en orden de hora, y casillas grandes para marcar. Nada más.</p>
-        </div>
-        <div class="nota">
-          <span class="nota-num">Lo resaltado</span>
-          <h3>Lo que toca ahora</h3>
-          <p>La app sabe la hora, así que resalta la cosa del momento. Si abres la app a las 2:05, lo primero que ves es «terminar de estudiar».</p>
-        </div>
-        <div class="nota">
-          <span class="nota-num">En naranja</span>
-          <h3>Los recados de tus papás</h3>
-          <p>Cuando tu papá o tu mamá te mandan algo, aparece aquí mismo con otro color, para que no se pierda entre lo de siempre.</p>
-        </div>
-        <div class="nota">
-          <span class="nota-num">Abajo</span>
-          <h3>Lo que viene</h3>
-          <p>Un cumpleaños, un examen, un feriado. Solo un aviso corto, sin sacarte del día.</p>
-        </div>
-        <div class="nota">
-          <span class="nota-num">Al marcar</span>
-          <h3>Tu racha crece</h3>
-          <p>Cada vez que marcas tu devocional, el contador sube. Doce días seguidos se siente distinto que doce días sueltos.</p>
+      <!-- ============ AVISOS ============ -->
+      <div class="columna-pantalla">
+        <div class="telefono"><div class="pantalla">
+          <div class="barra"><span>14:06</span><span>▮▮▮</span></div>
+
+          <div class="barra-app">
+            <div class="boton-barra">←</div>
+            <div class="titulo">Avisos</div>
+            <div class="boton-barra">⚙️</div>
+          </div>
+
+          <div class="solapas">
+            <div class="solapa viva">Todo</div>
+            <div class="solapa">Recados</div>
+            <div class="solapa">Invitaciones</div>
+          </div>
+
+          <div class="ficha sin-leer">
+            <div class="cabeza"><span class="avatar" style="width:20px;height:20px;font-size:10px;background:var(--tarde-piso)">👩</span>
+              <span class="quien">Mamá</span><span class="chip familia">Recado</span>
+              <span class="hace">10:12</span></div>
+            <div class="cuerpo">Mañana llevas el uniforme de deporte, no se te olvide 💙</div>
+            <div class="mi-respuesta"><span class="yo">Tu respuesta</span>Ya lo dejé listo en la silla ✓</div>
+          </div>
+
+          <div class="ficha sin-leer">
+            <div class="cabeza"><span class="avatar" style="width:20px;height:20px;font-size:10px;background:var(--dia-piso)">👧</span>
+              <span class="quien">Emma</span><span class="chip grupo">Invitación</span>
+              <span class="hace">9:40</span></div>
+            <div class="cuerpo">Te invitó a su devocional del sábado a las 8:00</div>
+            <div class="rsvp"><div class="si">Voy</div><div>No puedo</div></div>
+          </div>
+
+          <div class="ficha sin-leer">
+            <div class="cabeza"><span class="avatar" style="width:20px;height:20px;font-size:10px;background:var(--tarde-piso)">👨</span>
+              <span class="quien">Papá</span><span class="chip familia">Recado</span>
+              <span class="hace">8:15</span></div>
+            <div class="cuerpo">Sacar la basura antes de la cena</div>
+          </div>
+
+          <div class="ficha">
+            <div class="cabeza"><span class="avatar" style="width:20px;height:20px;font-size:10px;background:var(--alba-piso)">🙏</span>
+              <span class="quien">Sofía</span><span class="chip grupo">Oración</span>
+              <span class="hace">Ayer</span></div>
+            <div class="cuerpo">Pidió oración por su mamá, que está enferma</div>
+          </div>
+
+          <div class="ficha">
+            <div class="cabeza"><span class="avatar" style="width:20px;height:20px;font-size:10px;background:var(--tarjeta-2)">⏰</span>
+              <span class="quien">Alarma</span><span class="chip sola">Tarea</span>
+              <span class="hace">13:50</span></div>
+            <div class="cuerpo">En 10 minutos: terminar de estudiar</div>
+          </div>
+        </div></div>
+        <div class="pie-pantalla">
+          <h3>La campanita</h3>
+          <p>Todo junto: recados, invitaciones, oraciones de tus amigas y las alarmas que sonaron. Le contestas a tu mamá desde aquí y ella lo ve.</p>
         </div>
       </div>
+
+      <!-- ============ ORACIONES ============ -->
+      <div class="columna-pantalla">
+        <div class="telefono"><div class="pantalla">
+          <div class="barra"><span>21:30</span><span>▮▮▮</span></div>
+
+          <div class="barra-app">
+            <div class="boton-barra">←</div>
+            <div class="titulo">Oraciones</div>
+            <div class="boton-barra">+</div>
+          </div>
+
+          <div class="solapas">
+            <div class="solapa viva">Activas</div>
+            <div class="solapa">Contestadas · 7</div>
+          </div>
+
+          <div class="ficha">
+            <div class="cabeza"><span class="quien">Por el examen de mate</span>
+              <span class="chip sola">Solo yo</span></div>
+            <div class="cuerpo">Que Dios me ayude a concentrarme y a estar tranquila el viernes.</div>
+          </div>
+
+          <div class="ficha">
+            <div class="cabeza"><span class="quien">Por la abuela</span>
+              <span class="chip familia">Mi familia</span></div>
+            <div class="cuerpo">Que se recupere pronto de la operación de la rodilla.</div>
+            <div class="oraron">🙏 Papá, mamá y 2 más oraron por esto</div>
+          </div>
+
+          <div class="ficha">
+            <div class="cabeza"><span class="quien">Por la mamá de Sofía</span>
+              <span class="chip grupo">Amigas</span></div>
+            <div class="cuerpo">Sofía pidió que oremos por su mamá.</div>
+            <div class="oraron">🙏 Tú y Emma oraron por esto</div>
+          </div>
+
+          <div class="ficha" style="background:var(--verde-piso);border-color:color-mix(in srgb,var(--verde) 28%,transparent)">
+            <div class="cabeza"><span class="quien">Por la mudanza</span>
+              <span class="chip contestada">Contestada</span></div>
+            <div class="cuerpo">«Apareció una casa cerca del colegio, justo lo que pedimos. Dios sí escuchó.»</div>
+            <div class="oraron">Contestada el 12 de agosto</div>
+          </div>
+        </div></div>
+        <div class="pie-pantalla">
+          <h3>Oraciones</h3>
+          <p>Escribes lo que necesitas y eliges quién lo ve. Cuando Dios contesta, la mueves a «contestadas» y escribes cómo — para acordarte después.</p>
+        </div>
+      </div>
+
+      <!-- ============ GRUPO ============ -->
+      <div class="columna-pantalla">
+        <div class="telefono"><div class="pantalla">
+          <div class="barra"><span>16:20</span><span>▮▮▮</span></div>
+
+          <div class="barra-app">
+            <div class="boton-barra">←</div>
+            <div class="titulo">Amigas ✨</div>
+            <div class="boton-barra">＋</div>
+          </div>
+
+          <div class="fecha-fila"><span class="fecha">Leonora · Emma · Sofía</span></div>
+
+          <div class="ficha" style="border-color:var(--dia);background:var(--dia-piso)">
+            <div class="cabeza"><span class="quien">🎬 Cine el jueves</span>
+              <span class="hace">Emma</span></div>
+            <div class="cuerpo">Jueves 4 · 17:00 · ¿pueden?</div>
+            <div class="rsvp"><div class="si">Sí puedo</div><div>No puedo</div><div>Tal vez</div></div>
+            <div class="ya-dijeron">Emma: sí · Sofía: todavía no contesta</div>
+          </div>
+
+          <div class="ficha" style="padding:10px 11px">
+            <div class="cabeza"><span class="quien">💬 Chat del grupo</span><span class="hace">ahora</span></div>
+            <div style="margin-top:7px">
+              <div class="burbuja otra"><span class="nom">Emma</span>¿Vamos al de las 5 o al de las 7?</div>
+              <div class="burbuja mia">Al de las 5 mejor, tengo devocional a las 9 🙏</div>
+              <div class="burbuja otra"><span class="nom">Sofía</span>A mí me sirve el de las 5</div>
+            </div>
+          </div>
+
+          <div class="aviso-pie">🔒 Sofía comparte su calendario contigo. Emma no — ella lo eligió así.</div>
+        </div></div>
+        <div class="pie-pantalla">
+          <h3>Tu grupo</h3>
+          <p>Una propone, las demás contestan. El chat está dentro del mismo grupo. Y cada amiga decide si comparte su calendario contigo.</p>
+        </div>
+      </div>
+
     </div>
   </section>
 
   <section class="seccion">
-    <div class="rotulo">El arranque</div>
-    <h2>Cómo se arma tu semana</h2>
+    <div class="rotulo">Cambio 01</div>
+    <h2>Cómo funcionan los avisos</h2>
     <div class="prosa">
-      <p>No empiezas con una pantalla en blanco. Contestas cinco preguntas y la inteligencia artificial te propone una semana completa. Tú la revisas y le cambias lo que quieras.</p>
+      <p>La regla por defecto: <strong>te avisa 10 minutos antes de cada cosa</strong>, y el aviso dice qué es. Eso viene activado desde el primer día, sin que configures nada.</p>
     </div>
-
-    <div class="pasos">
-      <div class="paso">
-        <div class="paso-n">01</div>
-        <div>
-          <h3>¿Quién eres?</h3>
-          <p>Tu nombre y tu edad. La edad importa: no se le propone lo mismo a alguien de 8 que a alguien de 13.</p>
-        </div>
-      </div>
-      <div class="paso">
-        <div class="paso-n">02</div>
-        <div>
-          <h3>¿A qué hora te levantas y te acuestas?</h3>
-          <p>Esos dos límites definen el largo de tu día. Todo lo demás se acomoda adentro.</p>
-        </div>
-      </div>
-      <div class="paso">
-        <div class="paso-n">03</div>
-        <div>
-          <h3>Tu devocional</h3>
-          <p>Cuántos minutos al día quieres, y si lo prefieres en la mañana o en la noche. Este es el único bloque que se coloca primero, antes que todo lo demás.</p>
-          <div class="opciones">
-            <div class="opcion">15 min</div>
-            <div class="opcion">30 min</div>
-            <div class="opcion recomendada">1 hora</div>
-            <div class="opcion">En la mañana</div>
-            <div class="opcion">En la noche</div>
-          </div>
-        </div>
-      </div>
-      <div class="paso">
-        <div class="paso-n">04</div>
-        <div>
-          <h3>Tu colegio</h3>
-          <p>Aquí tienes dos caminos y los dos funcionan igual de bien. Si tienes a mano una foto de tu horario de clases o del calendario escolar, la subes y la app lee las horas y las fechas sola. Si no la tienes, escribes tus horarios a mano y sigues adelante.</p>
-          <div class="opciones">
-            <div class="opcion recomendada">📷 Subir una foto — más rápido</div>
-            <div class="opcion">✍️ Escribirlo yo misma</div>
-          </div>
-        </div>
-      </div>
-      <div class="paso">
-        <div class="paso-n">05</div>
-        <div>
-          <h3>¿Qué te toca en casa y qué te gusta hacer?</h3>
-          <p>Ordenar tu cuarto, lavar los platos, sacar la basura. Y después lo que disfrutas: leer, dibujar, deporte, música. Eso también entra en el día — un horario sin nada que te guste no se cumple.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="resultado">
-      <h3>Y entonces la IA te arma la semana</h3>
-      <p>Te la muestra completa, de lunes a domingo, con todo puesto en su hora. Tú le dices «me gusta» o «cámbiame esto». Nada se guarda hasta que tú lo apruebes.</p>
-    </div>
-  </section>
-
-  <section class="seccion">
-    <div class="rotulo">El vocabulario</div>
-    <h2>Todo es una «cosa», con su tipo</h2>
-    <div class="prosa">
-      <p>Cada cosa que haces en el día pertenece a un tipo, y cada tipo tiene su color. Eso es todo el sistema: no hay que aprender nada más.</p>
-    </div>
-
     <div class="rejilla">
-      <div class="clase">
-        <div class="clase-tope"><div class="punto" style="background:var(--alba)"></div><h3>💜 Fe</h3></div>
-        <p>Devocional, leer la Biblia, orar, la iglesia.</p>
-        <div class="marca-habito">Casi siempre se repite</div>
+      <div class="tarjeta-info">
+        <h3>Para toda la app</h3>
+        <p>En Ajustes cambias con cuántos minutos de anticipación quieres que te avise, y pones horas de silencio — por ejemplo, que no suene nada después de las 22:00.</p>
       </div>
-      <div class="clase">
-        <div class="clase-tope"><div class="punto" style="background:var(--dia)"></div><h3>📘 Estudio</h3></div>
-        <p>Clases, tareas, repasar para un examen.</p>
-        <div class="marca-habito">Termina a tu hora fijada</div>
+      <div class="tarjeta-info">
+        <h3>Para una cosa en particular</h3>
+        <p>Cada actividad puede tener su propia regla. El devocional te avisa 15 minutos antes; ordenar el cuarto, justo a la hora; dormir, media hora antes.</p>
       </div>
-      <div class="clase">
-        <div class="clase-tope"><div class="punto" style="background:var(--tarde)"></div><h3>🏠 Casa</h3></div>
-        <p>Ordenar tu cuarto, tender la cama, lavar los platos.</p>
-        <div class="marca-habito">Casi siempre se repite</div>
+      <div class="tarjeta-info">
+        <h3>Al abrir la app</h3>
+        <p>Lo que toca ahora sale arriba, grande y en morado, antes que la lista. No tienes que buscar en qué parte del día vas.</p>
       </div>
-      <div class="clase">
-        <div class="clase-tope"><div class="punto" style="background:var(--verde)"></div><h3>⚽ Deporte</h3></div>
-        <p>Ejercicio, entrenamiento, salir a caminar.</p>
-        <div class="marca-habito">Tú eliges cuántas veces</div>
-      </div>
-      <div class="clase">
-        <div class="clase-tope"><div class="punto" style="background:var(--fuego)"></div><h3>👨‍👩‍👧 Familia</h3></div>
-        <p>La cena, salir juntos, visitar a los abuelos.</p>
-        <div class="marca-habito">No se mueve de su hora</div>
-      </div>
-      <div class="clase">
-        <div class="clase-tope"><div class="punto" style="background:var(--tinta-tenue)"></div><h3>🌙 Descanso</h3></div>
-        <p>Dormir, tiempo libre, no hacer nada.</p>
-        <div class="marca-habito">También cuenta</div>
+      <div class="tarjeta-info">
+        <h3>Todo llega a la campanita</h3>
+        <p>Las alarmas, los recados, las invitaciones y las oraciones caen en el mismo sitio, con el número en rojo de lo que no has visto.</p>
       </div>
     </div>
   </section>
 
   <section class="seccion">
-    <div class="rotulo">La familia</div>
-    <h2>Cada quien entra con su cara</h2>
+    <div class="rotulo">Cambios 05, 06 y 07</div>
+    <h2>Tu gente</h2>
     <div class="prosa">
-      <p>La app es de la familia, no de una sola persona. Al abrirla ves las caras de todos y tocas la tuya.</p>
+      <p>La familia deja de ser algo aparte: <strong>una familia es un grupo</strong>, solo que de tipo familia. Eso hace que todo lo que sirve para tu familia sirva igual para tus amigas — el chat, el calendario compartido, las oraciones.</p>
     </div>
 
-    <div class="caras">
-      <div class="cara">
-        <div class="circulo" style="background:var(--tarde-piso)">👨</div>
-        <strong>Papá</strong><span>Ve el día de todos</span>
+    <div class="dos">
+      <div class="destacado">
+        <h3>Cada quien decide qué comparte</h3>
+        <p>Cuando invitas a Emma, ella entra al grupo pero <em>ella</em> elige si tú ves su calendario. Puede decir que no y seguir en el grupo sin problema. Y puede cambiar de opinión cuando quiera.</p>
+        <p>Es un interruptor por persona y por grupo: Sofía puede compartir su calendario contigo y no con otro grupo.</p>
       </div>
-      <div class="cara">
-        <div class="circulo" style="background:var(--fuego-piso)">👩</div>
-        <strong>Mamá</strong><span>Ve el día de todos</span>
+      <div class="destacado">
+        <h3>El calendario del grupo</h3>
+        <p>Cualquiera del grupo propone algo — «cine el jueves a las 5». A las demás les llega a la campanita y contestan <strong>sí</strong>, <strong>no</strong> o <strong>tal vez</strong>.</p>
+        <p>Quien propuso ve quién contestó qué, y si alguien todavía no ha contestado.</p>
       </div>
-      <div class="cara">
-        <div class="circulo" style="background:var(--alba-piso)">👧</div>
-        <strong>Leonora</strong><span>Ve el suyo</span>
+      <div class="destacado">
+        <h3>El chat</h3>
+        <p>Un botón arriba, al lado de la campanita. Cada grupo tiene su chat — el de tu familia y el de tus amigas son distintos.</p>
       </div>
-      <div class="cara">
-        <div class="circulo" style="background:var(--dia-piso)">🧒</div>
-        <strong>Tu hermano</strong><span>Ve el suyo</span>
+      <div class="destacado">
+        <h3>Invitar a tu devocional</h3>
+        <p>Tocas el devocional en tu pantalla de Hoy y pones el correo de quien quieras — tu papá, una amiga, alguien que ni tiene la app todavía.</p>
+        <p>Le llega la invitación y elige cómo: <strong>dentro de la app</strong>, o <strong>por una llamada de WhatsApp</strong> a la hora acordada.</p>
       </div>
     </div>
+  </section>
 
-    <div class="prosa" style="margin-top:30px">
-      <p><strong>Papá y mamá</strong> ven cómo va el día de cada hijo y pueden mandarles tres tipos de recado: una <em>tarea</em> («saca la basura»), un <em>recordatorio</em> («mañana llevas el uniforme de deporte») o un <em>consejo</em> («acuérdate de repasar mate antes del viernes»).</p>
-      <p><strong>Cada hijo</strong> ve solo su día. Los recados le llegan a su pantalla de Hoy, marcados en naranja. Puede marcarlos como hechos, y sus papás lo ven.</p>
+  <section class="seccion">
+    <div class="rotulo">Cambios 08 y 09</div>
+    <h2>La parte de fe</h2>
+
+    <div class="dos">
+      <div class="destacado">
+        <h3>Oraciones por los demás</h3>
+        <p>Escribes una necesidad y eliges quién la ve: <strong>solo yo</strong>, <strong>mi familia</strong>, <strong>un grupo</strong> o <strong>todas mis personas</strong>.</p>
+        <p>Los que la ven pueden tocar «oré por esto», y a ti te aparece <em>«Papá, mamá y 2 más oraron por esto»</em>. Saber que alguien oró por ti cambia el día.</p>
+        <p><strong>Nota:</strong> «todas mis personas» significa tu familia y tus grupos, nunca internet abierto. Una necesidad personal tuya no debería quedar a la vista de desconocidos.</p>
+      </div>
+      <div class="destacado">
+        <h3>Oraciones contestadas</h3>
+        <p>Cuando Dios contesta, mueves la oración a «contestadas» y escribes cómo pasó. Se queda ahí para siempre.</p>
+        <p>Con el tiempo tienes una lista de cosas que Dios hizo, con fecha. Eso es lo que fortalece la fe: acordarse.</p>
+      </div>
+      <div class="destacado">
+        <h3>El versículo del día</h3>
+        <p>Sale arriba en tu pantalla de Hoy, corto. Si lo tocas se abre completo, con <strong>varias versiones</strong> lado a lado para compararlas.</p>
+        <p>Y un botón de compartir que arma una <strong>imagen bonita</strong> con el versículo, lista para mandar por WhatsApp o subir a donde quieras.</p>
+      </div>
+      <div class="destacado privado">
+        <h3>Lo tuyo y de nadie más</h3>
+        <p>Si eres mujer, la app te pregunta una sola vez cuándo empezó tu último periodo y a partir de ahí lleva el calendario y te avisa antes.</p>
+        <p>En la pantalla es <strong>un puntito rosa junto a la fecha</strong>. Sin palabras, sin colores llamativos. Si alguien te ve el teléfono, no entiende nada.</p>
+        <p><strong>Esta es la única parte que tus papás no pueden ver</strong>, aunque sean tutores. Lo decidí así a propósito: es información de salud tuya.</p>
+      </div>
     </div>
   </section>
 
   <section class="tecnico">
-   <div class="envoltura-int">
+   <div class="interior">
     <div class="rotulo">Para papá</div>
-    <h2>Las tablas</h2>
-    <div class="prosa"><p>La simplificación de arriba tiene un efecto directo en la base de datos: donde había cuatro tablas para hábitos, ahora hay una columna.</p></div>
-
-    <div class="antes-despues">
-      <div class="ad">
-        <div class="rotulo">Diseño anterior</div>
-        <div class="cifra">20</div>
-        <p>Actividades y hábitos separados, registros de hábito, rachas guardadas, plantillas partidas en dos, importaciones partidas en dos.</p>
-      </div>
-      <div class="ad nueva">
-        <div class="rotulo">Diseño nuevo</div>
-        <div class="cifra">11</div>
-        <p>Un hábito es una actividad con <code>es_habito</code>. La racha se calcula de las casillas marcadas. Las fechas leídas de una foto son eventos sin confirmar.</p>
-      </div>
+    <h2>Las 22 tablas</h2>
+    <div class="prosa">
+      <p>La app pasó de «horario con hábitos» a «horario + fe + gente». Eso son 11 tablas más. Donde se pudo, seguí quitando: <strong>familias desapareció</strong> (una familia es un grupo), <strong>las rachas y las oraciones contestadas son consultas</strong>, no tablas, y <strong>el chat leído es una columna</strong> en miembros_grupo.</p>
     </div>
 
     <div class="marco-tabla">
       <table>
         <thead><tr><th>Tabla</th><th>Qué guarda</th><th>Lo importante</th></tr></thead>
         <tbody>
-          <tr><td><code>familias</code></td><td class="que">La familia. Es lo que se vende.</td><td class="que">Una compra = una familia</td></tr>
-          <tr><td><code>personas</code></td><td class="que">Cada miembro, con su rol.</td><td class="que"><code>rol</code>: tutor o hijo</td></tr>
-          <tr><td><code>ajustes</code></td><td class="que">Despertar, dormir, minutos de devocional, hora de fin de estudio.</td><td class="que">Que las 14:00 sea un dato y no una constante es lo que lo hace vendible</td></tr>
-          <tr><td><code>actividades</code></td><td class="que">La lista única de cosas.</td><td class="que"><code>tipo</code> + <code>es_habito</code> + <code>es_fijo</code> reemplazan 4 tablas</td></tr>
-          <tr><td><code>rutina</code></td><td class="que">Los bloques de la semana normal.</td><td class="que"><code>modo</code>: escolar o vacaciones</td></tr>
-          <tr><td><code>dias</code></td><td class="que">El plan de una fecha concreta.</td><td class="que"><code>nota_ia</code> explica por qué cambió el día</td></tr>
-          <tr><td><code>tareas_dia</code></td><td class="que">Lo que ella marca. La tabla que la app lee todo el día.</td><td class="que">Es una copia: mover algo hoy no daña la rutina</td></tr>
-          <tr><td><code>eventos</code></td><td class="que">Feriados, exámenes, cumpleaños, viajes.</td><td class="que"><code>confirmado</code>: nada que lea la IA entra sin aprobación</td></tr>
-          <tr><td><code>encargos</code></td><td class="que">Lo que papá y mamá mandan a un hijo.</td><td class="que"><code>tipo</code>: tarea, recordatorio o consejo</td></tr>
-          <tr><td><code>fotos</code></td><td class="que">Las imágenes de horarios y calendarios subidas.</td><td class="que">Las fechas leídas van directo a <code>eventos</code> sin confirmar</td></tr>
-          <tr><td><code>devocionales</code></td><td class="que">Pasaje, texto y pregunta de reflexión.</td><td class="que">Sin esto, «Devocional 6:30» es una casilla vacía</td></tr>
+          <tr class="grupo-cab"><td colspan="3">El día — Fase 1</td></tr>
+          <tr><td><code>personas</code></td><td class="que">Cada persona, su rol y su sexo.</td><td class="que"><code>sexo</code> activa el calendario de ciclo</td></tr>
+          <tr><td><code>ajustes</code></td><td class="que">Despertar, dormir, avisos, ocupación.</td><td class="que"><code>ocupacion</code>: colegio o trabajo · <code>avisar_antes_min</code> = 10</td></tr>
+          <tr><td><code>actividades</code></td><td class="que">La lista única de cosas.</td><td class="que"><code>tipo</code> + <code>es_habito</code> + <code>avisar_antes_min</code> propio</td></tr>
+          <tr><td><code>rutina</code></td><td class="que">Los bloques de la semana normal.</td><td class="que">Varias filas de tipo fe = varios devocionales</td></tr>
+          <tr><td><code>dias</code></td><td class="que">El plan de una fecha.</td><td class="que"><code>nota_ia</code> explica por qué cambió</td></tr>
+          <tr><td><code>tareas_dia</code></td><td class="que">Lo que ella marca.</td><td class="que">Es una copia: mover hoy no daña la rutina</td></tr>
+          <tr class="nueva"><td><code>avisos</code></td><td class="que">Alarmas, recados, invitaciones, oraciones.</td><td class="que">Es lo que alimenta la campanita</td></tr>
+
+          <tr class="grupo-cab"><td colspan="3">Fe — Fase 3</td></tr>
+          <tr><td><code>devocionales</code></td><td class="que">Pasaje, texto y pregunta.</td><td class="que">Sin esto el devocional es una casilla vacía</td></tr>
+          <tr class="nueva"><td><code>versiculos</code></td><td class="que">El versículo de cada día del año.</td><td class="que"><code>dia_del_año</code>: no hay que cargarlos cada año</td></tr>
+          <tr class="nueva"><td><code>versiculos_versiones</code></td><td class="que">El mismo versículo en RVR, NVI, NTV…</td><td class="que">Añadir una versión es una fila, no una columna</td></tr>
+          <tr class="nueva"><td><code>versiculos_guardados</code></td><td class="que">Sus favoritos.</td><td class="que">La imagen para compartir se genera en el teléfono</td></tr>
+
+          <tr class="grupo-cab"><td colspan="3">La gente — Fase 4</td></tr>
+          <tr class="nueva"><td><code>grupos</code></td><td class="que">Familia, amigas, iglesia.</td><td class="que"><code>tipo</code>: la familia es un grupo más</td></tr>
+          <tr class="nueva"><td><code>miembros_grupo</code></td><td class="que">Quién está en cada grupo.</td><td class="que"><code>ve_mi_calendario</code>: el interruptor de Emma</td></tr>
+          <tr><td><code>encargos</code></td><td class="que">Recados de papá y mamá.</td><td class="que"><code>respuesta</code> + <code>respondido_en</code>: ella contesta</td></tr>
+          <tr><td><code>eventos</code></td><td class="que">Feriados, exámenes, cumpleaños, planes.</td><td class="que"><code>confirmado</code>: nada de una foto entra sin aprobar</td></tr>
+
+          <tr class="grupo-cab"><td colspan="3">Oración — Fase 5</td></tr>
+          <tr class="nueva"><td><code>oraciones</code></td><td class="que">Peticiones y testimonios.</td><td class="que"><code>visibilidad</code> y <code>estado</code>; contestadas = un filtro</td></tr>
+          <tr class="nueva"><td><code>oraciones_apoyo</code></td><td class="que">Quién oró por qué.</td><td class="que">De aquí sale «4 personas oraron por esto»</td></tr>
+
+          <tr class="grupo-cab"><td colspan="3">Lo privado — Fase 6</td></tr>
+          <tr class="nueva"><td><code>ciclo</code></td><td class="que">Fechas de periodo.</td><td class="que"><strong>Única tabla sin excepción de tutor.</strong> Solo ella</td></tr>
+
+          <tr class="grupo-cab"><td colspan="3">Social — Fase 7</td></tr>
+          <tr class="nueva"><td><code>invitaciones</code></td><td class="que">A un grupo o a un devocional.</td><td class="que"><code>medio</code>: app o llamada de WhatsApp</td></tr>
+          <tr class="nueva"><td><code>mensajes</code></td><td class="que">El chat de cada grupo.</td><td class="que">Sin tabla de chats: el grupo <em>es</em> el chat</td></tr>
+          <tr class="nueva"><td><code>respuestas_evento</code></td><td class="que">Sí, no o tal vez al plan del grupo.</td><td class="que">Es el «¿pueden el jueves?»</td></tr>
+
+          <tr class="grupo-cab"><td colspan="3">Fotos — Fase 8</td></tr>
+          <tr><td><code>fotos</code></td><td class="que">Horarios y calendarios subidos.</td><td class="que">Lo leído va a <code>eventos</code> sin confirmar</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="prosa" style="margin-top:26px">
-      <p><strong>Las rachas no son una tabla</strong>, son una consulta sobre <code>tareas_dia</code>. <strong>La reflexión</strong> que escribe Leonora vive en <code>tareas_dia.nota</code>. Y aislamiento por fila en las once desde el primer día: son datos de una menor.</p>
-      <p><strong>Sobre el gasto de IA:</strong> nueve de cada diez días no la necesitan. La rutina más unas reglas de prioridad fijas resuelven el día completo. Solo se llama a la IA en el arranque, al leer una foto, y cuando hay un choque real — un feriado, un examen mañana.</p>
+      <p><strong>Privacidad, ahora que hay gente de fuera.</strong> Aislamiento por fila en las 22, con tres reglas duras: un tutor ve a sus hijos <em>menos</em> <code>ciclo</code>; una oración se ve según su <code>visibilidad</code> y nada más; y un calendario solo se ve si el dueño puso <code>ve_mi_calendario</code> en verdadero para ese grupo.</p>
+      <p><strong>Gasto de IA.</strong> No cambia: nueve de cada diez días no la necesitan. Los versículos, los devocionales y las oraciones son datos, no llamadas al modelo.</p>
     </div>
    </div>
   </section>
 
   <section class="seccion">
     <div class="rotulo">El camino</div>
-    <h2>Por dónde empezamos</h2>
+    <h2>Ocho fases</h2>
+    <div class="prosa"><p>Creció bastante, así que el orden importa más que antes. Cada fase deja algo que ya sirve por sí solo. Lo que pediste de deporte y nutrición va justo después de estas, en la sección siguiente.</p></div>
 
     <div class="fases">
       <div class="fase primera">
         <div class="fase-n">Fase 1</div>
-        <div>
-          <h3>La pantalla de Hoy</h3>
-          <p>Rutina escrita a mano, la lista del día y las casillas para marcar. Sin IA todavía. Esto solo ya te resuelve el día.</p>
-        </div>
+        <div><h3>El día, con alarmas</h3>
+          <p>Pantalla de Hoy, rutina a mano, lo de ahora resaltado y los avisos funcionando. Sin IA.</p></div>
         <div class="cuenta">7 tablas</div>
       </div>
       <div class="fase">
         <div class="fase-n">Fase 2</div>
-        <div>
-          <h3>El arranque con IA</h3>
-          <p>Las cinco preguntas y la semana propuesta. Aquí la app deja de ser una agenda.</p>
-        </div>
-        <div class="cuenta">+0 tablas</div>
+        <div><h3>El arranque con IA</h3>
+          <p>Las cinco preguntas y la semana propuesta. Aquí deja de ser una agenda.</p></div>
+        <div class="cuenta">+0</div>
       </div>
       <div class="fase">
         <div class="fase-n">Fase 3</div>
-        <div>
-          <h3>Fe y rachas</h3>
-          <p>Devocionales con pasaje y pregunta, contador de días seguidos, tus reflexiones.</p>
-        </div>
-        <div class="cuenta">+1 tabla</div>
+        <div><h3>Fe: devocionales, versículo, rachas</h3>
+          <p>El pasaje del día, varias versiones, la imagen para compartir y los días seguidos.</p></div>
+        <div class="cuenta">+4</div>
       </div>
       <div class="fase">
         <div class="fase-n">Fase 4</div>
-        <div>
-          <h3>La familia completa</h3>
-          <p>Varias personas, papá y mamá viendo a todos, los recados.</p>
-        </div>
-        <div class="cuenta">+2 tablas</div>
+        <div><h3>La familia y la campanita</h3>
+          <p>Varias personas, recados con respuesta, avisos en un solo sitio.</p></div>
+        <div class="cuenta">+4</div>
       </div>
       <div class="fase">
         <div class="fase-n">Fase 5</div>
-        <div>
-          <h3>Las fotos</h3>
-          <p>Subir el horario de clases y el calendario escolar y que se lean solos.</p>
-        </div>
-        <div class="cuenta">+1 tabla</div>
+        <div><h3>Oraciones</h3>
+          <p>Peticiones con visibilidad, «oré por esto» y las contestadas.</p></div>
+        <div class="cuenta">+2</div>
       </div>
       <div class="fase">
         <div class="fase-n">Fase 6</div>
-        <div>
-          <h3>Avisos y venta</h3>
-          <p>Recordatorios en el teléfono, cumpleaños, repaso del domingo, planes de pago.</p>
-        </div>
-        <div class="cuenta">+1 tabla</div>
+        <div><h3>Lo tuyo y de nadie más</h3>
+          <p>Calendario de ciclo, privado incluso de los tutores.</p></div>
+        <div class="cuenta">+1</div>
+      </div>
+      <div class="fase">
+        <div class="fase-n">Fase 7</div>
+        <div><h3>Amigas: invitar, planear, chatear</h3>
+          <p>Invitaciones, calendario del grupo con sí/no/tal vez, y el chat.</p></div>
+        <div class="cuenta">+3</div>
+      </div>
+      <div class="fase">
+        <div class="fase-n">Fase 8</div>
+        <div><h3>Las fotos</h3>
+          <p>Subir el horario de clases y el calendario escolar y que se lean solos.</p></div>
+        <div class="cuenta">+1</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="rotulo">Guardado para después</div>
+    <h2>Cuatro cosas que no se me olvidan</h2>
+    <div class="prosa">
+      <p>Estas no entran ahora — la app ya creció bastante y meterlas haría que la Fase 1 nunca llegue. Quedan escritas aquí, y te las recuerdo cuando toque.</p>
+    </div>
+
+    <div class="dos">
+      <div class="destacado despues">
+        <h3>💪 Entrenar el cuerpo y el espíritu</h3>
+        <p>Eliges <strong>cuántos minutos de deporte</strong> quieres al día — 15, 30, los que sean — y si los haces de día o de noche. Se pregunta en el arranque, junto con lo del devocional, y después puedes mover ese bloque en tu horario como cualquier otra cosa.</p>
+        <p>Y lo importante: <strong>cuando marcas tu entrenamiento físico, la app te recuerda el entrenamiento del espíritu.</strong> No solo el cuerpo se entrena. Es el mismo gesto — te preparaste, te costó, cumpliste — aplicado a lo que no se ve.</p>
+        <p>Te lo digo con franqueza: <em>esta es la mejor idea de toda la app.</em> Ninguna app de ejercicio hace esto, y ninguna app devocional tampoco. Es lo que la haría distinta si algún día la vendes.</p>
+      </div>
+
+      <div class="destacado despues">
+        <h3>🏋️ El entrenamiento en sí</h3>
+        <p>Tocas el bloque de deporte y te sale la rutina del día. Todo <strong>entrenamiento funcional</strong>, con lo que ya hay en casa: un par de mancuernas y un banco o una mesa firme. Nada de gimnasio ni de máquinas.</p>
+        <p>La idea de fondo: cuidar el cuerpo porque es prestado, no por vanidad. Eso cambia el tono de todos los textos de esa pantalla.</p>
+        <p><em>Cuando llegue: 2 tablas más</em> — los ejercicios y las rutinas armadas con ellos.</p>
+      </div>
+
+      <div class="destacado despues">
+        <h3>🥗 Nutrición</h3>
+        <p>Todavía más adelante. Va después del entrenamiento porque comparten la misma idea — el cuerpo como algo que se cuida — y porque sin la parte de deporte andando, la de comida sola no tiene dónde apoyarse.</p>
+      </div>
+
+      <div class="destacado despues">
+        <h3>📱 Widget de iOS</h3>
+        <p>En la pantalla de inicio del iPhone, sin abrir la app: el <strong>devocional del día</strong>, <strong>lo que te toca hoy</strong> y el <strong>versículo</strong>.</p>
+        <p>Se hace cuando las fases 1 a 3 estén andando, porque el widget no inventa nada: solo muestra datos que ya tienen que existir.</p>
       </div>
     </div>
   </section>
@@ -614,13 +745,13 @@ td.que{color:var(--tinta-suave)}
   <section class="cierre">
     <div class="rotulo">Antes de escribir código</div>
     <div class="prosa">
-      <p>Cuatro cosas que necesito que decidas, y arrancamos con la Fase 1.</p>
+      <p>Con esto ya está el diseño completo. Cuatro decisiones y arrancamos con la Fase 1.</p>
     </div>
     <div class="preguntas">
-      <div class="pregunta"><span>01</span><div>¿La usas en el teléfono, o también en la computadora?</div></div>
-      <div class="pregunta"><span>02</span><div>Los devocionales, ¿los escoge papá o los propone la IA?</div></div>
-      <div class="pregunta"><span>03</span><div>¿Cuántas personas van a estar en la familia desde el principio?</div></div>
-      <div class="pregunta"><span>04</span><div>¿Arrancamos con la Fase 1 completa, o quieres tocar primero la pantalla de Hoy funcionando?</div></div>
+      <div class="pregunta"><span>01</span><div>¿Arrancamos con la Fase 1 sola, o quieres las fases 1 a 3 juntas — que es la app con fe adentro, y la primera que de verdad se puede enseñar?</div></div>
+      <div class="pregunta"><span>02</span><div>Los devocionales y los versículos, ¿los cargamos de una fuente pública, los escribe papá, o los propone la IA?</div></div>
+      <div class="pregunta"><span>03</span><div>Para invitar amigas por correo hace falta que la app mande correos. ¿Empezamos solo con enlace para compartir por WhatsApp, que es gratis y más simple?</div></div>
+      <div class="pregunta"><span>04</span><div>¿Cuántas personas van a estar desde el principio — solo Leonora, o toda la familia?</div></div>
     </div>
   </section>
 

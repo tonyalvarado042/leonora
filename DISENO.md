@@ -1,187 +1,179 @@
 # El día de Leonora
 
-App familiar de horarios, hábitos de fe y organización del tiempo.
+App de horario, hábitos de fe y organización del tiempo, para una familia y sus grupos.
 
-**Versión 2 del diseño — simplificada.** Todavía no hay código.
-Página visual del diseño: `docs/dia-de-leonora.html`
-
----
-
-## 1. La simplificación
-
-En la v1 había cuatro tablas para lo mismo: `actividades`, `habitos`,
-`registros_habito` y `rachas`. Pero **un hábito no es otra cosa: es una
-actividad que se repite.** El devocional es una actividad; lo que lo vuelve un
-hábito es la frecuencia.
-
-Resultado: **20 tablas → 11.**
-
-| Antes | Ahora |
-|---|---|
-| `actividades` + `habitos` | `actividades` con `tipo` y `es_habito` |
-| `registros_habito` | los checks de `tareas_dia` |
-| `rachas` | una consulta, no una tabla |
-| `plantillas_horario` + `bloques_plantilla` | `rutina` con columna `modo` |
-| `importaciones` + `importaciones_items` | `fotos`; las fechas leídas van a `eventos` con `confirmado = false` |
-| `plan_devocional` | `tareas_dia.devocional_id` + `tareas_dia.nota` |
+**Versión 3 del diseño.** Todavía no hay código.
+Página visual: `docs/dia-de-leonora.html`
 
 ---
 
-## 2. Las tres capas (esto no cambia)
+## 1. Qué cambió en la v3
 
-1. **Rutina** — cómo es un lunes normal. Casi nunca cambia.
-2. **Eventos** — feriados, exámenes, cumpleaños. Cambian siempre.
+| # | Cambio | Impacto en datos |
+|---|---|---|
+| 1 | Alarmas que dicen qué hacer, por defecto 10 min antes | tabla `avisos` + `ajustes.avisar_antes_min` + `actividades.avisar_antes_min` |
+| 2 | Varios devocionales al día | ninguno: son varias filas en `rutina` con `tipo = fe` |
+| 3 | Colegio **o trabajo** | `ajustes.ocupacion`; el tipo `estudio` cambia de etiqueta |
+| 4 | Campanita de avisos, con respuesta a los recados | `encargos.respuesta` + `respondido_en` |
+| 5 | Grupos de amigas, con permiso de calendario por persona | `grupos`, `miembros_grupo.ve_mi_calendario` |
+| 6 | Chat de familia y de grupo | `mensajes`; `miembros_grupo.chat_leido_en` |
+| 7 | Invitar a alguien a tu devocional | `invitaciones` con `medio` (app \| whatsapp) |
+| 8 | Oraciones con visibilidad, y oraciones contestadas | `oraciones`, `oraciones_apoyo` |
+| 9 | Versículo del día en varias versiones, con imagen | `versiculos`, `versiculos_versiones`, `versiculos_guardados` |
+| 10 | Calendario de periodo, privado | `personas.sexo`, tabla `ciclo` |
+
+**`familias` desapareció:** una familia es un `grupo` de tipo familia. Todo lo que
+sirve para la familia sirve igual para las amigas.
+
+---
+
+## 2. Las tres capas (no cambia)
+
+1. **Rutina** — cómo es un lunes normal.
+2. **Eventos** — feriados, exámenes, cumpleaños, planes de grupo.
 3. **Día generado** — el plan del martes 3. Es lo que ella marca.
 
-La capa 3 se **genera** combinando 1 y 2, y es una copia: mover algo hoy no
-daña la rutina.
+La capa 3 es una copia: mover algo hoy no daña la rutina.
 
 ---
 
-## 3. Las 11 tablas
+## 3. Las 22 tablas
 
-### `familias`
-`id`, `nombre`, `plan`, `creado_en`
-La unidad que se vende. Una compra = una familia.
+### El día — Fase 1
+- **`personas`** — `id`, `nombre`, `avatar`, `fecha_nacimiento`, `email`, `rol` (tutor|hijo|adulto), `sexo`, `zona_horaria`
+- **`ajustes`** — `persona_id`, `hora_despertar`, `hora_dormir`, `ocupacion` (**colegio|trabajo|ambos|ninguno**), `hora_fin_ocupacion` (14:00), `avisar_antes_min` (**10**), `avisos_activos`, `silencio_desde/hasta`, `dias_ocupados`, `idioma`
+- **`actividades`** — `id`, `nombre`, `emoji`, `tipo` (**fe|estudio|casa|deporte|familia|descanso**), `duracion_min`, `es_habito`, `meta_semanal`, `es_fijo`, `avisar`, `avisar_antes_min`, `creada_por`
+- **`rutina`** — `persona_id`, `modo` (escolar|vacaciones), `dia_semana`, `hora_inicio`, `hora_fin`, `actividad_id`, `es_fijo`
+- **`dias`** — `persona_id`, `fecha`, `tipo_dia`, `modo_usado`, `nota_ia`, `estado`
+- **`tareas_dia`** — `dia_id`, `actividad_id`, `evento_id`, `encargo_id`, `devocional_id`, `titulo`, `hora_inicio`, `hora_fin`, `estado`, `completado_en`, `nota`
+- **`avisos`** — `persona_id`, `tipo` (tarea|recado|invitacion|oracion|evento|ciclo), `referencia_id`, `momento`, `canal`, `titulo`, `cuerpo`, `estado`, `leido_en` — *alimenta la campanita*
 
-### `personas`
-`id`, `familia_id`, `nombre`, `avatar`, `fecha_nacimiento`, `email`,
-`rol` (**tutor** | **hijo**), `zona_horaria`
+### Fe — Fase 3
+- **`devocionales`** — `titulo`, `pasaje`, `texto`, `pregunta`, `minutos`, `edad_min/max`
+- **`versiculos`** — `dia_del_año`, `referencia`, `tema`
+- **`versiculos_versiones`** — `versiculo_id`, `version` (RVR|NVI|NTV…), `texto`
+- **`versiculos_guardados`** — `persona_id`, `versiculo_id`
 
-### `ajustes`
-`persona_id`, `hora_despertar`, `hora_dormir`, `minutos_devocional` (60),
-`momento_devocional` (mañana | tarde | noche), `hora_fin_estudio` (**14:00**),
-`dias_escolares`, `idioma`
+### La gente — Fase 4
+- **`grupos`** — `nombre`, `tipo` (**familia|amigos|iglesia|otro**), `emoji`, `creado_por`, `plan`
+- **`miembros_grupo`** — `grupo_id`, `persona_id`, `rol` (dueño|tutor|miembro), **`ve_mi_calendario`**, `chat_leido_en`, `estado`
+- **`encargos`** — `de_persona_id`, `para_persona_id`, `titulo`, `nota`, `fecha`, `tipo` (tarea|recordatorio|consejo), `estado`, **`respuesta`**, `respondido_en`
+- **`eventos`** — `grupo_id`, `persona_id`, `tipo`, `titulo`, `fecha_inicio/fin`, `recurrencia`, `efecto`, `propuesto_por`, `requiere_respuesta`, `origen`, `confianza`, `confirmado`
 
-> Que "termina de estudiar a las 2:00" sea una fila y no una constante es lo
-> que hace que la app sirva para otra familia.
+### Oración — Fase 5
+- **`oraciones`** — `persona_id`, `titulo`, `detalle`, **`visibilidad`** (solo_yo|familia|grupo|todas_mis_personas), `grupo_id`, `estado` (activa|**contestada**|archivada), `como_contesto`, `contestada_en`
+- **`oraciones_apoyo`** — `oracion_id`, `persona_id`, `oro_en`
 
-### `actividades` — la tabla fusionada
-`id`, `familia_id`, `persona_id`, `nombre`, `emoji`, `color`,
-`tipo` (**fe | estudio | casa | deporte | familia | descanso**),
-`duracion_min`, `es_habito`, `meta_semanal`, `es_fijo`, `creada_por`, `activa`
+### Lo privado — Fase 6
+- **`ciclo`** — `persona_id`, `fecha_inicio`, `fecha_fin`, `duracion_estimada`, `nota`
+  > **Única tabla sin excepción de tutor.** RLS estricta a `persona_id = auth.uid()`.
 
-- `tipo` es la agrupación que pediste: hábitos de fe, deportivos, etc.
-- `es_habito` sustituye toda la maquinaria de hábitos de la v1.
-- `es_fijo` marca las anclas: la cena y el devocional no se mueven;
-  "leer un capítulo" flota y la IA lo reubica.
+### Social — Fase 7
+- **`invitaciones`** — `tipo` (grupo|actividad), `grupo_id`, `tarea_id`, `email`, `invitado_por`, `codigo`, `medio` (**app|whatsapp**), `estado`, `caduca_en`
+- **`mensajes`** — `grupo_id`, `persona_id`, `texto`, `respuesta_a`, `creado_en`
+- **`respuestas_evento`** — `evento_id`, `persona_id`, `respuesta` (**si|no|tal_vez**), `nota`
 
-### `rutina`
-`id`, `persona_id`, `modo` (**escolar | vacaciones**), `dia_semana` (0-6),
-`hora_inicio`, `hora_fin`, `actividad_id`, `es_fijo`, `orden`
+### Fotos — Fase 8
+- **`fotos`** — `grupo_id`, `subida_por`, `tipo`, `archivo_url`, `estado`, `resumen`
 
-### `dias`
-`id`, `persona_id`, `fecha`, `tipo_dia`, `modo_usado`, `generado_por`,
-`nota_ia`, `estado`
-
-`nota_ia` explica el cambio: *"hoy no hay clases: moví el estudio a la tarde"*.
-
-### `tareas_dia` — la tabla que la app lee todo el día
-`id`, `dia_id`, `actividad_id`, `evento_id`, `encargo_id`, `devocional_id`,
-`titulo`, `hora_inicio`, `hora_fin`, `orden`, `es_fijo`, `origen`,
-`estado` (pendiente | hecha | omitida | movida), `completado_en`, `nota`
-
-`nota` guarda la reflexión del devocional. Las rachas se calculan de aquí.
-
-### `eventos`
-`id`, `familia_id`, `persona_id` (null = toda la familia),
-`tipo` (feriado | escolar | examen | entrega | cumpleaños | cita | viaje),
-`titulo`, `fecha_inicio`, `fecha_fin`, `todo_el_dia`, `recurrencia` (RRULE),
-`efecto` (**libra_el_dia | bloquea_horas | solo_avisa**),
-`origen` (manual | foto), `foto_id`, `confianza`, `confirmado`
-
-> `confirmado` es la regla dura: **nada que la IA lea de una foto entra al
-> horario sin aprobación humana.**
-
-### `encargos` — papá/mamá → hijo
-`id`, `de_persona_id`, `para_persona_id`, `titulo`, `nota`, `fecha`,
-`hora_sugerida`, `tipo` (**tarea | recordatorio | consejo**), `estado`,
-`visto_en`, `completado_en`
-
-Al generar el día, los encargos entran a `tareas_dia` marcados en naranja.
-
-### `fotos`
-`id`, `familia_id`, `subida_por`, `tipo` (horario_clases | calendario_escolar |
-feriados), `archivo_url`, `estado`, `resumen`, `respuesta_cruda`, `creado_en`
-
-### `devocionales`
-`id`, `titulo`, `pasaje`, `texto`, `pregunta`, `minutos`, `edad_min`, `edad_max`
+**No son tablas:** las rachas (consulta sobre `tareas_dia`), las oraciones
+contestadas (filtro por `estado`), la imagen del versículo (se genera en el
+teléfono).
 
 ---
 
-## 4. El arranque con IA (5 preguntas)
+## 4. Privacidad — tres reglas duras
 
-1. Nombre y edad
-2. Hora de despertar y de dormir
-3. **Devocional: cuántos minutos y en qué momento** — se coloca primero, antes que todo
-4. **Colegio: 📷 foto del horario *o* escribirlo a mano** — los dos caminos valen igual
-5. Quehaceres de casa y lo que le gusta hacer
+1. Un tutor ve a sus hijos **menos** `ciclo`.
+2. Una oración se ve según su `visibilidad`, y «todas mis personas» significa
+   familia y grupos — **nunca internet abierto**. Sin esta regla haría falta
+   moderación para publicaciones de menores.
+3. Un calendario solo se ve si su dueño puso `ve_mi_calendario = true` para
+   ese grupo. Es por persona y por grupo, y se puede revocar.
 
-→ La IA devuelve una semana en JSON → se muestra completa → ella aprueba o pide
-cambios → se guarda en `rutina`. **Nada se guarda sin aprobación.**
-
-La foto es un atajo, no un requisito.
+RLS en las 22 tablas.
 
 ---
 
-## 5. Dónde entra la IA (y dónde no)
+## 5. Dónde entra la IA
 
 | Momento | ¿IA? |
 |---|---|
 | Arranque: armar la semana | Sí, una vez |
 | Leer una foto de horario o calendario | Sí, al subirla |
 | Generar un día normal | **No** — rutina + reglas fijas |
-| Generar un día con choque (feriado, examen) | Sí |
+| Día con choque (feriado, examen) | Sí |
 | Repaso del domingo | Sí, corto |
 
-Reglas de prioridad, sin IA:
-`eventos fijos > actividades con es_fijo > comidas y sueño > estudio > casa > ocio`
-
+Versículos, devocionales y oraciones son **datos**, no llamadas al modelo.
 Nueve de cada diez días cuestan $0.
 
 ---
 
-## 6. Roles
+## 6. Fases
 
-- **Tutor** (papá/mamá): ve el día de todos los hijos, manda encargos, ajusta rutinas.
-- **Hijo**: ve el suyo, marca sus cosas, ve sus recados y sus rachas.
-- Pantalla de entrada: las caras de la familia, cada quien toca la suya.
+| Fase | Qué se construye | Tablas |
+|---|---|---|
+| **1** | **El día con alarmas: pantalla de Hoy, rutina a mano, avisos. Sin IA.** | **7** |
+| 2 | El arranque con IA (5 preguntas → semana propuesta) | +0 |
+| 3 | Fe: devocionales, versículo del día, rachas | +4 |
+| 4 | La familia y la campanita: grupos, recados con respuesta | +4 |
+| 5 | Oraciones: visibilidad, «oré por esto», contestadas | +2 |
+| 6 | Lo privado: calendario de ciclo | +1 |
+| 7 | Amigas: invitaciones, calendario de grupo, chat | +3 |
+| 8 | Fotos de horarios y calendarios | +1 |
 
 ---
 
-## 7. Tecnología
+## 7. Guardado para fases posteriores
+
+**No entra ahora.** Escrito aquí para no perderlo.
+
+### 7.1 Entrenar el cuerpo y el espíritu
+- La persona elige **cuántos minutos de deporte** al día (15, 30, los que sean)
+  y si de día o de noche, en el arranque — igual que el devocional.
+- Después puede **mover ese bloque** en su horario como cualquier otra cosa.
+- **Al marcar el entrenamiento físico, la app recuerda el entrenamiento del
+  espíritu** (el devocional). No solo el cuerpo se entrena.
+- Es la idea que diferencia esta app: ninguna app de ejercicio lo hace, y
+  ninguna app devocional tampoco.
+- Datos: `ajustes.minutos_deporte`, `ajustes.momento_deporte`, y un enlace
+  entre la actividad de tipo `deporte` y la de tipo `fe`.
+
+### 7.2 El entrenamiento en sí
+- Al tocar el bloque de deporte, sale la rutina del día.
+- **Todo funcional**, con lo que hay en casa: un par de mancuernas y un banco o
+  una mesa firme. Sin gimnasio ni máquinas.
+- Tono: cuidar el cuerpo porque es prestado, no por vanidad.
+- Datos: +2 tablas (`ejercicios`, `entrenamientos`).
+
+### 7.3 Nutrición
+- Después del entrenamiento, porque comparten la misma idea y sin la parte de
+  deporte no tiene dónde apoyarse.
+
+### 7.4 Widget de iOS
+- En la pantalla de inicio: devocional del día, lo que toca hoy, y el versículo.
+- Se hace cuando las fases 1 a 3 estén andando: el widget solo muestra datos
+  que ya deben existir.
+
+---
+
+## 8. Tecnología
 
 | Pieza | Elección |
 |---|---|
 | App | Next.js + Tailwind, instalable como PWA |
-| Datos, login, fotos | Supabase (Postgres + RLS + Storage) |
+| Datos, login, fotos, tiempo real (chat) | Supabase |
 | IA | API de Claude (texto y visión) |
 | Hosting | Vercel |
 | Avisos | Web push + email |
-
-**Privacidad:** son datos de una menor. RLS en las once tablas desde el primer
-día, nada público, y las fotos se pueden borrar tras procesarlas.
-
----
-
-## 8. Fases
-
-| Fase | Qué se construye | Tablas |
-|---|---|---|
-| **1** | **Pantalla de Hoy: rutina a mano, lista del día, marcar. Sin IA.** | **7** |
-| 2 | El arranque con IA (5 preguntas → semana propuesta) | +0 |
-| 3 | Devocionales, rachas, reflexiones | +1 |
-| 4 | Familia completa: varias personas, roles, encargos | +2 |
-| 5 | Fotos de horario y calendario | +1 |
-| 6 | Recordatorios, cumpleaños, repaso semanal, planes de pago | +1 |
-
-La Fase 1 ya resuelve el día de Leonora. Se puede parar en cualquier fase.
+| Widget iOS (después) | App nativa ligera sobre la misma API |
 
 ---
 
 ## 9. Pendiente de decidir
 
-1. ¿Solo teléfono, o también computadora?
-2. ¿Los devocionales los escoge papá o los propone la IA?
-3. ¿Cuántas personas en la familia desde el principio?
-4. ¿Fase 1 completa, o primero la pantalla de Hoy funcionando?
+1. ¿Fase 1 sola, o fases 1 a 3 juntas (la primera versión enseñable)?
+2. Devocionales y versículos: ¿fuente pública, escritos por papá, o propuestos por IA?
+3. ¿Invitaciones por correo, o solo enlace de WhatsApp al principio?
+4. ¿Cuántas personas desde el principio — solo Leonora, o toda la familia?
