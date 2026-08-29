@@ -265,6 +265,48 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
 .si-no{font-family:var(--reloj);font-size:15px}
 .si-no.si{color:var(--verde)}
 .si-no.no{color:var(--tinta-tenue)}
+/* ---- rachas y logros ---- */
+.racha-grande{background:linear-gradient(140deg,var(--fuego-piso),var(--tarde-piso));
+  border:1px solid color-mix(in srgb,var(--fuego) 30%,transparent);
+  border-radius:15px;padding:14px;margin-bottom:12px;text-align:center}
+.racha-grande .num{font-family:var(--display);font-size:44px;font-weight:600;
+  line-height:1;color:var(--fuego)}
+.racha-grande .lbl{font-size:12px;color:var(--tinta-suave);margin-top:3px}
+.racha-grande .prox{font-family:var(--reloj);font-size:10px;color:var(--tinta-tenue);margin-top:7px}
+.vias{display:flex;flex-direction:column;gap:7px}
+.via{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;padding:10px 11px}
+.via .top{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.via .nom{font-size:13px;font-weight:700;flex:1}
+.via .dias{font-family:var(--reloj);font-size:11.5px;color:var(--fuego);font-variant-numeric:tabular-nums}
+.barra-prog{height:5px;border-radius:4px;background:var(--linea);overflow:hidden}
+.barra-prog i{display:block;height:100%;border-radius:4px}
+.via .meta{font-size:10.5px;color:var(--tinta-tenue);margin-top:5px}
+.insignias{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.insignia{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+  font-size:15px;background:var(--tarjeta-2);border:1px solid var(--linea)}
+.insignia.ganada{background:var(--alba-piso);border-color:var(--alba)}
+.insignia.bloqueada{opacity:.32}
+.escalera{margin-top:30px;display:grid;gap:12px;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.via-col{background:var(--tarjeta);border:1px solid var(--linea);border-radius:14px;padding:16px 17px}
+.via-col .cab{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.via-col h3{font-family:var(--texto);font-size:15px;font-weight:700}
+.peldano{display:grid;grid-template-columns:34px 1fr;gap:9px;align-items:center;
+  padding:6px 0;border-top:1px solid var(--linea);font-size:13.5px}
+.peldano:first-of-type{border-top:none}
+.peldano .d{font-family:var(--reloj);font-size:11px;color:var(--tinta-tenue);
+  font-variant-numeric:tabular-nums}
+.peldano .l{display:flex;align-items:center;gap:6px}
+#confeti{position:fixed;inset:0;pointer-events:none;z-index:9999}
+.botones-demo{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.btn-demo{font-family:var(--texto);font-size:15px;font-weight:700;padding:11px 20px;
+  border-radius:11px;border:1px solid var(--linea-fuerte);background:var(--tarjeta);
+  color:var(--tinta);cursor:pointer;transition:transform .12s ease, box-shadow .12s ease}
+.btn-demo:hover{transform:translateY(-1px);box-shadow:var(--sombra)}
+.btn-demo:focus-visible{outline:2px solid var(--alba);outline-offset:2px}
+.btn-demo.fuego{border-color:var(--fuego);color:var(--fuego);background:var(--fuego-piso)}
+.btn-demo.confe{border-color:var(--alba);color:var(--alba);background:var(--alba-piso)}
+.btn-demo.estrella{border-color:var(--tarde);color:var(--tarde);background:var(--tarde-piso)}
 </style>
 
 <div class="envoltura">
@@ -339,7 +381,7 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
 
   <section class="seccion">
     <div class="rotulo">Lo que pediste</div>
-    <h2>Catorce cambios</h2>
+    <h2>Dieciséis cambios</h2>
     <div class="cambios">
       <div class="cambio"><div class="cambio-n">01</div><div>
         <h3>Alarmas que dicen qué hacer</h3>
@@ -383,6 +425,12 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
       <div class="cambio"><div class="cambio-n">14</div><div>
         <h3>Invitados con funciones básicas</h3>
         <p>A quien invitas entra gratis a chatear contigo y al devocional al que lo llamaste. Para tener su propio horario y todo lo demás, su familia paga.</p></div></div>
+      <div class="cambio"><div class="cambio-n">15</div><div>
+        <h3>Rachas separadas, con niveles que se desbloquean</h3>
+        <p>No una racha, sino cuatro: abrir la app, cumplir tu día, el devocional y la oración. Cada una lleva su propia cuenta de días y desbloquea sus propias insignias.</p></div></div>
+      <div class="cambio"><div class="cambio-n">16</div><div>
+        <h3>Premios y celebración en pantalla</h3>
+        <p>Terminas antes de tiempo y ganas puntos. Y cuando desbloqueas algo, cae fuego o confeti por encima de toda la app.</p></div></div>
     </div>
   </section>
 
@@ -860,6 +908,156 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
   </section>
 
   <section class="seccion">
+    <div class="rotulo">Cambios 15 y 16</div>
+    <h2>Las rachas</h2>
+    <div class="prosa">
+      <p>Tienes razón en que esto es imprescindible: es lo que hace que se abra la app mañana. Pero <strong>una sola racha no alcanza</strong> — si llevas 40 días de devocional y un día no ordenas tu cuarto, perderlo todo es injusto y desanima.</p>
+      <p>Así que son <strong>cuatro rachas separadas</strong>, cada una con su cuenta de días y sus propias insignias. Puedes ir fuerte en una y floja en otra, que es como funciona la vida real.</p>
+    </div>
+
+    <div class="tira" style="grid-template-columns:repeat(auto-fit,minmax(272px,1fr));max-width:640px">
+      <div class="columna-pantalla">
+        <div class="telefono"><div class="pantalla">
+          <div class="barra"><span>21:40</span><span>▮▮▮</span></div>
+          <div class="barra-app">
+            <div class="boton-barra">←</div>
+            <div class="titulo">Tus rachas</div>
+            <div class="boton-barra">🏆</div>
+          </div>
+
+          <div class="racha-grande">
+            <div style="font-size:22px">🔥</div>
+            <div class="num">12</div>
+            <div class="lbl">días seguidos de devocional</div>
+            <div class="prox">Faltan 2 días para <strong>Brote</strong> 🌿</div>
+          </div>
+
+          <div class="vias">
+            <div class="via">
+              <div class="top"><span>💜</span><span class="nom">Devocional</span><span class="dias">12 días</span></div>
+              <div class="barra-prog"><i style="width:86%;background:var(--alba)"></i></div>
+              <div class="meta">Nivel: Raíz · siguiente Brote a los 14</div>
+              <div class="insignias">
+                <div class="insignia ganada">🌱</div>
+                <div class="insignia ganada">🪴</div>
+                <div class="insignia bloqueada">🌿</div>
+                <div class="insignia bloqueada">🌳</div>
+                <div class="insignia bloqueada">🍎</div>
+              </div>
+            </div>
+            <div class="via">
+              <div class="top"><span>✅</span><span class="nom">Cumplir tu día</span><span class="dias">5 días</span></div>
+              <div class="barra-prog"><i style="width:71%;background:var(--verde)"></i></div>
+              <div class="meta">Nivel: En marcha · siguiente Constante a los 7</div>
+            </div>
+            <div class="via">
+              <div class="top"><span>👋</span><span class="nom">Abrir la app</span><span class="dias">18 días</span></div>
+              <div class="barra-prog"><i style="width:60%;background:var(--dia)"></i></div>
+              <div class="meta">Nivel: Fiel · siguiente Siempre aquí a los 30</div>
+            </div>
+            <div class="via">
+              <div class="top"><span>🙏</span><span class="nom">Orar por otros</span><span class="dias">3 días</span></div>
+              <div class="barra-prog"><i style="width:43%;background:var(--fuego)"></i></div>
+              <div class="meta">Siguiente: Intercesora a los 7</div>
+            </div>
+          </div>
+
+          <div class="aviso-pie">⚡ 340 chispas · 8 insignias de 24</div>
+        </div></div>
+        <div class="pie-pantalla">
+          <h3>Tus rachas</h3>
+          <p>La más fuerte arriba y grande. Cada vía con su barra, su nivel y sus insignias — las que faltan se ven apagadas, para que sepas qué viene.</p>
+        </div>
+      </div>
+
+      <div class="columna-pantalla">
+        <div style="background:var(--tarjeta);border:1px solid var(--linea);border-radius:16px;padding:20px 22px;height:100%">
+          <h3 style="font-size:18px;font-weight:600;margin-bottom:10px">Por qué separadas</h3>
+          <p style="font-size:15px;color:var(--tinta-suave);margin-bottom:14px">Una racha única castiga demasiado. Cuatro rachas te dan cuatro razones distintas para volver mañana, y ninguna se lleva a las otras por delante.</p>
+          <h3 style="font-size:18px;font-weight:600;margin-bottom:10px">Un día de gracia al mes</h3>
+          <p style="font-size:15px;color:var(--tinta-suave);margin-bottom:14px">Una vez al mes, fallar un día no rompe la racha. Sin esto, la gente que falla una vez abandona la app entera — y perder 40 días por una noche de fiebre no enseña nada bueno.</p>
+          <h3 style="font-size:18px;font-weight:600;margin-bottom:10px">La racha nunca miente</h3>
+          <p style="font-size:15px;color:var(--tinta-suave)">Se cuenta con tu día real, no con la hora del servidor: si te acuestas a las 12:30 de la noche y marcas tu devocional, cuenta para el día que estabas viviendo.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:22px;font-weight:600;margin-top:52px">Las cuatro escaleras</h3>
+    <div class="escalera">
+      <div class="via-col">
+        <div class="cab"><span style="font-size:19px">💜</span><h3>Devocional</h3></div>
+        <div class="peldano"><span class="d">3 d</span><span class="l">🌱 Semilla</span></div>
+        <div class="peldano"><span class="d">7 d</span><span class="l">🪴 Raíz</span></div>
+        <div class="peldano"><span class="d">14 d</span><span class="l">🌿 Brote</span></div>
+        <div class="peldano"><span class="d">30 d</span><span class="l">🌳 Árbol</span></div>
+        <div class="peldano"><span class="d">100 d</span><span class="l">🍎 Fruto</span></div>
+        <div class="peldano"><span class="d">365 d</span><span class="l">🌾 Cosecha</span></div>
+      </div>
+      <div class="via-col">
+        <div class="cab"><span style="font-size:19px">✅</span><h3>Cumplir tu día</h3></div>
+        <div class="peldano"><span class="d">3 d</span><span class="l">🚶 En marcha</span></div>
+        <div class="peldano"><span class="d">7 d</span><span class="l">🎯 Constante</span></div>
+        <div class="peldano"><span class="d">14 d</span><span class="l">⚙️ Disciplinada</span></div>
+        <div class="peldano"><span class="d">30 d</span><span class="l">🚀 Imparable</span></div>
+        <div class="peldano"><span class="d">100 d</span><span class="l">🛡️ De hierro</span></div>
+        <div class="peldano"><span class="d">365 d</span><span class="l">👑 Leyenda</span></div>
+      </div>
+      <div class="via-col">
+        <div class="cab"><span style="font-size:19px">👋</span><h3>Abrir la app</h3></div>
+        <div class="peldano"><span class="d">3 d</span><span class="l">👋 Presente</span></div>
+        <div class="peldano"><span class="d">7 d</span><span class="l">🤝 Fiel</span></div>
+        <div class="peldano"><span class="d">30 d</span><span class="l">🏠 Siempre aquí</span></div>
+        <div class="peldano"><span class="d">100 d</span><span class="l">⚓ Ancla</span></div>
+      </div>
+      <div class="via-col">
+        <div class="cab"><span style="font-size:19px">🙏</span><h3>Orar por otros</h3></div>
+        <div class="peldano"><span class="d">3 d</span><span class="l">🕊️ Primer amén</span></div>
+        <div class="peldano"><span class="d">7 d</span><span class="l">🙏 Intercesora</span></div>
+        <div class="peldano"><span class="d">30 d</span><span class="l">🔥 Guerrera</span></div>
+        <div class="peldano"><span class="d">100 d</span><span class="l">⚔️ Centinela</span></div>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--tinta-tenue);margin-top:14px">24 insignias en total. Los nombres son propuestas — se cambian en un rato, viven en una tabla.</p>
+
+    <h3 style="font-size:22px;font-weight:600;margin-top:52px">Los premios por terminar</h3>
+    <div class="prosa" style="margin-top:14px">
+      <p>Aquí hay una trampa que quiero señalarte antes de construirla. Pediste premiar terminar antes de tiempo, y en los platos eso es perfecto: dejaste 30 minutos, lo hiciste en 5, te ganaste el premio.</p>
+      <p><strong>Pero en el estudio y en el devocional, premiar la velocidad enseña lo contrario de lo que quieres.</strong> Si dejaste una hora de estudio y la app te felicita por terminar en 30 minutos, le está pagando por estudiar menos. Lo mismo con el devocional: nadie quiere una racha de devocionales de dos minutos.</p>
+      <p>La solución es sencilla y conserva tu idea entera: <strong>el premio se gana por terminar lo que tenías que hacer, no por parar el reloj.</strong> Cuando marcas antes de tiempo, la app pregunta una cosa: <em>¿terminaste, o lo dejas para después?</em> Si terminaste, ganas. Si lo dejas, se guarda y no pierdes nada — pero tampoco cobras.</p>
+    </div>
+
+    <div class="rejilla">
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--tarde)"></span><h3>🏠 Casa</h3></div>
+        <p><strong>Se premia la velocidad.</strong> Los platos en 5 minutos en vez de 30 es un logro de verdad. Más chispas mientras más tiempo ahorres.</p>
+      </div>
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--dia)"></span><h3>📘 Estudio</h3></div>
+        <p><strong>Se premia terminar la tarea.</strong> Si de verdad acabaste lo que tenías, ganas igual — y ese rato que te sobra queda libre para lo que quieras.</p>
+      </div>
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--alba)"></span><h3>💜 Fe</h3></div>
+        <p><strong>Se premia el tiempo completo.</strong> Aquí correr no tiene sentido: la recompensa es haber estado el rato que te propusiste.</p>
+      </div>
+      <div class="tarjeta-info">
+        <div class="arriba"><span class="punto" style="background:var(--verde)"></span><h3>⭐ El día perfecto</h3></div>
+        <p>Si cumples todo lo del día, premio aparte y celebración grande. Es el único premio que no se puede sacar a medias.</p>
+      </div>
+    </div>
+
+    <h3 style="font-size:22px;font-weight:600;margin-top:52px">La celebración</h3>
+    <div class="prosa" style="margin-top:14px">
+      <p>Cae <strong>por encima de toda la app</strong>, no dentro de una tarjeta: una capa que cubre la pantalla entera y desaparece sola en dos segundos. Tócalos para verlos aquí mismo.</p>
+    </div>
+    <div class="botones-demo">
+      <button class="btn-demo fuego" data-fx="fuego">🔥 Terminaste rápido</button>
+      <button class="btn-demo confe" data-fx="confeti">🎉 Nivel desbloqueado</button>
+      <button class="btn-demo estrella" data-fx="estrellas">⭐ Día perfecto</button>
+    </div>
+    <p style="font-size:14px;color:var(--tinta-tenue);margin-top:14px">Fuego para la velocidad y las rachas. Confeti para una insignia nueva. Estrellas para el día completo. Cada premio tiene su forma, así se sabe qué pasó sin leer nada.</p>
+  </section>
+
+  <section class="seccion">
     <div class="rotulo">Cambio 13</div>
     <h2>Deja de ser una web</h2>
     <div class="prosa">
@@ -904,9 +1102,10 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
   <section class="tecnico">
    <div class="interior">
     <div class="rotulo">Para papá</div>
-    <h2>Las 24 tablas</h2>
+    <h2>Las 27 tablas</h2>
     <div class="prosa">
-      <p>El Muro y el cobro suman dos tablas más, y tres columnas nuevas hacen el resto del trabajo. Sigue en pie lo de antes: <strong>familias no existe</strong> (una familia es un grupo), <strong>las rachas y las oraciones contestadas son consultas</strong>, y <strong>el chat leído es una columna</strong>. El nivel de acceso de un invitado también es una columna, no una tabla de permisos.</p>
+      <p>Sigue en pie lo de antes: <strong>familias no existe</strong> (una familia es un grupo), <strong>las oraciones contestadas son un filtro</strong>, y el chat leído y el nivel de acceso son columnas, no tablas.</p>
+      <p><strong>Cambio de opinión que te debo:</strong> en la versión pasada dije que las rachas eran una consulta y no una tabla. Con cuatro vías, niveles y un día de gracia al mes, ya no: se leen en <em>cada</em> apertura de la app, y hay que guardar <em>cuándo</em> ganaste cada insignia. Ahora son tres tablas, y están bien ganadas.</p>
     </div>
 
     <div class="marco-tabla">
@@ -918,48 +1117,53 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
           <tr><td><code>ajustes</code></td><td class="que">Despertar, dormir, avisos, ocupación.</td><td class="que"><code>ocupacion</code>: colegio o trabajo · <code>avisar_antes_min</code> = 10</td></tr>
           <tr><td><code>actividades</code></td><td class="que">La lista única de cosas.</td><td class="que"><code>tipo</code> + <code>es_habito</code> + <code>avisar_antes_min</code> propio</td></tr>
           <tr><td><code>rutina</code></td><td class="que">Los bloques de la semana normal.</td><td class="que">Varias filas de tipo fe = varios devocionales</td></tr>
-          <tr><td><code>dias</code></td><td class="que">El plan de una fecha.</td><td class="que"><code>nota_ia</code> explica por qué cambió</td></tr>
-          <tr><td><code>tareas_dia</code></td><td class="que">Lo que ella marca.</td><td class="que">Es una copia: mover hoy no daña la rutina</td></tr>
+          <tr><td><code>dias</code></td><td class="que">El plan de una fecha.</td><td class="que"><code>nota_ia</code> explica el cambio · <code>porcentaje_cumplido</code></td></tr>
+          <tr><td><code>tareas_dia</code></td><td class="que">Lo que ella marca.</td><td class="que">Es una copia · <code>minutos_reales</code>, <code>termino_de_verdad</code>, <code>puntos</code></td></tr>
           <tr class="nueva"><td><code>avisos</code></td><td class="que">Alarmas, recados, invitaciones, oraciones.</td><td class="que">Es lo que alimenta la campanita</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">Fe — Fase 3</td></tr>
+          <tr class="grupo-cab"><td colspan="3">Rachas y premios — Fase 2</td></tr>
+          <tr class="nueva"><td><code>rachas</code></td><td class="que">Una fila por persona y por vía.</td><td class="que"><code>via</code>: apertura, dia, devocional, oracion · <code>gracia_usada_mes</code></td></tr>
+          <tr class="nueva"><td><code>logros</code></td><td class="que">El catálogo de insignias.</td><td class="que">Cambiar un nombre o un umbral es editar una fila</td></tr>
+          <tr class="nueva"><td><code>logros_ganados</code></td><td class="que">Quién ganó qué y cuándo.</td><td class="que"><code>visto_en</code>: decide si toca lanzar la celebración</td></tr>
+
+          <tr class="grupo-cab"><td colspan="3">Fe — Fase 4</td></tr>
           <tr><td><code>devocionales</code></td><td class="que">Pasaje, texto y pregunta.</td><td class="que">Sin esto el devocional es una casilla vacía</td></tr>
           <tr class="nueva"><td><code>versiculos</code></td><td class="que">El versículo de cada día del año.</td><td class="que"><code>dia_del_año</code>: no hay que cargarlos cada año</td></tr>
           <tr class="nueva"><td><code>versiculos_versiones</code></td><td class="que">El mismo versículo en RVR, NVI, NTV…</td><td class="que">Añadir una versión es una fila, no una columna</td></tr>
           <tr class="nueva"><td><code>versiculos_guardados</code></td><td class="que">Sus favoritos.</td><td class="que">La imagen para compartir se genera en el teléfono</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">La gente — Fase 4</td></tr>
+          <tr class="grupo-cab"><td colspan="3">La gente — Fase 5</td></tr>
           <tr class="nueva"><td><code>grupos</code></td><td class="que">Familia, amigas, iglesia.</td><td class="que"><code>tipo</code>: la familia es un grupo más</td></tr>
           <tr class="nueva"><td><code>miembros_grupo</code></td><td class="que">Quién está en cada grupo.</td><td class="que"><code>ve_mi_calendario</code>: el interruptor de Emma · <code>nivel_acceso</code></td></tr>
           <tr><td><code>encargos</code></td><td class="que">Recados de papá y mamá.</td><td class="que"><code>respuesta</code> + <code>respondido_en</code>: ella contesta</td></tr>
           <tr><td><code>eventos</code></td><td class="que">Feriados, exámenes, cumpleaños, planes.</td><td class="que"><code>confirmado</code>: nada de una foto entra sin aprobar</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">Oración — Fase 5</td></tr>
+          <tr class="grupo-cab"><td colspan="3">Oración — Fase 6</td></tr>
           <tr class="nueva"><td><code>oraciones</code></td><td class="que">Peticiones y testimonios.</td><td class="que"><code>visibilidad</code> con 5 niveles · <code>es_anonima</code> · <code>estado_moderacion</code></td></tr>
           <tr class="nueva"><td><code>oraciones_apoyo</code></td><td class="que">Quién oró por qué.</td><td class="que">De aquí sale «4 personas oraron por esto»</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">Lo privado — Fase 7</td></tr>
+          <tr class="grupo-cab"><td colspan="3">Lo privado — Fase 8</td></tr>
           <tr class="nueva"><td><code>ciclo</code></td><td class="que">Fechas de periodo.</td><td class="que"><strong>Única tabla sin excepción de tutor.</strong> Solo ella</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">Social — Fase 8</td></tr>
+          <tr class="grupo-cab"><td colspan="3">Social — Fase 9</td></tr>
           <tr class="nueva"><td><code>invitaciones</code></td><td class="que">A un grupo o a un devocional.</td><td class="que"><code>medio</code>: app o llamada de WhatsApp</td></tr>
           <tr class="nueva"><td><code>mensajes</code></td><td class="que">El chat de cada grupo.</td><td class="que">Sin tabla de chats: el grupo <em>es</em> el chat</td></tr>
           <tr class="nueva"><td><code>respuestas_evento</code></td><td class="que">Sí, no o tal vez al plan del grupo.</td><td class="que">Es el «¿pueden el jueves?»</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">El Muro — Fase 6</td></tr>
+          <tr class="grupo-cab"><td colspan="3">El Muro — Fase 7</td></tr>
           <tr class="nueva"><td><code>reportes</code></td><td class="que">Oraciones marcadas por alguien.</td><td class="que">La revisión de la IA corre antes; esto es la segunda red</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">Dinero — Fase 9</td></tr>
+          <tr class="grupo-cab"><td colspan="3">Dinero — Fase 10</td></tr>
           <tr class="nueva"><td><code>suscripciones</code></td><td class="que">Qué familia pagó y hasta cuándo.</td><td class="que">Paga el <code>grupo</code>, no la persona · <code>proveedor</code>: apple o google</td></tr>
 
-          <tr class="grupo-cab"><td colspan="3">Fotos — Fase 10</td></tr>
+          <tr class="grupo-cab"><td colspan="3">Fotos — Fase 11</td></tr>
           <tr><td><code>fotos</code></td><td class="que">Horarios y calendarios subidos.</td><td class="que">Lo leído va a <code>eventos</code> sin confirmar</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="prosa" style="margin-top:26px">
-      <p><strong>Privacidad, ahora que el Muro es público.</strong> Aislamiento por fila en las 24, con cuatro reglas duras: un tutor ve a sus hijos <em>menos</em> <code>ciclo</code>; una oración se ve según su <code>visibilidad</code> y nada más; un calendario solo se ve si su dueño puso <code>ve_mi_calendario</code> para ese grupo; y en el Muro <strong>solo salen oraciones con <code>visibilidad = publica</code> y <code>estado_moderacion = aprobada</code></strong> — nunca el apellido, la ciudad ni forma de contactar a nadie.</p>
+      <p><strong>Privacidad, ahora que el Muro es público.</strong> Aislamiento por fila en las 27, con cuatro reglas duras: un tutor ve a sus hijos <em>menos</em> <code>ciclo</code>; una oración se ve según su <code>visibilidad</code> y nada más; un calendario solo se ve si su dueño puso <code>ve_mi_calendario</code> para ese grupo; y en el Muro <strong>solo salen oraciones con <code>visibilidad = publica</code> y <code>estado_moderacion = aprobada</code></strong> — nunca el apellido, la ciudad ni forma de contactar a nadie.</p>
       <p><strong>Gasto de IA.</strong> No cambia: nueve de cada diez días no la necesitan. Los versículos, los devocionales y las oraciones son datos, no llamadas al modelo.</p>
     </div>
    </div>
@@ -967,8 +1171,8 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
 
   <section class="seccion">
     <div class="rotulo">El camino</div>
-    <h2>Diez fases</h2>
-    <div class="prosa"><p>Cada fase deja algo que ya sirve por sí solo. Las tres primeras son la app que se puede enseñar; la sexta es la que la hace crecer sola; la novena es la que empieza a cobrar.</p></div>
+    <h2>Once fases</h2>
+    <div class="prosa"><p>Cada fase deja algo que ya sirve por sí solo. Subí las rachas hasta el segundo puesto: son baratas de hacer y son lo que consigue que la app se abra mañana. Sin ellas, las fases de después le llegan a nadie.</p></div>
 
     <div class="fases">
       <div class="fase primera">
@@ -977,56 +1181,62 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
           <p>Pantalla de Hoy, rutina a mano, lo de ahora resaltado y los avisos funcionando. Sin IA.</p></div>
         <div class="cuenta">7 tablas</div>
       </div>
-      <div class="fase">
+      <div class="fase primera">
         <div class="fase-n">Fase 2</div>
+        <div><h3>Rachas, niveles y celebración</h3>
+          <p>Las cuatro vías, las 24 insignias, los premios por terminar y el confeti. Es lo que hace que se vuelva a abrir.</p></div>
+        <div class="cuenta">+3</div>
+      </div>
+      <div class="fase">
+        <div class="fase-n">Fase 3</div>
         <div><h3>Bienvenida y arranque con IA</h3>
           <p>El video de cómo funciona, las cinco preguntas y la semana propuesta. Aquí deja de ser una agenda.</p></div>
         <div class="cuenta">+0</div>
       </div>
       <div class="fase">
-        <div class="fase-n">Fase 3</div>
-        <div><h3>Fe: devocionales, versículo, rachas</h3>
+        <div class="fase-n">Fase 4</div>
+        <div><h3>Fe: devocionales y versículo del día</h3>
           <p>El pasaje del día, varias versiones, la imagen para compartir y los días seguidos.</p></div>
         <div class="cuenta">+4</div>
       </div>
       <div class="fase">
-        <div class="fase-n">Fase 4</div>
+        <div class="fase-n">Fase 5</div>
         <div><h3>La familia y la campanita</h3>
           <p>Varias personas, recados con respuesta, avisos en un solo sitio.</p></div>
         <div class="cuenta">+4</div>
       </div>
       <div class="fase">
-        <div class="fase-n">Fase 5</div>
+        <div class="fase-n">Fase 6</div>
         <div><h3>Oraciones</h3>
           <p>Peticiones con visibilidad, «oré por esto» y las contestadas.</p></div>
         <div class="cuenta">+2</div>
       </div>
-      <div class="fase primera">
-        <div class="fase-n">Fase 6</div>
+      <div class="fase">
+        <div class="fase-n">Fase 7</div>
         <div><h3>El Muro</h3>
           <p>Oración pública, la página web abierta, publicar sin nombre y la revisión automática. Es la fase que hace que la app se conozca sola.</p></div>
         <div class="cuenta">+1</div>
       </div>
       <div class="fase">
-        <div class="fase-n">Fase 7</div>
+        <div class="fase-n">Fase 8</div>
         <div><h3>Lo tuyo y de nadie más</h3>
           <p>Calendario de ciclo, privado incluso de los tutores.</p></div>
         <div class="cuenta">+1</div>
       </div>
       <div class="fase">
-        <div class="fase-n">Fase 8</div>
+        <div class="fase-n">Fase 9</div>
         <div><h3>Amigas: invitar, planear, chatear</h3>
           <p>Invitaciones, calendario del grupo con sí/no/tal vez, y el chat.</p></div>
         <div class="cuenta">+3</div>
       </div>
       <div class="fase">
-        <div class="fase-n">Fase 9</div>
+        <div class="fase-n">Fase 10</div>
         <div><h3>Invitados y cobro</h3>
           <p>La cuenta de invitada con funciones básicas, y la suscripción de la familia por las tiendas.</p></div>
         <div class="cuenta">+1</div>
       </div>
       <div class="fase">
-        <div class="fase-n">Fase 10</div>
+        <div class="fase-n">Fase 11</div>
         <div><h3>Las fotos</h3>
           <p>Subir el horario de clases y el calendario escolar y que se lean solos.</p></div>
         <div class="cuenta">+1</div>
@@ -1084,3 +1294,95 @@ tr.grupo-cab td{background:var(--tarjeta-2);font-family:var(--reloj);font-size:1
   </section>
 
 </div>
+
+<canvas id="confeti" aria-hidden="true"></canvas>
+<script>
+(function(){
+  var cv = document.getElementById('confeti'), cx = cv.getContext('2d');
+  var parts = [], corriendo = false, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function medir(){
+    cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+    cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  medir(); addEventListener('resize', medir);
+
+  var recetas = {
+    fuego: {
+      n: 70, colores: ['#FF6B2C','#FF9E3D','#E03B1F','#FFC861','#FF4D1C'],
+      crear: function(){
+        var x = innerWidth * (0.1 + Math.random() * 0.8);
+        return { x:x, y: innerHeight + 20, vx:(Math.random()-0.5)*1.6, vy:-(4.5+Math.random()*5),
+                 g:0.045, s:5+Math.random()*11, rot:Math.random()*6.28, vrot:(Math.random()-0.5)*0.22,
+                 forma:'circulo', color:this.colores[(Math.random()*5)|0], vida:1, fade:0.011 };
+      }
+    },
+    confeti: {
+      n: 110, colores: ['#6C5CD4','#2A768F','#C0743A','#3F8468','#CF5734','#B4497A','#E8C64A'],
+      crear: function(){
+        return { x: innerWidth*Math.random(), y:-20-Math.random()*140,
+                 vx:(Math.random()-0.5)*3.4, vy:2.2+Math.random()*3.4, g:0.055,
+                 s:5+Math.random()*7, rot:Math.random()*6.28, vrot:(Math.random()-0.5)*0.34,
+                 forma:'rect', color:this.colores[(Math.random()*7)|0], vida:1, fade:0.0075 };
+      }
+    },
+    estrellas: {
+      n: 60, colores: ['#E8C64A','#FFDE7A','#F0A93C','#FFF0BC'],
+      crear: function(){
+        return { x: innerWidth*Math.random(), y:-20-Math.random()*180,
+                 vx:(Math.random()-0.5)*1.9, vy:1.6+Math.random()*2.6, g:0.032,
+                 s:7+Math.random()*10, rot:Math.random()*6.28, vrot:(Math.random()-0.5)*0.13,
+                 forma:'estrella', color:this.colores[(Math.random()*4)|0], vida:1, fade:0.0068 };
+      }
+    }
+  };
+
+  function estrella(g, r){
+    g.beginPath();
+    for (var i = 0; i < 10; i++){
+      var rad = (i % 2 === 0) ? r : r * 0.44, a = (Math.PI / 5) * i - Math.PI / 2;
+      g[i ? 'lineTo' : 'moveTo'](Math.cos(a) * rad, Math.sin(a) * rad);
+    }
+    g.closePath(); g.fill();
+  }
+
+  function paso(){
+    cx.clearRect(0, 0, innerWidth, innerHeight);
+    for (var i = parts.length - 1; i >= 0; i--){
+      var q = parts[i];
+      q.x += q.vx; q.y += q.vy; q.vy += q.g; q.rot += q.vrot; q.vida -= q.fade;
+      if (q.vida <= 0 || q.y > innerHeight + 60){ parts.splice(i, 1); continue; }
+      cx.save();
+      cx.globalAlpha = Math.max(0, Math.min(1, q.vida));
+      cx.translate(q.x, q.y); cx.rotate(q.rot); cx.fillStyle = q.color;
+      if (q.forma === 'rect') cx.fillRect(-q.s/2, -q.s/4, q.s, q.s/2);
+      else if (q.forma === 'estrella') estrella(cx, q.s);
+      else { cx.beginPath(); cx.arc(0, 0, q.s/2, 0, 6.284); cx.fill(); }
+      cx.restore();
+    }
+    if (parts.length){ requestAnimationFrame(paso); }
+    else { corriendo = false; cx.clearRect(0, 0, innerWidth, innerHeight); }
+  }
+
+  function lanzar(tipo){
+    var r = recetas[tipo]; if (!r) return;
+    if (reduce){
+      cx.clearRect(0, 0, innerWidth, innerHeight);
+      cx.save(); cx.globalAlpha = .9; cx.fillStyle = r.colores[0];
+      cx.font = '600 46px Georgia, serif'; cx.textAlign = 'center';
+      cx.fillText(tipo === 'fuego' ? '🔥' : tipo === 'confeti' ? '🎉' : '⭐', innerWidth/2, innerHeight/2);
+      cx.restore();
+      setTimeout(function(){ cx.clearRect(0, 0, innerWidth, innerHeight); }, 900);
+      return;
+    }
+    for (var i = 0; i < r.n; i++) parts.push(r.crear());
+    if (!corriendo){ corriendo = true; requestAnimationFrame(paso); }
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-fx]'), function(b){
+    b.addEventListener('click', function(){ lanzar(b.getAttribute('data-fx')); });
+  });
+})();
+</script>

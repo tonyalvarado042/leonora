@@ -2,7 +2,7 @@
 
 App de horario, hábitos de fe y organización del tiempo, para una familia y sus grupos.
 
-**Versión 4 del diseño.** Todavía no hay código.
+**Versión 5 del diseño.** Todavía no hay código.
 Página visual: `docs/dia-de-leonora.html`
 
 ---
@@ -25,6 +25,8 @@ Página visual: `docs/dia-de-leonora.html`
 | 12 | Bienvenida con video antes de configurar | ninguno |
 | 13 | **App nativa iOS + Android** (avisos de verdad) | cambia el stack completo |
 | 14 | Invitados con funciones básicas; el resto se paga | `personas.tipo_cuenta`, `miembros_grupo.nivel_acceso`, tabla `suscripciones` |
+| 15 | **Cuatro rachas separadas** con niveles desbloqueables | tablas `rachas`, `logros`, `logros_ganados` |
+| 16 | Premios por terminar + celebración a pantalla completa | `tareas_dia.minutos_reales/termino_de_verdad/puntos`, `dias.porcentaje_cumplido` |
 
 **`familias` desapareció:** una familia es un `grupo` de tipo familia. Todo lo que
 sirve para la familia sirve igual para las amigas.
@@ -41,55 +43,65 @@ La capa 3 es una copia: mover algo hoy no daña la rutina.
 
 ---
 
-## 3. Las 24 tablas
+## 3. Las 27 tablas
 
 ### El día — Fase 1
 - **`personas`** — `id`, `nombre`, `avatar`, `fecha_nacimiento`, `email`, `rol` (tutor|hijo|adulto), `sexo`, `zona_horaria`, **`tipo_cuenta`** (invitada|completa), `tutor_email`
 - **`ajustes`** — `persona_id`, `hora_despertar`, `hora_dormir`, `ocupacion` (**colegio|trabajo|ambos|ninguno**), `hora_fin_ocupacion` (14:00), `avisar_antes_min` (**10**), `avisos_activos`, `silencio_desde/hasta`, `dias_ocupados`, `idioma`
 - **`actividades`** — `id`, `nombre`, `emoji`, `tipo` (**fe|estudio|casa|deporte|familia|descanso**), `duracion_min`, `es_habito`, `meta_semanal`, `es_fijo`, `avisar`, `avisar_antes_min`, `creada_por`
 - **`rutina`** — `persona_id`, `modo` (escolar|vacaciones), `dia_semana`, `hora_inicio`, `hora_fin`, `actividad_id`, `es_fijo`
-- **`dias`** — `persona_id`, `fecha`, `tipo_dia`, `modo_usado`, `nota_ia`, `estado`
-- **`tareas_dia`** — `dia_id`, `actividad_id`, `evento_id`, `encargo_id`, `devocional_id`, `titulo`, `hora_inicio`, `hora_fin`, `estado`, `completado_en`, `nota`
+- **`dias`** — `persona_id`, `fecha`, `tipo_dia`, `modo_usado`, `nota_ia`, `estado`, **`porcentaje_cumplido`**
+- **`tareas_dia`** — `dia_id`, `actividad_id`, `evento_id`, `encargo_id`, `devocional_id`, `titulo`, `hora_inicio`, `hora_fin`, `estado`, `completado_en`, `nota`, **`minutos_reales`**, **`termino_de_verdad`**, **`puntos`**
 - **`avisos`** — `persona_id`, `tipo` (tarea|recado|invitacion|oracion|evento|ciclo), `referencia_id`, `momento`, `canal`, `titulo`, `cuerpo`, `estado`, `leido_en` — *alimenta la campanita*
 
-### Fe — Fase 3
+### Rachas y premios — Fase 2
+- **`rachas`** — `persona_id`, **`via`** (apertura|dia|devocional|oracion), `racha_actual`,
+  `racha_mejor`, `total_dias`, `ultimo_dia`, `gracia_usada_mes`
+- **`logros`** — `via`, `dias_requeridos`, `nombre`, `emoji`, `orden` — *el catálogo*
+- **`logros_ganados`** — `persona_id`, `logro_id`, `ganado_en`, **`visto_en`**
+
+> **Corrijo la v3:** ahí dije que las rachas eran una consulta y no una tabla.
+> Con cuatro vías, niveles y día de gracia ya no aplica: se leen en *cada*
+> apertura y hay que guardar cuándo se ganó cada insignia.
+
+### Fe — Fase 4
 - **`devocionales`** — `titulo`, `pasaje`, `texto`, `pregunta`, `minutos`, `edad_min/max`
 - **`versiculos`** — `dia_del_año`, `referencia`, `tema`
 - **`versiculos_versiones`** — `versiculo_id`, `version` (RVR|NVI|NTV…), `texto`
 - **`versiculos_guardados`** — `persona_id`, `versiculo_id`
 
-### La gente — Fase 4
+### La gente — Fase 5
 - **`grupos`** — `nombre`, `tipo` (**familia|amigos|iglesia|otro**), `emoji`, `creado_por`, `plan`
 - **`miembros_grupo`** — `grupo_id`, `persona_id`, `rol` (dueño|tutor|miembro), **`ve_mi_calendario`**, **`nivel_acceso`** (invitado|completo), `chat_leido_en`, `estado`
 - **`encargos`** — `de_persona_id`, `para_persona_id`, `titulo`, `nota`, `fecha`, `tipo` (tarea|recordatorio|consejo), `estado`, **`respuesta`**, `respondido_en`
 - **`eventos`** — `grupo_id`, `persona_id`, `tipo`, `titulo`, `fecha_inicio/fin`, `recurrencia`, `efecto`, `propuesto_por`, `requiere_respuesta`, `origen`, `confianza`, `confirmado`
 
-### Oración — Fase 5
+### Oración — Fase 6
 - **`oraciones`** — `persona_id`, `titulo`, `detalle`, **`visibilidad`** (solo_yo|familia|grupo|todas_mis_personas|**publica**), `grupo_id`, `estado` (activa|**contestada**|archivada), **`es_anonima`**, **`estado_moderacion`** (pendiente|aprobada|rechazada), `como_contesto`, `contestada_en`
 - **`oraciones_apoyo`** — `oracion_id`, `persona_id`, `oro_en`
 
-### El Muro — Fase 6
+### El Muro — Fase 7
 - **`reportes`** — `oracion_id`, `reportado_por`, `motivo`, `estado`, `resuelto_en`
   > La revisión con IA corre antes de publicar; esto es la segunda red.
 
-### Lo privado — Fase 7
+### Lo privado — Fase 8
 - **`ciclo`** — `persona_id`, `fecha_inicio`, `fecha_fin`, `duracion_estimada`, `nota`
   > **Única tabla sin excepción de tutor.** RLS estricta a `persona_id = auth.uid()`.
 
-### Social — Fase 8
+### Social — Fase 9
 - **`invitaciones`** — `tipo` (grupo|actividad), `grupo_id`, `tarea_id`, `email`, `invitado_por`, `codigo`, `medio` (**app|whatsapp**), `estado`, `caduca_en`
 - **`mensajes`** — `grupo_id`, `persona_id`, `texto`, `respuesta_a`, `creado_en`
 - **`respuestas_evento`** — `evento_id`, `persona_id`, `respuesta` (**si|no|tal_vez**), `nota`
 
-### Dinero — Fase 9
+### Dinero — Fase 10
 - **`suscripciones`** — **`grupo_id`** (paga la familia, no la persona), `plan`, `estado`, `vence_en`, `proveedor` (apple|google), `id_externo`, `renovacion_automatica`
 
-### Fotos — Fase 10
+### Fotos — Fase 11
 - **`fotos`** — `grupo_id`, `subida_por`, `tipo`, `archivo_url`, `estado`, `resumen`
 
-**No son tablas:** las rachas (consulta sobre `tareas_dia`), las oraciones
-contestadas (filtro por `estado`), la imagen del versículo (se genera en el
-teléfono).
+**No son tablas:** las oraciones contestadas (filtro por `estado`), el chat
+leído (columna), el nivel de acceso del invitado (columna), la imagen del
+versículo (se genera en el teléfono).
 
 ---
 
@@ -103,7 +115,7 @@ teléfono).
    **y** `estado_moderacion = aprobada`. Nunca apellido, ciudad ni forma de
    contacto.
 
-RLS en las 24 tablas.
+RLS en las 27 tablas.
 
 ### El Muro es público: tres protecciones de diseño
 - **`es_anonima`** — se puede publicar sin nombre.
@@ -131,7 +143,52 @@ Nueve de cada diez días cuestan $0.
 
 ---
 
-## 6. El modelo de invitados
+## 6. Rachas, niveles y premios
+
+### Cuatro vías, no una
+Una racha única castiga demasiado: perder 40 días de devocional por no ordenar
+el cuarto una vez desanima y la gente abandona. Cuatro vías separadas dan
+cuatro razones distintas de volver mañana.
+
+| Vía | Cuenta | Escalera (24 insignias en total) |
+|---|---|---|
+| 💜 Devocional | días con devocional hecho | 3 Semilla · 7 Raíz · 14 Brote · 30 Árbol · 100 Fruto · 365 Cosecha |
+| ✅ Cumplir tu día | días con el día completo | 3 En marcha · 7 Constante · 14 Disciplinada · 30 Imparable · 100 De hierro · 365 Leyenda |
+| 👋 Abrir la app | días con apertura | 3 Presente · 7 Fiel · 30 Siempre aquí · 100 Ancla |
+| 🙏 Orar por otros | días con un amén dado | 3 Primer amén · 7 Intercesora · 30 Guerrera · 100 Centinela |
+
+Los nombres viven en `logros`: cambiarlos es editar filas, no código.
+
+### Dos reglas que evitan el abandono
+- **Un día de gracia al mes** (`rachas.gracia_usada_mes`). Fallar una vez no
+  rompe la racha. Sin esto, quien falla un día deja la app entera.
+- **La racha usa el día real de la persona**, no la fecha del servidor: marcar
+  el devocional a las 00:30 cuenta para el día que estaba viviendo.
+
+### Los premios por terminar — con un matiz importante
+El usuario pidió premiar terminar antes de tiempo. En quehaceres es correcto;
+**en estudio y fe, premiar la velocidad enseña lo contrario de lo que se
+busca** — pagar por estudiar menos, o por devocionales de dos minutos.
+
+La regla, por tipo de actividad:
+
+| Tipo | Qué se premia |
+|---|---|
+| `casa` | **La velocidad.** Más puntos mientras más tiempo ahorres. |
+| `estudio` | **Terminar la tarea.** Al marcar antes, la app pregunta: *¿terminaste, o lo dejas para después?* Solo el primer caso paga. |
+| `fe`, `deporte` | **El tiempo completo.** Aquí correr no tiene sentido. |
+| — | **Día perfecto:** todo el día cumplido, premio aparte. |
+
+### La celebración
+Capa a pantalla completa (canvas), por encima de la app, ~2 segundos, y se va
+sola. Tres formas distintas para que se sepa qué pasó sin leer:
+**🔥 fuego** velocidad y rachas · **🎉 confeti** insignia nueva ·
+**⭐ estrellas** día perfecto. Respeta `prefers-reduced-motion`.
+`logros_ganados.visto_en` decide si toca lanzarla.
+
+---
+
+## 7. El modelo de invitados
 
 Cuando Leonora invita a Emma, Emma entra **a lo que la invitaron**, no a toda
 la app. Su horario es asunto de su familia, y esa familia todavía no está aquí.
@@ -154,28 +211,33 @@ Dos notas:
 
 ---
 
-## 7. Fases
+## 8. Fases
 
 | Fase | Qué se construye | Tablas |
 |---|---|---|
 | **1** | **El día con alarmas: pantalla de Hoy, rutina a mano, avisos nativos.** | **7** |
-| 2 | Bienvenida con video + arranque con IA | +0 |
-| 3 | Fe: devocionales, versículo del día, rachas | +4 |
-| 4 | La familia y la campanita: grupos, recados con respuesta | +4 |
-| 5 | Oraciones: visibilidad, «amén», contestadas | +2 |
-| **6** | **El Muro: público, web abierta, anónimo, moderación** | **+1** |
-| 7 | Lo privado: calendario de ciclo | +1 |
-| 8 | Amigas: invitaciones, calendario de grupo, chat | +3 |
-| 9 | Invitados y cobro por las tiendas | +1 |
-| 10 | Fotos de horarios y calendarios | +1 |
+| **2** | **Rachas, niveles y celebración.** Barato, y es lo que hace volver. | **+3** |
+| 3 | Bienvenida con video + arranque con IA | +0 |
+| 4 | Fe: devocionales y versículo del día | +4 |
+| 5 | La familia y la campanita: grupos, recados con respuesta | +4 |
+| 6 | Oraciones: visibilidad, «amén», contestadas | +2 |
+| 7 | El Muro: público, web abierta, anónimo, moderación | +1 |
+| 8 | Lo privado: calendario de ciclo | +1 |
+| 9 | Amigas: invitaciones, calendario de grupo, chat | +3 |
+| 10 | Invitados y cobro por las tiendas | +1 |
+| 11 | Fotos de horarios y calendarios | +1 |
+
+Las rachas suben al segundo puesto: cuestan 3 tablas simples y son lo que
+consigue que la app se abra mañana. Sin ellas, las fases siguientes le llegan
+a nadie.
 
 ---
 
-## 8. Guardado para fases posteriores
+## 9. Guardado para fases posteriores
 
 **No entra ahora.** Escrito aquí para no perderlo.
 
-### 8.1 Entrenar el cuerpo y el espíritu
+### 9.1 Entrenar el cuerpo y el espíritu
 - La persona elige **cuántos minutos de deporte** al día (15, 30, los que sean)
   y si de día o de noche, en el arranque — igual que el devocional.
 - Después puede **mover ese bloque** en su horario como cualquier otra cosa.
@@ -186,25 +248,25 @@ Dos notas:
 - Datos: `ajustes.minutos_deporte`, `ajustes.momento_deporte`, y un enlace
   entre la actividad de tipo `deporte` y la de tipo `fe`.
 
-### 8.2 El entrenamiento en sí
+### 9.2 El entrenamiento en sí
 - Al tocar el bloque de deporte, sale la rutina del día.
 - **Todo funcional**, con lo que hay en casa: un par de mancuernas y un banco o
   una mesa firme. Sin gimnasio ni máquinas.
 - Tono: cuidar el cuerpo porque es prestado, no por vanidad.
 - Datos: +2 tablas (`ejercicios`, `entrenamientos`).
 
-### 8.3 Nutrición
+### 9.3 Nutrición
 - Después del entrenamiento, porque comparten la misma idea y sin la parte de
   deporte no tiene dónde apoyarse.
 
-### 8.4 Widget de iOS
+### 9.4 Widget de iOS
 - En la pantalla de inicio: devocional del día, lo que toca hoy, y el versículo.
 - Se hace cuando las fases 1 a 3 estén andando: el widget solo muestra datos
   que ya deben existir.
 
 ---
 
-## 9. Tecnología — ahora nativa
+## 10. Tecnología — ahora nativa
 
 Que sea app nativa cambia una cosa de raíz: **los avisos ahora sí sirven.**
 Una web no despierta el teléfono con la pantalla apagada; una app nativa sí.
@@ -227,7 +289,7 @@ debería depender de una descarga.
 
 ---
 
-## 10. El nombre
+## 11. El nombre
 
 Veinte candidatos en `docs/dia-de-leonora.html`. Mi recomendación:
 
@@ -242,7 +304,7 @@ Veinte candidatos en `docs/dia-de-leonora.html`. Mi recomendación:
 
 ---
 
-## 11. Pendiente de decidir
+## 12. Pendiente de decidir
 
 1. **¿Cómo se llama?** Sin nombre no hay ícono, bienvenida ni video.
 2. ¿Fases 1 a 3 juntas (la primera versión enseñable)?
