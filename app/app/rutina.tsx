@@ -1,5 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Cabecera } from '@/componentes/Cabecera';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { SelectorHora } from '@/componentes/SelectorHora';
@@ -88,7 +91,9 @@ export default function Rutina() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: p.papel }} edges={['top']}>
+      <Cabecera titulo="Tu rutina" />
+      <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
       <Text style={[e.intro, { color: p.tintaSuave }]}>
         Esto es tu semana normal. La app la reparte en tus días — cambiar algo aquí
         cambia todos los {DIAS.find((d) => d.n === dia)!.plural} que vienen.
@@ -247,7 +252,8 @@ export default function Rutina() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

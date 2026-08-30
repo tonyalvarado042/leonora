@@ -30,11 +30,22 @@ export interface TareaSuelta {
   hora_fin: string;
 }
 
+/** Lo mínimo para dibujar un día en el calendario sin cargarlo entero. */
+export interface TareaLigera {
+  titulo: string;
+  emoji: string;
+  tipo: Tarea['tipo'];
+  hora_inicio: string;
+  estado: EstadoTarea;
+}
+
 export interface ResumenDia {
   fecha: Fecha;
   total: number;
   hechas: number;
   porcentaje: number;
+  tipo_dia: Dia['tipo'];
+  tareas: TareaLigera[];
 }
 
 export interface DiaCompleto {
@@ -217,6 +228,11 @@ export class RepositorioLocal implements Repositorio {
           total: cuentan.length,
           hechas: cuentan.filter((t) => t.estado === 'hecha').length,
           porcentaje: d.dia.porcentaje_cumplido,
+          tipo_dia: d.dia.tipo,
+          tareas: d.tareas.map((t) => ({
+            titulo: t.titulo, emoji: t.emoji, tipo: t.tipo,
+            hora_inicio: t.hora_inicio, estado: t.estado,
+          })),
         };
       })
       .sort((x, y) => x.fecha.localeCompare(y.fecha));

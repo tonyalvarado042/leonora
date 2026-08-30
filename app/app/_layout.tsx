@@ -18,25 +18,10 @@ export default function Disposicion() {
   return (
     <ProveedorCelebracion activadas={activadas}>
       <StatusBar style={p.oscuro ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: p.papel },
-          headerTintColor: p.tinta,
-          headerTitleStyle: { fontWeight: '700' },
-          headerShadowVisible: false,
-          contentStyle: { backgroundColor: p.papel },
-        }}
-      >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-        <Stack.Screen name="bienvenida" options={{ headerShown: false }} />
-        <Stack.Screen name="arranque" options={{ headerShown: false }} />
-        <Stack.Screen name="rutina" options={{ title: 'Tu rutina' }} />
-        <Stack.Screen name="ajustes" options={{ title: 'Ajustes' }} />
-        <Stack.Screen name="rachas" options={{ title: 'Tus rachas' }} />
-        <Stack.Screen name="calendario" options={{ title: 'Tu calendario' }} />
-        <Stack.Screen name="actividad" options={{ title: 'Una cosa tuya', presentation: 'modal' }} />
-      </Stack>
+      {/* Sin cabecera del navegador: cada pantalla pone la suya con
+          <Cabecera>, porque la de react-navigation no pinta el botón de
+          volver en web y la app se quedaba sin salida. */}
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: p.papel } }} />
     </ProveedorCelebracion>
   );
 }

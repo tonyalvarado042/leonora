@@ -1,5 +1,8 @@
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Cabecera } from '@/componentes/Cabecera';
 import { useFocusEffect } from 'expo-router';
 
 import { repositorio } from '@/lib/repositorio';
@@ -29,7 +32,9 @@ export default function Rachas() {
   const siguiente = fuerte ? proximoLogro(fuerte.via, fuerte.racha_actual) : null;
 
   return (
-    <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: p.papel }} edges={['top']}>
+      <Cabecera titulo="Tus rachas" />
+      <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
       <View style={[e.grande, { backgroundColor: p.fuegoPiso, borderColor: p.fuego }]}>
         <Text style={e.llama}>🔥</Text>
         <Text style={[e.numero, { color: p.fuego }]}>{fuerte?.racha_actual ?? 0}</Text>
@@ -108,7 +113,8 @@ export default function Rachas() {
           en otra sin perderlo todo. Y una vez al mes, fallar un día no rompe nada.
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

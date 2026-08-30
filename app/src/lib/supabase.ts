@@ -22,7 +22,7 @@ import {
   type Logro, type Marcado, type Racha, type Via,
 } from './rachas';
 import type {
-  DiaCompleto, Premio, Repositorio, ResumenDia, TareaSuelta,
+  DiaCompleto, Premio, Repositorio, ResumenDia, TareaLigera, TareaSuelta,
 } from './repositorio';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, EstadoTarea, Fecha, Persona, Tarea,
@@ -134,10 +134,13 @@ export class RepositorioSupabase implements Repositorio {
   async resumenDias(desde: Fecha, hasta: Fecha): Promise<ResumenDia[]> {
     const filas = pedir(
       await this.sb.from('dias')
-        .select('fecha, porcentaje_cumplido, tareas_dia(estado)')
+        .select('fecha, tipo, porcentaje_cumplido, tareas_dia(titulo, emoji, tipo, hora_inicio, estado)')
         .gte('fecha', desde).lte('fecha', hasta).order('fecha'),
       'leer el historial',
-    ) as { fecha: Fecha; porcentaje_cumplido: number; tareas_dia: { estado: string }[] }[];
+    ) as {
+      fecha: Fecha; tipo: Dia['tipo']; porcentaje_cumplido: number;
+      tareas_dia: TareaLigera[];
+    }[];
 
     return filas.map((f) => {
       const cuentan = f.tareas_dia.filter((t) => t.estado !== 'omitida');
@@ -146,6 +149,8 @@ export class RepositorioSupabase implements Repositorio {
         total: cuentan.length,
         hechas: cuentan.filter((t) => t.estado === 'hecha').length,
         porcentaje: f.porcentaje_cumplido,
+        tipo_dia: f.tipo,
+        tareas: [...f.tareas_dia].sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio)),
       };
     });
   }

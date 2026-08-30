@@ -1,5 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Cabecera } from '@/componentes/Cabecera';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { usarPaleta } from '@/lib/tema';
@@ -28,7 +31,9 @@ export default function Ajustes() {
   const guardar = async (cambios: Partial<TipoAjustes>) => setAj(await repositorio.guardarAjustes(cambios));
 
   return (
-    <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: p.papel }} edges={['top']}>
+      <Cabecera titulo="Ajustes" />
+      <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
       <Grupo titulo="TÚ">
         <View style={e.campo}>
           <Text style={[e.campoEtiqueta, { color: p.tintaSuave }]}>Tu nombre</Text>
@@ -167,7 +172,8 @@ export default function Ajustes() {
       <Text style={[e.version, { color: p.tintaTenue }]}>
         GraceDay · tu día, tu fe y tu gente
       </Text>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

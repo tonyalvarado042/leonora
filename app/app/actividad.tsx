@@ -1,5 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Cabecera } from '@/componentes/Cabecera';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
 import { repositorio } from '@/lib/repositorio';
@@ -63,7 +66,9 @@ export default function EditarActividad() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: p.papel }} edges={['top']}>
+      <Cabecera titulo="Una cosa tuya" />
+      <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
       <Text style={[e.etiqueta, { color: p.tintaSuave }]}>¿Cómo se llama?</Text>
       <TextInput
         value={nombre}
@@ -190,7 +195,8 @@ export default function EditarActividad() {
           <Text style={[e.borrarTexto, { color: p.fuego }]}>Borrar «{original.nombre}»</Text>
         </Pressable>
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

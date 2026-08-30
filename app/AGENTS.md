@@ -28,18 +28,19 @@ escribir código.** Si están bloqueados por red, la fuente de verdad son los
 
 ## Regla que no se salta: documentar SIEMPRE
 
-**Cada cambio se refleja en `../DOCUMENTACION.md` en el mismo commit.** No al
-final, no cuando haya tiempo: en el mismo commit.
+**Cada cambio actualiza los tres documentos, en el mismo commit.** No al final,
+no cuando haya tiempo: en el mismo commit. Y viven en el repositorio, en
+Markdown, para poder leerlos desde GitHub sin bajar nada.
 
-Ahí va, completo y al día:
-- Todas las tablas, campo por campo, con su tipo y para qué sirve.
-- Cómo se relacionan entre ellas.
-- Todas las funciones del programa y qué hace cada una.
-- Las fases: la que se está haciendo, las que faltan y lo guardado para después.
-- Las decisiones de diseño y **por qué** se tomaron.
+| Documento | Qué se actualiza |
+|---|---|
+| `../DOCUMENTACION.md` | La referencia: tablas campo por campo, relaciones, funciones, reglas de negocio, fases, y las decisiones **con su porqué** |
+| `../CHANGELOG.md` | Qué se hizo, qué se arregló y **qué se verificó**. Lo nuevo arriba |
+| `../README.md` | El índice y el estado de las fases, si cambió |
 
-Si se añade una columna, una función o una pantalla y no aparece ahí, el
-trabajo no está terminado.
+Si se añade una columna, una función o una pantalla y no aparece en los tres,
+el trabajo no está terminado. Lo mismo vale para cada PR: la descripción
+apunta a lo que cambió en la documentación.
 
 ## Antes de dar algo por hecho
 

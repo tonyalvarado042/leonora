@@ -7,6 +7,8 @@ enteras.
 **Estado: fases 1, 2 y 3 hechas y verificadas.**
 Última actualización: 2026-08-29
 
+- **Índice del repositorio:** `README.md`
+- **Historial de todo lo hecho:** `CHANGELOG.md`
 - Diseño visual: `docs/dia-de-leonora.html`
 - Resumen del diseño: `DISENO.md`
 - Publicar en las tiendas: `LANZAMIENTO.md`
@@ -309,8 +311,12 @@ Una interfaz `Repositorio`, dos implementaciones intercambiables:
 | `ajustes` | Nombre, ícono, avisos, sonidos, celebraciones, empezar de nuevo |
 | `+not-found` | Enseña Hoy: la app arranca aunque no se sirva en la raíz |
 
-**Componentes:** `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
+**Componentes:** `Cabecera` · `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
 `AnilloProgreso` · `Celebracion` · `SelectorHora` · `PreguntaTerminaste` · `Enlace`
+
+> **`Cabecera` es propia y no la del navegador** porque react-navigation **no
+> pinta el botón de volver en web**: la app se quedaba sin salida en el
+> calendario, la rutina y los ajustes. Toda pantalla que no sea Hoy la lleva.
 
 ---
 
@@ -362,7 +368,25 @@ para después?* Solo el primer caso paga.
 6. Cena a las 19:00 y a dormir a la hora elegida: anclas.
 7. **El fin de semana empieza una hora más tarde.**
 
-### 5.5 Los tres gestos de una tarea
+### 5.5 El calendario
+Dos vistas, y ninguna intenta ser Google Calendar en una pantalla de teléfono.
+
+- **Mes:** rejilla. En cada celda, el número y **hasta cuatro barritas de
+  color**, una por tipo de cosa que hay ese día. De un vistazo se ve si el día
+  está cargado de estudio, de casa o de fe, sin leer una palabra. Barra llena =
+  terminado; a media tinta = pendiente. El fondo verde es un día cumplido del
+  todo, el gris un fin de semana, y el rojizo un feriado (llega en la fase 5).
+- **Semana:** ahí sí cabe todo, así que es una **agenda de verdad**: los siete
+  días en vertical, cada uno con sus tareas, su hora, su color de tipo y su
+  tic. Siete columnas en un teléfono no se leen; siete filas sí.
+
+Ambas navegan hacia atrás y adelante, con «Volver a hoy» cuando te alejas.
+
+`ResumenDia` lleva `fecha`, `total`, `hechas`, `porcentaje`, `tipo_dia` y una
+lista ligera de tareas (`titulo`, `emoji`, `tipo`, `hora_inicio`, `estado`) —
+lo justo para dibujar sin cargar el día entero.
+
+### 5.6 Los tres gestos de una tarea
 - **El círculo** marca y desmarca.
 - **El cuerpo** abre el detalle (nota, minutos, chispas).
 - **Dejar apretado** la salta — y saltada se ve **distinta** de hecha:
@@ -461,5 +485,4 @@ Lo leído entra a `eventos` **sin confirmar**.
 | La foto nunca sale en el Muro | Es una menor en una página abierta |
 | El ciclo, ni los tutores | Es información de salud suya |
 | Rachas persistidas, no consulta | Se leen en cada apertura y hay que saber cuándo se ganó cada insignia |
-| El repositorio devuelve copias | Sin esto React no vuelve a pintar. Causó dos bugs |
 | Lo puro separado de la plataforma | Zonas horarias y medianoche se prueban sin simulador |

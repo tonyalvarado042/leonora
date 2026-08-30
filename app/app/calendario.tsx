@@ -1,11 +1,14 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Cabecera } from '@/componentes/Cabecera';
 import { useFocusEffect } from 'expo-router';
 
 import { diasEntre, fechaLarga, fechaLocal, sumarDias } from '@/lib/fechas';
 import { repositorio, type ResumenDia } from '@/lib/repositorio';
-import { usarPaleta } from '@/lib/tema';
-import type { Fecha } from '@/lib/tipos';
+import { colorDeTipo, usarPaleta, type Paleta } from '@/lib/tema';
+import type { Fecha, TipoActividad } from '@/lib/tipos';
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -37,7 +40,9 @@ export default function Calendario() {
   const cumplidos = conDatos.filter((r) => r.porcentaje === 100).length;
 
   return (
-    <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: p.papel }} edges={['top']}>
+      <Cabecera titulo="Tu calendario" />
+      <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
       <View style={e.solapas}>
         {(['semana', 'mes'] as const).map((v) => (
           <Pressable
@@ -83,53 +88,135 @@ export default function Calendario() {
         </Pressable>
       )}
 
-      <View style={e.cabecera}>
-        {CABECERA.map((d, i) => (
-          <Text key={i} style={[e.cabeceraTexto, { color: p.tintaTenue }]}>{d}</Text>
-        ))}
-      </View>
+      {vista === 'mes' && (
+        <View style={e.cabecera}>
+          {CABECERA.map((d, i) => (
+            <Text key={i} style={[e.cabeceraTexto, { color: p.tintaTenue }]}>{d}</Text>
+          ))}
+        </View>
+      )}
 
-      <View style={e.rejilla}>
-        {celdas.map((f, i) => {
-          if (f === null) return <View key={`v${i}`} style={e.celda} />;
-          const r = resumen.get(f);
-          const esHoy = f === hoy;
-          const futuro = f > hoy;
-          const lleno = r && r.total > 0 ? r.porcentaje : null;
+      {vista === 'mes' ? (
+        <View style={e.rejilla}>
+          {celdas.map((f, i) => {
+            if (f === null) return <View key={`v${i}`} style={e.celda} />;
+            const r = resumen.get(f);
+            const esHoy = f === hoy;
+            const futuro = f > hoy;
+            const lleno = r && r.total > 0 ? r.porcentaje : null;
+            const finde = r?.tipo_dia === 'fin_de_semana';
+            const feriado = r?.tipo_dia === 'feriado';
 
-          return (
-            <View
-              key={f}
-              accessible
-              aria-label={`${fechaLarga(f, zona)}${
-                lleno === null ? ', sin datos' : `, ${r!.hechas} de ${r!.total} hechas`}`}
-              style={[
-                e.celda,
-                {
-                  backgroundColor: lleno === null ? 'transparent'
-                    : lleno === 100 ? p.verde
-                    : lleno >= 50 ? p.verdePiso
-                    : p.tarjeta2,
-                  borderColor: esHoy ? p.alba : 'transparent',
-                  borderWidth: esHoy ? 2 : 0,
-                  opacity: futuro ? 0.45 : 1,
-                },
-              ]}
-            >
-              <Text style={[
-                e.numero,
-                { color: lleno === 100 ? '#FFF' : esHoy ? p.alba : p.tinta,
-                  fontWeight: esHoy ? '800' : '600' },
-              ]}>
-                {Number(f.slice(8, 10))}
-              </Text>
-              {r && r.total > 0 && lleno !== 100 && (
-                <Text style={[e.mini, { color: p.tintaTenue }]}>{r.hechas}/{r.total}</Text>
-              )}
-            </View>
-          );
-        })}
-      </View>
+            return (
+              <View
+                key={f}
+                accessible
+                aria-label={`${fechaLarga(f, zona)}${
+                  lleno === null ? ', sin nada' : `, ${r!.hechas} de ${r!.total} hechas`}`}
+                style={[
+                  e.celda,
+                  {
+                    backgroundColor: feriado ? p.fuegoPiso
+                      : lleno === 100 ? p.verdePiso
+                      : finde ? p.tarjeta2
+                      : 'transparent',
+                    borderColor: esHoy ? p.alba : 'transparent',
+                    borderWidth: esHoy ? 2 : 0,
+                    opacity: futuro ? 0.55 : 1,
+                  },
+                ]}
+              >
+                <Text style={[
+                  e.numero,
+                  { color: esHoy ? p.alba : p.tinta, fontWeight: esHoy ? '800' : '600' },
+                ]}>
+                  {Number(f.slice(8, 10))}
+                </Text>
+                <Barras tareas={r?.tareas ?? []} p={p} />
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <View style={e.agenda}>
+          {celdas.filter((f): f is Fecha => f !== null).map((f) => {
+            const r = resumen.get(f);
+            const esHoy = f === hoy;
+            const tareas = r?.tareas ?? [];
+            return (
+              <View
+                key={f}
+                style={[
+                  e.diaAgenda,
+                  {
+                    backgroundColor: p.tarjeta,
+                    borderColor: esHoy ? p.alba : p.linea,
+                    borderWidth: esHoy ? 1.5 : StyleSheet.hairlineWidth,
+                    opacity: f > hoy ? 0.7 : 1,
+                  },
+                ]}
+              >
+                <View style={e.diaAgendaCab}>
+                  <Text style={[e.diaAgendaNombre, { color: esHoy ? p.alba : p.tinta }]}>
+                    {fechaLarga(f, zona)}
+                  </Text>
+                  {r && r.total > 0 && (
+                    <Text style={[
+                      e.diaAgendaCuenta,
+                      { color: r.porcentaje === 100 ? p.verde : p.tintaTenue },
+                    ]}>
+                      {r.hechas}/{r.total}
+                    </Text>
+                  )}
+                </View>
+
+                {tareas.length === 0 ? (
+                  <Text style={[e.diaAgendaVacio, { color: p.tintaTenue }]}>
+                    {f > hoy ? 'Se arma cuando llegue' : 'Nada guardado'}
+                  </Text>
+                ) : (
+                  <View style={e.tiras}>
+                    {tareas.slice(0, 6).map((t, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          e.tira,
+                          {
+                            backgroundColor: t.estado === 'omitida' ? p.tarjeta2 : colorDeTipo(t.tipo, p) + '22',
+                            borderLeftColor: t.estado === 'omitida' ? p.tintaTenue : colorDeTipo(t.tipo, p),
+                          },
+                        ]}
+                      >
+                        <Text style={[e.tiraHora, { color: p.tintaTenue }]}>{t.hora_inicio}</Text>
+                        <Text
+                          numberOfLines={1}
+                          style={[
+                            e.tiraTexto,
+                            {
+                              color: t.estado === 'omitida' ? p.tintaTenue : p.tinta,
+                              textDecorationLine: t.estado === 'hecha' ? 'line-through' : 'none',
+                            },
+                          ]}
+                        >
+                          {t.emoji} {t.titulo}
+                        </Text>
+                        {t.estado === 'hecha' && (
+                          <Text style={[e.tiraTic, { color: p.verde }]}>✓</Text>
+                        )}
+                      </View>
+                    ))}
+                    {tareas.length > 6 && (
+                      <Text style={[e.tiraMas, { color: p.tintaTenue }]}>
+                        y {tareas.length - 6} más
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      )}
 
       <View style={[e.pie, { backgroundColor: p.tarjeta, borderColor: p.linea }]}>
         {conDatos.length === 0 ? (
@@ -151,11 +238,59 @@ export default function Calendario() {
       </View>
 
       <View style={e.leyenda}>
-        <Cuadro color={p.verde} texto="Completo" />
-        <Cuadro color={p.verdePiso} texto="A medias" />
-        <Cuadro color={p.tarjeta2} texto="Flojo" />
+        <Cuadro color={p.alba} texto="Fe" />
+        <Cuadro color={p.dia} texto="Estudio" />
+        <Cuadro color={p.tarde} texto="Casa" />
+        <Cuadro color={p.verde} texto="Deporte" />
+        <Cuadro color={p.fuego} texto="Familia" />
       </View>
-    </ScrollView>
+      <Text style={[e.leyendaPie, { color: p.tintaTenue }]}>
+        Barra llena, terminado. A media tinta, aún pendiente. El fondo verde es
+        un día cumplido del todo; el gris, fin de semana.
+      </Text>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+/**
+ * Las barritas de un día en el mes.
+ *
+ * En una celda de este tamaño no cabe el nombre de nada, pero sí el color: una
+ * barra por tipo de cosa que hay ese día. De un vistazo se ve si el día está
+ * cargado de estudio, de casa o de fe, sin leer una palabra. Las hechas van
+ * llenas y las pendientes a media tinta.
+ */
+function Barras({ tareas, p }: { tareas: ResumenDia['tareas']; p: Paleta }) {
+  if (tareas.length === 0) return null;
+
+  // Una barra por tipo, en el orden en que aparecen, hasta cuatro.
+  const porTipo = new Map<TipoActividad, { total: number; hechas: number }>();
+  for (const t of tareas) {
+    if (t.estado === 'omitida') continue;
+    const v = porTipo.get(t.tipo) ?? { total: 0, hechas: 0 };
+    v.total += 1;
+    if (t.estado === 'hecha') v.hechas += 1;
+    porTipo.set(t.tipo, v);
+  }
+  const tipos = [...porTipo.entries()].slice(0, 4);
+  if (tipos.length === 0) return null;
+
+  return (
+    <View style={e.barras}>
+      {tipos.map(([tipo, v]) => (
+        <View
+          key={tipo}
+          style={[
+            e.barraTipo,
+            {
+              backgroundColor: colorDeTipo(tipo, p),
+              opacity: v.hechas === v.total ? 1 : 0.42,
+            },
+          ]}
+        />
+      ))}
+    </View>
   );
 }
 
@@ -225,8 +360,24 @@ const e = StyleSheet.create({
     width: `${100 / 7}%`, aspectRatio: 1, borderRadius: 10,
     alignItems: 'center', justifyContent: 'center',
   },
-  numero: { fontSize: 14.5, fontVariant: ['tabular-nums'] },
-  mini: { fontSize: 9.5, marginTop: 1 },
+  numero: { fontSize: 14, fontVariant: ['tabular-nums'] },
+  barras: { flexDirection: 'row', gap: 1.5, marginTop: 3, height: 3 },
+  barraTipo: { width: 6, height: 3, borderRadius: 2 },
+  agenda: { gap: 9, marginTop: 4 },
+  diaAgenda: { borderRadius: 14, padding: 13 },
+  diaAgendaCab: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  diaAgendaNombre: { flex: 1, fontSize: 14.5, fontWeight: '700' },
+  diaAgendaCuenta: { fontSize: 13, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  diaAgendaVacio: { fontSize: 12.5, fontStyle: 'italic' },
+  tiras: { gap: 4 },
+  tira: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    borderLeftWidth: 3, borderRadius: 6, paddingVertical: 5, paddingHorizontal: 8,
+  },
+  tiraHora: { fontSize: 10.5, fontVariant: ['tabular-nums'], width: 34 },
+  tiraTexto: { flex: 1, fontSize: 12.5, fontWeight: '600' },
+  tiraTic: { fontSize: 12, fontWeight: '700' },
+  tiraMas: { fontSize: 11.5, marginTop: 2, marginLeft: 8 },
   pie: {
     marginTop: 18, padding: 16, borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth, gap: 6,
@@ -237,4 +388,5 @@ const e = StyleSheet.create({
   leyendaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   leyendaColor: { width: 14, height: 14, borderRadius: 4, borderWidth: StyleSheet.hairlineWidth },
   leyendaTexto: { fontSize: 12 },
+  leyendaPie: { fontSize: 11.5, textAlign: 'center', marginTop: 10, lineHeight: 16 },
 });
