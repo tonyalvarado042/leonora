@@ -5,6 +5,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
+import { Aviso } from '@/componentes/Aviso';
+import { CampoTexto } from '@/componentes/CampoTexto';
 import { SelectorHora } from '@/componentes/SelectorHora';
 import {
   armarSemana, GUSTOS, OCUPACIONES, QUEHACERES, RESPUESTAS_EN_BLANCO,
@@ -37,16 +39,38 @@ export default function Arranque() {
   const [materias, setMaterias] = useState<MateriaLeida[] | null>(null);
   // El día que se está mirando en el preview editable.
   const [diaPreview, setDiaPreview] = useState(1);
+  const [falta, setFalta] = useState<string | null>(null);
 
-  const cambiar = (c: Partial<Respuestas>) => setR((v) => ({ ...v, ...c }));
+  // Al tocar cualquier cosa se quita el aviso: ya se está arreglando.
+  const cambiar = (c: Partial<Respuestas>) => {
+    setFalta(null);
+    setR((v) => ({ ...v, ...c }));
+  };
   const alternar = (lista: 'quehaceres' | 'gustos', id: string) =>
     cambiar({ [lista]: r[lista].includes(id) ? r[lista].filter((x) => x !== id) : [...r[lista], id] } as Partial<Respuestas>);
 
-  // Solo el nombre es obligatorio: todo lo demás trae un valor razonable, y
-  // obligar a decidirlo todo antes de ver nada es como se pierde a la gente.
-  const puedeSeguir = paso !== 1 || r.nombre.trim().length > 0;
+  /**
+   * Qué falta en el paso actual, o null si se puede seguir.
+   *
+   * Solo el nombre es obligatorio: todo lo demás trae un valor razonable, y
+   * obligar a decidirlo todo antes de ver nada es como se pierde a la gente.
+   */
+  function queFalta(): string | null {
+    if (paso === 1 && r.nombre.trim() === '') {
+      return 'Falta tu nombre. Es lo único que necesito para seguir.';
+    }
+    if (paso === 4 && r.ocupacion !== 'ninguno' && r.dias_ocupados.length === 0) {
+      return 'No marcaste ningún día. Elige al menos uno, o pon «Ninguno» arriba.';
+    }
+    return null;
+  }
 
+  // El botón nunca se apaga: se pulsa y avisa. Un botón muerto sin decir por
+  // qué deja a la persona mirando la pantalla sin saber qué hacer.
   function siguiente() {
+    const problema = queFalta();
+    setFalta(problema);
+    if (problema) return;
     if (paso < PASOS) { setPaso(paso + 1); return; }
     setPropuesta(armarSemana(r, 'local'));
   }
@@ -290,16 +314,21 @@ export default function Arranque() {
             <Text style={[e.ayuda, { color: p.tintaSuave }]}>
               Es como te va a saludar la app cada mañana.
             </Text>
-            <TextInput
+            <CampoTexto
+              etiqueta="Tu nombre"
+              obligatorio
+              ayuda="Como te llaman en casa está bien."
+              error={falta && paso === 1 ? falta : null}
               value={r.nombre}
               onChangeText={(t) => cambiar({ nombre: t })}
               placeholder="Tu nombre"
-              placeholderTextColor={p.tintaTenue}
-              aria-label="Tu nombre"
               autoFocus
-              style={[e.entrada, { color: p.tinta, backgroundColor: p.tarjeta, borderColor: p.linea }]}
             />
-            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>¿Cuántos años tienes?</Text>
+            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
+              ¿Cuántos años tienes?  <Text style={{ color: p.tintaTenue, fontWeight: '400' }}>
+                (si no lo pones, no pasa nada)
+              </Text>
+            </Text>
             <View style={e.opciones}>
               {[8, 10, 12, 13, 15, 18].map((n) => (
                 <Chip key={n} texto={`${n}`} puesto={r.edad === n}
@@ -380,17 +409,16 @@ export default function Arranque() {
 
             {r.ocupacion !== 'ninguno' && (
               <>
-                <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
-                  ¿Cómo quieres que se llame en tu horario?
-                </Text>
-                <TextInput
-                  value={r.ocupacion_nombre}
-                  onChangeText={(t) => cambiar({ ocupacion_nombre: t })}
-                  placeholder={OCUPACIONES.find((o) => o.id === r.ocupacion)?.nombre ?? ''}
-                  placeholderTextColor={p.tintaTenue}
-                  aria-label="Nombre de tu colegio o trabajo"
-                  style={[e.entrada, { color: p.tinta, backgroundColor: p.tarjeta, borderColor: p.linea }]}
-                />
+                <View style={{ marginTop: 18 }}>
+                  <CampoTexto
+                    etiqueta="¿Cómo quieres que se llame en tu horario?"
+                    ayuda={`Si lo dejas vacío se llamará «${
+                      OCUPACIONES.find((o) => o.id === r.ocupacion)?.nombre ?? ''}».`}
+                    value={r.ocupacion_nombre}
+                    onChangeText={(t) => cambiar({ ocupacion_nombre: t })}
+                    placeholder={OCUPACIONES.find((o) => o.id === r.ocupacion)?.nombre ?? ''}
+                  />
+                </View>
 
                 <Pressable
                   role="button"
@@ -421,7 +449,11 @@ export default function Arranque() {
                     onCambiar={(h) => cambiar({ ocupacion_fin: h })} />
                 </View>
 
-                <Text style={[e.etiqueta, { color: p.tintaSuave }]}>¿Qué días?</Text>
+                <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
+                  ¿Qué días?  <Text style={{ color: p.tintaTenue, fontWeight: '400' }}>
+                    (al menos uno)
+                  </Text>
+                </Text>
                 <View style={e.dias}>
                   {DIAS.map((d) => {
                     const puesto = r.dias_ocupados.includes(d.n);
@@ -458,7 +490,11 @@ export default function Arranque() {
         {paso === 5 && (
           <>
             <Text style={[e.titulo, { color: p.tinta }]}>¿Qué más hay en tu día?</Text>
-            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>Lo que te toca en casa</Text>
+            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
+              Lo que te toca en casa  <Text style={{ color: p.tintaTenue, fontWeight: '400' }}>
+                (puedes no marcar nada y añadirlo después)
+              </Text>
+            </Text>
             <View style={e.opciones}>
               {QUEHACERES.map((q) => (
                 <Chip key={q.id} texto={`${q.emoji} ${q.nombre}`}
@@ -478,11 +514,12 @@ export default function Arranque() {
           </>
         )}
 
+        <Aviso texto={paso === 1 ? null : falta} />
+
         <Pressable
           role="button"
           onPress={siguiente}
-          disabled={!puedeSeguir}
-          style={[e.principal, { backgroundColor: puedeSeguir ? p.alba : p.linea }]}
+          style={[e.principal, { backgroundColor: p.alba }]}
         >
           <Text style={e.principalTexto}>
             {paso === PASOS ? 'Armar mi semana' : 'Siguiente'}
@@ -490,7 +527,7 @@ export default function Arranque() {
         </Pressable>
 
         {paso > 1 && (
-          <Pressable role="button" onPress={() => setPaso(paso - 1)} style={e.secundario}>
+          <Pressable role="button" onPress={() => { setFalta(null); setPaso(paso - 1); }} style={e.secundario}>
             <Text style={[e.secundarioTexto, { color: p.tintaSuave }]}>Atrás</Text>
           </Pressable>
         )}

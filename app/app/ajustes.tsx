@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Cabecera } from '@/componentes/Cabecera';
+import { CampoTexto } from '@/componentes/CampoTexto';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { usarPaleta } from '@/lib/tema';
@@ -36,15 +37,20 @@ export default function Ajustes() {
       <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
       <Grupo titulo="TÚ">
         <View style={e.campo}>
-          <Text style={[e.campoEtiqueta, { color: p.tintaSuave }]}>Tu nombre</Text>
-          <TextInput
+          <CampoTexto
+            etiqueta="Tu nombre"
+            obligatorio
+            ayuda="Se guarda solo al salir del campo."
+            error={persona.nombre.trim() === ''
+              ? 'Si lo dejas vacío se guardará como «Tú».' : null}
             value={persona.nombre}
             onChangeText={(t) => setPersona({ ...persona, nombre: t })}
-            onBlur={() => { void repositorio.guardarPersona({ nombre: persona.nombre.trim() || 'Tú' }); }}
+            onBlur={() => {
+              const limpio = persona.nombre.trim() || 'Tú';
+              setPersona({ ...persona, nombre: limpio });
+              void repositorio.guardarPersona({ nombre: limpio });
+            }}
             placeholder="Tu nombre"
-            placeholderTextColor={p.tintaTenue}
-            aria-label="Tu nombre"
-            style={[e.entrada, { color: p.tinta, backgroundColor: p.tarjeta2, borderColor: p.linea }]}
           />
         </View>
         <Text style={[e.ayuda, { color: p.tintaSuave, borderTopColor: p.linea, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 14 }]}>

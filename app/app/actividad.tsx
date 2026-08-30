@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Cabecera } from '@/componentes/Cabecera';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
+import { Aviso } from '@/componentes/Aviso';
+import { CampoTexto } from '@/componentes/CampoTexto';
 import { repositorio } from '@/lib/repositorio';
 import { colorDeTipo, NOMBRE_TIPO, usarPaleta } from '@/lib/tema';
 import type { Actividad, TipoActividad } from '@/lib/tipos';
@@ -27,6 +29,7 @@ export default function EditarActividad() {
   const [esFijo, setEsFijo] = useState(false);
   const [avisar, setAvisar] = useState(true);
   const [original, setOriginal] = useState<Actividad | null>(null);
+  const [falta, setFalta] = useState<string | null>(null);
 
   useFocusEffect(useCallback(() => {
     if (!id) return;
@@ -39,10 +42,12 @@ export default function EditarActividad() {
     });
   }, [id]));
 
-  const puedeGuardar = nombre.trim().length > 0;
-
   async function guardar() {
-    if (!puedeGuardar) return;
+    if (nombre.trim() === '') {
+      setFalta('Falta el nombre. ¿Cómo se llama esta cosa que vas a hacer?');
+      return;
+    }
+    setFalta(null);
     const persona = await repositorio.persona();
     await repositorio.guardarActividad({
       id: original?.id ?? `act-${Date.now()}`,
@@ -69,14 +74,14 @@ export default function EditarActividad() {
     <SafeAreaView style={{ flex: 1, backgroundColor: p.papel }} edges={['top']}>
       <Cabecera titulo="Una cosa tuya" />
       <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
-      <Text style={[e.etiqueta, { color: p.tintaSuave }]}>¿Cómo se llama?</Text>
-      <TextInput
+      <CampoTexto
+        etiqueta="¿Cómo se llama?"
+        obligatorio
+        ayuda="Con el nombre que uses tú, no uno formal."
+        error={falta}
         value={nombre}
-        onChangeText={setNombre}
+        onChangeText={(t) => { setFalta(null); setNombre(t); }}
         placeholder="Leer un capítulo, entrenar, sacar al perro…"
-        placeholderTextColor={p.tintaTenue}
-        aria-label="Nombre de la actividad"
-        style={[e.entrada, { color: p.tinta, backgroundColor: p.tarjeta, borderColor: p.linea }]}
       />
 
       <Text style={[e.etiqueta, { color: p.tintaSuave }]}>¿De qué tipo es?</Text>
@@ -181,11 +186,12 @@ export default function EditarActividad() {
         </View>
       </Pressable>
 
+      <Aviso texto={falta} />
+
       <Pressable
         role="button"
         onPress={guardar}
-        disabled={!puedeGuardar}
-        style={[e.guardar, { backgroundColor: puedeGuardar ? p.alba : p.linea }]}
+        style={[e.guardar, { backgroundColor: p.alba }]}
       >
         <Text style={e.guardarTexto}>{original ? 'Guardar cambios' : 'Crear'}</Text>
       </Pressable>

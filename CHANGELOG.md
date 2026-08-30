@@ -7,6 +7,32 @@ Lo más nuevo arriba.
 
 ---
 
+## Ningún campo se queda callado · 2026-08-29
+
+**Arreglado — el botón «Siguiente» se quedaba muerto sin decir nada.** Al no
+escribir el nombre en el arranque, el botón se apagaba y no había ninguna
+explicación: la persona se quedaba mirando la pantalla sin saber qué hacer.
+
+Ahora **los botones no se apagan: se pulsan y avisan.** Cinco sitios revisados
+—el nombre, los días de colegio, añadir algo a hoy, crear una actividad y el
+nombre en Ajustes— cada uno con su mensaje de qué falta, junto al campo y junto
+al botón. El aviso se quita en cuanto se escribe. Lo opcional también se dice.
+
+Dos componentes nuevos para que sea difícil volver a hacerlo mal:
+`<CampoTexto>` (etiqueta, ayuda, marca de obligatorio y aviso en el mismo
+sitio) y `<Aviso>` (el mensaje junto al botón).
+
+**Nace `REGLAS.md`, el cerebro maestro del proyecto:** cada regla acordada, con
+su fecha y su porqué. `AGENTS.md` pasa a ser un resumen que apunta ahí.
+Recoge R1 (documentar siempre), R2 (ningún campo callado), R3 (lo puro aparte),
+R4 (el repositorio devuelve copias), R5 (verificar en el navegador) y R6
+(detalles que ya costaron un rato).
+
+*Verificado:* los cinco avisos, que el aviso se quita al escribir, y que **no
+queda ni un botón apagado en las seis pantallas**.
+
+---
+
 ## Navegación y vista previa del calendario · 2026-08-29
 
 **Arreglado — no había forma de volver atrás.** La cabecera de react-navigation

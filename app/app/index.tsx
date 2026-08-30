@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { AnilloProgreso } from '@/componentes/AnilloProgreso';
+import { Aviso } from '@/componentes/Aviso';
+import { CampoTexto } from '@/componentes/CampoTexto';
 import { DetalleTarea } from '@/componentes/DetalleTarea';
 import { useCelebrar } from '@/componentes/Celebracion';
 import { Enlace } from '@/componentes/Enlace';
@@ -32,6 +34,7 @@ export default function Hoy() {
   const [preguntando, setPreguntando] = useState<string | null>(null);
   const [suelta, setSuelta] = useState<{ titulo: string; hora: string } | null>(null);
   const [abierta, setAbierta] = useState<string | null>(null);
+  const [faltaSuelta, setFaltaSuelta] = useState<string | null>(null);
   const router = useRouter();
   const celebrar = useCelebrar();
   // Se guarda el minuto para que «lo que toca ahora» se mueva solo con el reloj.
@@ -189,7 +192,7 @@ export default function Hoy() {
 
         <Pressable
           role="button"
-          onPress={() => setSuelta({ titulo: '', hora: hora })}
+          onPress={() => { setFaltaSuelta(null); setSuelta({ titulo: '', hora }); }}
           style={[e.anadir, { borderColor: p.alba, backgroundColor: p.albaPiso }]}
         >
           <Text style={[e.anadirTexto, { color: p.alba }]}>+ Añadir algo solo para hoy</Text>
@@ -248,39 +251,49 @@ export default function Hoy() {
             <Text style={[e.hojaAyuda, { color: p.tintaSuave }]}>
               No entra en tu rutina: aparece hoy y ya está.
             </Text>
-            <TextInput
+            <CampoTexto
+              etiqueta="¿Qué hay que hacer?"
+              obligatorio
+              error={faltaSuelta}
               value={suelta?.titulo ?? ''}
-              onChangeText={(t) => setSuelta((s) => (s ? { ...s, titulo: t } : s))}
+              onChangeText={(t) => {
+                setFaltaSuelta(null);
+                setSuelta((s) => (s ? { ...s, titulo: t } : s));
+              }}
               placeholder="Llamar a la abuela, comprar pan…"
-              placeholderTextColor={p.tintaTenue}
-              aria-label="Qué hay que hacer"
-              style={[e.entrada, { color: p.tinta, backgroundColor: p.tarjeta, borderColor: p.linea }]}
+              autoFocus
             />
             <SelectorHora
               etiqueta="¿A qué hora?"
               valor={suelta?.hora ?? '12:00'}
               onCambiar={(h) => setSuelta((s) => (s ? { ...s, hora: h } : s))}
             />
+            <Aviso texto={faltaSuelta} />
+
             <Pressable
               role="button"
-              disabled={!suelta?.titulo.trim()}
               onPress={async () => {
                 const s = suelta;
+                if (!s?.titulo.trim()) {
+                  setFaltaSuelta('Falta decir qué hay que hacer.');
+                  return;
+                }
                 setSuelta(null);
-                if (!s?.titulo.trim()) return;
+                setFaltaSuelta(null);
                 setDia(await repositorio.anadirTareaHoy(fecha, {
                   titulo: s.titulo.trim(), emoji: '⭐', tipo: 'casa',
                   hora_inicio: s.hora, hora_fin: aHora(aMinutos(s.hora) + 30),
                 }));
               }}
-              style={[
-                e.hojaBoton,
-                { backgroundColor: suelta?.titulo.trim() ? p.alba : p.linea },
-              ]}
+              style={[e.hojaBoton, { backgroundColor: p.alba }]}
             >
               <Text style={e.hojaBotonTexto}>Añadir a hoy</Text>
             </Pressable>
-            <Pressable role="button" onPress={() => setSuelta(null)} style={e.cerrar}>
+            <Pressable
+              role="button"
+              onPress={() => { setSuelta(null); setFaltaSuelta(null); }}
+              style={e.cerrar}
+            >
               <Text style={[e.cerrarTexto, { color: p.tintaSuave }]}>Cancelar</Text>
             </Pressable>
           </View>

@@ -8,6 +8,7 @@ enteras.
 Última actualización: 2026-08-29
 
 - **Índice del repositorio:** `README.md`
+- **Las reglas del proyecto:** `REGLAS.md`
 - **Historial de todo lo hecho:** `CHANGELOG.md`
 - Diseño visual: `docs/dia-de-leonora.html`
 - Resumen del diseño: `DISENO.md`
@@ -311,9 +312,14 @@ Una interfaz `Repositorio`, dos implementaciones intercambiables:
 | `ajustes` | Nombre, ícono, avisos, sonidos, celebraciones, empezar de nuevo |
 | `+not-found` | Enseña Hoy: la app arranca aunque no se sirva en la raíz |
 
-**Componentes:** `Cabecera` · `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
+**Componentes:** `Cabecera` · `CampoTexto` · `Aviso` · `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
 `AnilloProgreso` · `Celebracion` · `SelectorHora` · `PreguntaTerminaste` · `Enlace`
 
+> **`CampoTexto` y `Aviso` existen para cumplir R2** (`REGLAS.md`): ningún
+> campo se queda callado. `CampoTexto` trae etiqueta, ayuda, marca de
+> obligatorio y aviso en el mismo sitio, así que es más fácil hacerlo bien que
+> mal. `Aviso` va junto al botón.
+>
 > **`Cabecera` es propia y no la del navegador** porque react-navigation **no
 > pinta el botón de volver en web**: la app se quedaba sin salida en el
 > calendario, la rutina y los ajustes. Toda pantalla que no sea Hoy la lleva.
@@ -386,7 +392,26 @@ Ambas navegan hacia atrás y adelante, con «Volver a hoy» cuando te alejas.
 lista ligera de tareas (`titulo`, `emoji`, `tipo`, `hora_inicio`, `estado`) —
 lo justo para dibujar sin cargar el día entero.
 
-### 5.6 Los tres gestos de una tarea
+### 5.6 Los formularios avisan, no se apagan
+Ningún botón se queda muerto sin decir por qué (R2). Al tocar «Siguiente» o
+«Guardar» con algo sin llenar:
+
+| Dónde | Qué avisa |
+|---|---|
+| Arranque, paso 1 | «Falta tu nombre. Es lo único que necesito para seguir.» |
+| Arranque, paso 4 | «No marcaste ningún día. Elige al menos uno, o pon Ninguno arriba.» |
+| Añadir algo a hoy | «Falta decir qué hay que hacer.» |
+| Crear una actividad | «Falta el nombre. ¿Cómo se llama esta cosa que vas a hacer?» |
+| Ajustes, nombre vacío | «Si lo dejas vacío se guardará como Tú.» |
+
+El aviso se quita en cuanto se empieza a escribir. Lo opcional también se dice
+—«puedes no marcar nada y añadirlo después»— para que nadie se quede parado
+creyendo que falta algo.
+
+**La única excepción:** un botón puede apagarse *mientras trabaja*, y solo si
+lo dice («⏳ Leyendo tu horario…»).
+
+### 5.7 Los tres gestos de una tarea
 - **El círculo** marca y desmarca.
 - **El cuerpo** abre el detalle (nota, minutos, chispas).
 - **Dejar apretado** la salta — y saltada se ve **distinta** de hecha:

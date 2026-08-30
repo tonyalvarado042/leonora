@@ -6,41 +6,22 @@ App nativa de iOS y Android con Expo SDK 57.
 escribir código.** Si están bloqueados por red, la fuente de verdad son los
 `.d.ts` de `node_modules/` — no la memoria.
 
-## Reglas de la casa
+## Las reglas viven en `../REGLAS.md`
 
-- **Lo puro va aparte.** `src/lib/fechas.ts`, `dia.ts` y `avisos.ts` no importan
-  nada de React Native ni de Expo, y así se prueban con `node --test` sin
-  bundler. Lo que toca la plataforma va en archivos aparte
-  (`avisosTelefono.ts`). No mezclarlos.
-- **El repositorio nunca entrega su estado interno.** Todos los lectores
-  devuelven copias; si no, React ve la misma referencia y no vuelve a pintar.
-- **Los nombres van en español**, igual que las tablas, porque el dominio se
-  piensa en español.
-- **Accesibilidad con `role` y `aria-*`**, no con `accessibility*`:
-  react-native-web no traduce `accessibilityState`.
-- **Enlaces con `<Enlace>`**, no con `<Link asChild>` a pelo: en web el estilo
-  acaba en un `<a>` del DOM y un array de estilos revienta ahí.
-- **Navegar no cierra un `Modal`.** Hay que bajarlo antes de empujar una
-  pantalla, o se queda flotando encima de la nueva.
-- **`app/+not-found.tsx` enseña Hoy a propósito**, para que la app arranque
-  aunque se sirva en una ruta que no sea la raíz (vista previa, artefacto,
-  subcarpeta).
+**Antes de escribir código, leer `../REGLAS.md`.** Ahí está el acuerdo
+completo, con su porqué y su fecha. Es el cerebro maestro del proyecto: cada
+regla nueva entra ahí, no aquí.
 
-## Regla que no se salta: documentar SIEMPRE
+Resumen para tenerlo a mano:
 
-**Cada cambio actualiza los tres documentos, en el mismo commit.** No al final,
-no cuando haya tiempo: en el mismo commit. Y viven en el repositorio, en
-Markdown, para poder leerlos desde GitHub sin bajar nada.
-
-| Documento | Qué se actualiza |
+| | Regla |
 |---|---|
-| `../DOCUMENTACION.md` | La referencia: tablas campo por campo, relaciones, funciones, reglas de negocio, fases, y las decisiones **con su porqué** |
-| `../CHANGELOG.md` | Qué se hizo, qué se arregló y **qué se verificó**. Lo nuevo arriba |
-| `../README.md` | El índice y el estado de las fases, si cambió |
-
-Si se añade una columna, una función o una pantalla y no aparece en los tres,
-el trabajo no está terminado. Lo mismo vale para cada PR: la descripción
-apunta a lo que cambió en la documentación.
+| **R1** | Documentar siempre, en el mismo commit: `DOCUMENTACION.md`, `CHANGELOG.md`, `README.md` |
+| **R2** | Ningún campo se queda callado. Los botones no se apagan: se pulsan y avisan |
+| **R3** | Lo puro va aparte de la plataforma |
+| **R4** | El repositorio nunca entrega su estado interno |
+| **R5** | Se verifica en el navegador, no solo compilando |
+| **R6** | Detalles que ya costaron un rato (`role`/`aria-*`, `<Enlace>`, Modal y navegación, cabecera propia) |
 
 ## Antes de dar algo por hecho
 

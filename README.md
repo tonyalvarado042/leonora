@@ -16,11 +16,12 @@ años y hecha para vendérsela a familias enteras.
 |---|---|
 | **[DOCUMENTACION.md](DOCUMENTACION.md)** | **La referencia completa.** Las tablas campo por campo, cómo se relacionan, todas las funciones, las reglas de negocio, las once fases y las decisiones con su porqué |
 | **[CHANGELOG.md](CHANGELOG.md)** | **Todo lo que se ha hecho**, en orden, con lo que se verificó en cada paso |
+| **[REGLAS.md](REGLAS.md)** | **El cerebro maestro.** Cada regla acordada, con su fecha y su porqué |
 | [DISENO.md](DISENO.md) | El diseño del producto: qué hace y por qué |
 | [docs/dia-de-leonora.html](docs/dia-de-leonora.html) | El diseño visual, explicado para Leonora |
 | [LANZAMIENTO.md](LANZAMIENTO.md) | Publicar en App Store y Google Play: cuentas, costos, pasos y lo que exigen |
 | [app/README.md](app/README.md) | Cómo correr y probar el código |
-| [app/AGENTS.md](app/AGENTS.md) | Las reglas de la casa al escribir código |
+| [app/AGENTS.md](app/AGENTS.md) | Resumen de las reglas, para tenerlo junto al código |
 
 ---
 
@@ -44,6 +45,7 @@ entrenamientos, nutrición, widget de iOS): [DOCUMENTACION.md §7](DOCUMENTACION
 README.md                    ← estás aquí
 DOCUMENTACION.md             ← la referencia completa
 CHANGELOG.md                 ← el historial
+REGLAS.md                    ← el cerebro maestro
 DISENO.md · LANZAMIENTO.md
 docs/dia-de-leonora.html     ← el diseño visual
 
