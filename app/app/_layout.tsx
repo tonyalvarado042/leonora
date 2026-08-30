@@ -34,6 +34,7 @@ export default function Disposicion() {
         <Stack.Screen name="rutina" options={{ title: 'Tu rutina' }} />
         <Stack.Screen name="ajustes" options={{ title: 'Ajustes' }} />
         <Stack.Screen name="rachas" options={{ title: 'Tus rachas' }} />
+        <Stack.Screen name="calendario" options={{ title: 'Tu calendario' }} />
         <Stack.Screen name="actividad" options={{ title: 'Una cosa tuya', presentation: 'modal' }} />
       </Stack>
     </ProveedorCelebracion>

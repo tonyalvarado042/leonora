@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { AnilloProgreso } from '@/componentes/AnilloProgreso';
+import { DetalleTarea } from '@/componentes/DetalleTarea';
 import { useCelebrar } from '@/componentes/Celebracion';
 import { Enlace } from '@/componentes/Enlace';
 import { PreguntaTerminaste } from '@/componentes/PreguntaTerminaste';
@@ -30,6 +31,7 @@ export default function Hoy() {
   const [chispas, setChispas] = useState(0);
   const [preguntando, setPreguntando] = useState<string | null>(null);
   const [suelta, setSuelta] = useState<{ titulo: string; hora: string } | null>(null);
+  const [abierta, setAbierta] = useState<string | null>(null);
   const router = useRouter();
   const celebrar = useCelebrar();
   // Se guarda el minuto para que «lo que toca ahora» se mueva solo con el reloj.
@@ -180,6 +182,7 @@ export default function Hoy() {
               esFoco={foco.enCurso && foco.actual?.id === t.id}
               onMarcar={() => marcar(t.id, t.estado === 'hecha' ? 'pendiente' : 'hecha')}
               onOmitir={() => marcar(t.id, t.estado === 'omitida' ? 'pendiente' : 'omitida')}
+              onAbrir={() => setAbierta(t.id)}
             />
           ))
         )}
@@ -198,14 +201,40 @@ export default function Hoy() {
           </Text>
         </Enlace>
 
+        <Enlace href="/calendario" estilo={[e.enlace, { borderColor: p.linea }]}>
+          <Text style={[e.enlaceTexto, { color: p.dia }]}>📅  Ver mi semana y mi mes →</Text>
+        </Enlace>
+
         <Enlace href="/rutina" estilo={[e.enlace, { borderColor: p.linea }]}>
           <Text style={[e.enlaceTexto, { color: p.alba }]}>Editar mi rutina de la semana →</Text>
         </Enlace>
 
         <Text style={[e.pista, { color: p.tintaTenue }]}>
-          Toca para marcar. Mantén pulsado si te la saltaste.
+          Toca el círculo para marcar, la tarea para ver el detalle, y mantén
+          pulsado si te la saltaste.
         </Text>
       </ScrollView>
+
+      <DetalleTarea
+        tarea={dia.tareas.find((t) => t.id === abierta) ?? null}
+        onCerrar={() => setAbierta(null)}
+        onGuardar={async (nota) => {
+          if (!abierta) return;
+          setDia(await repositorio.guardarNota(fecha, abierta, nota));
+          setAbierta(null);
+        }}
+        onEstado={(estado) => {
+          const id = abierta;
+          setAbierta(null);
+          if (id) void marcar(id, estado as 'hecha' | 'pendiente' | 'omitida');
+        }}
+        onBorrar={async () => {
+          if (!abierta) return;
+          const id = abierta;
+          setAbierta(null);
+          setDia(await repositorio.borrarTarea(fecha, id));
+        }}
+      />
 
       <Modal
         visible={suelta !== null}

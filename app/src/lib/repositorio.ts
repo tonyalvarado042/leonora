@@ -30,6 +30,13 @@ export interface TareaSuelta {
   hora_fin: string;
 }
 
+export interface ResumenDia {
+  fecha: Fecha;
+  total: number;
+  hechas: number;
+  porcentaje: number;
+}
+
 export interface DiaCompleto {
   dia: Dia;
   tareas: Tarea[];
@@ -61,6 +68,11 @@ export interface Repositorio {
   /** Una tarea que solo existe hoy y no toca la rutina. */
   anadirTareaHoy(fecha: Fecha, tarea: TareaSuelta): Promise<DiaCompleto>;
   borrarTarea(fecha: Fecha, tareaId: string): Promise<DiaCompleto>;
+  guardarNota(fecha: Fecha, tareaId: string, nota: string): Promise<DiaCompleto>;
+  /** Resumen de los días ya vividos entre dos fechas, para el calendario.
+   *  No genera los que faltan: el pasado no se inventa, y el futuro se genera
+   *  cuando llegue. */
+  resumenDias(desde: Fecha, hasta: Fecha): Promise<ResumenDia[]>;
   /** Devuelve el día. Si no existía, lo genera desde la rutina y lo guarda. */
   dia(fecha: Fecha): Promise<DiaCompleto>;
   /** Vuelve a generarlo desde la rutina, perdiendo lo marcado ese día. */
@@ -189,6 +201,36 @@ export class RepositorioLocal implements Repositorio {
         .map((x, i) => ({ ...x, orden: i }));
 
       const despues: DiaCompleto = { ...d, tareas };
+      a.dias[fecha] = despues;
+      return copia(despues);
+    });
+  }
+
+  async resumenDias(desde: Fecha, hasta: Fecha): Promise<ResumenDia[]> {
+    const a = await this.cargar();
+    return Object.values(a.dias)
+      .filter((d) => d.dia.fecha >= desde && d.dia.fecha <= hasta)
+      .map((d) => {
+        const cuentan = d.tareas.filter((t) => t.estado !== 'omitida');
+        return {
+          fecha: d.dia.fecha,
+          total: cuentan.length,
+          hechas: cuentan.filter((t) => t.estado === 'hecha').length,
+          porcentaje: d.dia.porcentaje_cumplido,
+        };
+      })
+      .sort((x, y) => x.fecha.localeCompare(y.fecha));
+  }
+
+  guardarNota(fecha: Fecha, tareaId: string, nota: string) {
+    return this.escribir((a) => {
+      const d = a.dias[fecha] ?? construirDia(a, fecha);
+      const limpia = nota.trim();
+      const despues: DiaCompleto = {
+        ...d,
+        tareas: d.tareas.map((t) =>
+          t.id === tareaId ? { ...t, nota: limpia === '' ? null : limpia } : t),
+      };
       a.dias[fecha] = despues;
       return copia(despues);
     });

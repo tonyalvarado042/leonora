@@ -17,6 +17,7 @@ export const ajustesIniciales: Ajustes = {
   hora_despertar: '06:00',
   hora_dormir: '21:30',
   ocupacion: 'colegio',
+  ocupacion_nombre: '',
   hora_fin_ocupacion: '14:00',
   dias_ocupados: [1, 2, 3, 4, 5],
   avisos_activos: true,

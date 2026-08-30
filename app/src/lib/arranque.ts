@@ -22,6 +22,7 @@ export interface Respuestas {
   devocional_min: number;
   devocional_momento: 'mañana' | 'noche' | 'ambas';
   ocupacion: Ocupacion;
+  ocupacion_nombre: string;
   ocupacion_inicio: Hora;
   ocupacion_fin: Hora;
   /** 0 = domingo … 6 = sábado. */
@@ -38,6 +39,7 @@ export const RESPUESTAS_EN_BLANCO: Respuestas = {
   devocional_min: 60,
   devocional_momento: 'mañana',
   ocupacion: 'colegio',
+  ocupacion_nombre: '',
   ocupacion_inicio: '08:00',
   ocupacion_fin: '14:00',
   dias_ocupados: [1, 2, 3, 4, 5],
@@ -52,6 +54,17 @@ interface Plantilla {
   tipo: TipoActividad;
   minutos: number;
 }
+
+/** Cómo se llama y se dibuja cada ocupación. Es lo que trae de fábrica: la
+ *  persona le puede poner el nombre que quiera. */
+export const OCUPACIONES: { id: Ocupacion; nombre: string; emoji: string }[] = [
+  { id: 'colegio',     nombre: 'Colegio',     emoji: '📘' },
+  { id: 'escuela',     nombre: 'Escuela',     emoji: '🎒' },
+  { id: 'universidad', nombre: 'Universidad', emoji: '🎓' },
+  { id: 'trabajo',     nombre: 'Trabajo',     emoji: '💼' },
+  { id: 'otro',        nombre: 'Otra cosa',   emoji: '📌' },
+  { id: 'ninguno',     nombre: 'Ninguno',     emoji: '—' },
+];
 
 export const QUEHACERES: Plantilla[] = [
   { id: 'cama',    nombre: 'Tender la cama',   emoji: '🛏️', tipo: 'casa', minutos: 5 },
@@ -126,12 +139,15 @@ export function armarSemana(r: Respuestas, personaId: string): Propuesta {
         manana ? Math.min(20, devMin) : devMin, true, 10) : null;
 
   const trabaja = r.ocupacion !== 'ninguno';
-  const etiquetaOcupacion = r.ocupacion === 'trabajo' ? 'Trabajo' : 'Colegio';
+  const deFabrica = OCUPACIONES.find((o) => o.id === r.ocupacion);
+  const etiquetaOcupacion = r.ocupacion_nombre.trim() || deFabrica?.nombre || 'Colegio';
   const ocupacionAct = trabaja
-    ? crear('ocupacion', etiquetaOcupacion, r.ocupacion === 'trabajo' ? '💼' : '📘',
+    ? crear('ocupacion', etiquetaOcupacion, deFabrica?.emoji ?? '📘',
         'estudio', aMinutos(r.ocupacion_fin) - aMinutos(r.ocupacion_inicio), true, 20)
     : null;
-  const estudioAct = r.ocupacion === 'colegio'
+  // Solo quien estudia necesita un rato para terminar la tarea al llegar.
+  const estudia = ['colegio', 'escuela', 'universidad'].includes(r.ocupacion);
+  const estudioAct = estudia
     ? crear('estudiar', 'Terminar de estudiar', '📘', 'estudio', 45) : null;
 
   const cenaAct = crear('cena', 'Cena', '🍽️', 'familia', CENA_MIN, true);
@@ -211,6 +227,7 @@ export function armarSemana(r: Respuestas, personaId: string): Propuesta {
       hora_despertar: r.hora_despertar,
       hora_dormir: r.hora_dormir,
       ocupacion: r.ocupacion,
+      ocupacion_nombre: r.ocupacion_nombre,
       hora_fin_ocupacion: r.ocupacion_fin,
       dias_ocupados: r.dias_ocupados,
     },

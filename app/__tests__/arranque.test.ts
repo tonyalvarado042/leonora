@@ -19,7 +19,7 @@ function respuestas(cambios: Partial<Respuestas> = {}): Respuestas {
 
 const ajustes: Ajustes = {
   persona_id: 'p', hora_despertar: '06:00', hora_dormir: '21:30',
-  ocupacion: 'colegio', hora_fin_ocupacion: '14:00', dias_ocupados: [1, 2, 3, 4, 5],
+  ocupacion: 'colegio', ocupacion_nombre: '', hora_fin_ocupacion: '14:00', dias_ocupados: [1, 2, 3, 4, 5],
   avisos_activos: true, avisar_antes_min: 10, sonido_aviso: 'campana',
   sonido_devocional: 'arpa', vibrar: true, silencio_desde: null, silencio_hasta: null,
   tema: 'auto', celebraciones: true, arranque_hecho: true,

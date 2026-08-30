@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { usarPaleta } from '@/lib/tema';
@@ -29,9 +29,21 @@ export default function Ajustes() {
 
   return (
     <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
-      <Grupo titulo="TU ÍCONO">
-        <Text style={[e.ayuda, { color: p.tintaSuave }]}>
-          Así te ven tu familia y tus grupos.
+      <Grupo titulo="TÚ">
+        <View style={e.campo}>
+          <Text style={[e.campoEtiqueta, { color: p.tintaSuave }]}>Tu nombre</Text>
+          <TextInput
+            value={persona.nombre}
+            onChangeText={(t) => setPersona({ ...persona, nombre: t })}
+            onBlur={() => { void repositorio.guardarPersona({ nombre: persona.nombre.trim() || 'Tú' }); }}
+            placeholder="Tu nombre"
+            placeholderTextColor={p.tintaTenue}
+            aria-label="Tu nombre"
+            style={[e.entrada, { color: p.tinta, backgroundColor: p.tarjeta2, borderColor: p.linea }]}
+          />
+        </View>
+        <Text style={[e.ayuda, { color: p.tintaSuave, borderTopColor: p.linea, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 14 }]}>
+          Tu ícono. Así te ven tu familia y tus grupos.
         </Text>
         <View style={e.iconos}>
           {ICONOS.map((i) => {
@@ -207,6 +219,12 @@ const e = StyleSheet.create({
   grupoTitulo: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, marginBottom: 8 },
   caja: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
   ayuda: { fontSize: 13, padding: 14, paddingBottom: 0 },
+  campo: { padding: 14, gap: 7 },
+  campoEtiqueta: { fontSize: 13.5, fontWeight: '600' },
+  entrada: {
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: 11,
+    paddingHorizontal: 13, paddingVertical: 12, fontSize: 16,
+  },
   iconos: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14 },
   icono: {
     width: 48, height: 48, borderRadius: 13, borderWidth: StyleSheet.hairlineWidth,

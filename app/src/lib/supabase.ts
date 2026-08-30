@@ -21,7 +21,9 @@ import {
   cumplioHoy, rachaVacia,
   type Logro, type Marcado, type Racha, type Via,
 } from './rachas';
-import type { DiaCompleto, Premio, Repositorio, TareaSuelta } from './repositorio';
+import type {
+  DiaCompleto, Premio, Repositorio, ResumenDia, TareaSuelta,
+} from './repositorio';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, EstadoTarea, Fecha, Persona, Tarea,
 } from './tipos';
@@ -126,6 +128,33 @@ export class RepositorioSupabase implements Repositorio {
       hora_inicio: t.hora_inicio, hora_fin: t.hora_fin, origen: 'manual',
     });
     if (error) throw new Error(`añadir la tarea: ${error.message}`);
+    return this.dia(fecha);
+  }
+
+  async resumenDias(desde: Fecha, hasta: Fecha): Promise<ResumenDia[]> {
+    const filas = pedir(
+      await this.sb.from('dias')
+        .select('fecha, porcentaje_cumplido, tareas_dia(estado)')
+        .gte('fecha', desde).lte('fecha', hasta).order('fecha'),
+      'leer el historial',
+    ) as { fecha: Fecha; porcentaje_cumplido: number; tareas_dia: { estado: string }[] }[];
+
+    return filas.map((f) => {
+      const cuentan = f.tareas_dia.filter((t) => t.estado !== 'omitida');
+      return {
+        fecha: f.fecha,
+        total: cuentan.length,
+        hechas: cuentan.filter((t) => t.estado === 'hecha').length,
+        porcentaje: f.porcentaje_cumplido,
+      };
+    });
+  }
+
+  async guardarNota(fecha: Fecha, tareaId: string, nota: string): Promise<DiaCompleto> {
+    const limpia = nota.trim();
+    const { error } = await this.sb.from('tareas_dia')
+      .update({ nota: limpia === '' ? null : limpia }).eq('id', tareaId);
+    if (error) throw new Error(`guardar la nota: ${error.message}`);
     return this.dia(fecha);
   }
 

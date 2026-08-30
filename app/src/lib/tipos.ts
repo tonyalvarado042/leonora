@@ -6,7 +6,8 @@ export type TipoActividad =
 export type ModoRutina = 'escolar' | 'vacaciones';
 export type EstadoTarea = 'pendiente' | 'hecha' | 'omitida' | 'movida';
 export type OrigenTarea = 'rutina' | 'evento' | 'encargo' | 'ia' | 'manual';
-export type Ocupacion = 'colegio' | 'trabajo' | 'ambos' | 'ninguno';
+export type Ocupacion =
+  | 'colegio' | 'escuela' | 'universidad' | 'trabajo' | 'otro' | 'ninguno';
 export type Tema = 'claro' | 'oscuro' | 'auto';
 
 /** "HH:MM", 24 horas. */
@@ -28,6 +29,8 @@ export interface Ajustes {
   hora_despertar: Hora;
   hora_dormir: Hora;
   ocupacion: Ocupacion;
+  /** Cómo lo llama la persona. Vacío = la etiqueta que toque por el tipo. */
+  ocupacion_nombre: string;
   hora_fin_ocupacion: Hora;
   /** 0 = domingo … 6 = sábado, igual que Date.getDay(). */
   dias_ocupados: number[];

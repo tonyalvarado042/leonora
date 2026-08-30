@@ -7,9 +7,14 @@ import { useRouter } from 'expo-router';
 
 import { SelectorHora } from '@/componentes/SelectorHora';
 import {
-  armarSemana, GUSTOS, QUEHACERES, RESPUESTAS_EN_BLANCO,
+  armarSemana, GUSTOS, OCUPACIONES, QUEHACERES, RESPUESTAS_EN_BLANCO,
   type Propuesta, type Respuestas,
 } from '@/lib/arranque';
+import {
+  CONFIANZA_MINIMA, jornada, leerHorario, type MateriaLeida,
+} from '@/lib/horarioFoto';
+import { aHora, aMinutos } from '@/lib/fechas';
+import { colorDeTipo } from '@/lib/tema';
 import { fechaLocal } from '@/lib/fechas';
 import { repositorio } from '@/lib/repositorio';
 import { usarPaleta } from '@/lib/tema';
@@ -27,6 +32,11 @@ export default function Arranque() {
   const [paso, setPaso] = useState(1);
   const [r, setR] = useState<Respuestas>(RESPUESTAS_EN_BLANCO);
   const [propuesta, setPropuesta] = useState<Propuesta | null>(null);
+  const [edadLibre, setEdadLibre] = useState('');
+  const [leyendo, setLeyendo] = useState(false);
+  const [materias, setMaterias] = useState<MateriaLeida[] | null>(null);
+  // El día que se está mirando en el preview editable.
+  const [diaPreview, setDiaPreview] = useState(1);
 
   const cambiar = (c: Partial<Respuestas>) => setR((v) => ({ ...v, ...c }));
   const alternar = (lista: 'quehaceres' | 'gustos', id: string) =>
@@ -41,6 +51,24 @@ export default function Arranque() {
     setPropuesta(armarSemana(r, 'local'));
   }
 
+  /** Editar la propuesta antes de aceptarla. Aceptar algo que no te gusta y
+   *  después buscar dónde arreglarlo es peor que arreglarlo aquí mismo. */
+  function moverBloque(id: string, minutos: number) {
+    setPropuesta((v) => v && {
+      ...v,
+      rutina: v.rutina.map((b) => {
+        if (b.id !== id) return b;
+        const largo = aMinutos(b.hora_fin) - aMinutos(b.hora_inicio);
+        const inicio = aHora(aMinutos(b.hora_inicio) + minutos);
+        return { ...b, hora_inicio: inicio, hora_fin: aHora(aMinutos(inicio) + largo) };
+      }),
+    });
+  }
+
+  function quitarBloque(id: string) {
+    setPropuesta((v) => v && { ...v, rutina: v.rutina.filter((b) => b.id !== id) });
+  }
+
   async function aceptar() {
     if (!propuesta) return;
     const persona = await repositorio.persona();
@@ -48,6 +76,80 @@ export default function Arranque() {
       propuesta, r.nombre.trim(), fechaLocal(new Date(), persona.zona_horaria),
     );
     router.replace('/');
+  }
+
+  // ------------------------------------------------ lo leído de la foto
+  if (materias) {
+    const j = jornada(materias);
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: p.papel }}>
+        <ScrollView contentContainerStyle={e.cuerpo}>
+          <Text style={[e.titulo, { color: p.tinta }]}>
+            Leí {materias.length} materias
+          </Text>
+          <Text style={[e.ayuda, { color: p.tintaSuave }]}>
+            Revisa antes de aceptar. Lo que salió borroso está marcado en rojo —
+            nada entra a tu horario sin que tú lo apruebes.
+          </Text>
+
+          {materias.map((m) => {
+            const dudosa = m.confianza < CONFIANZA_MINIMA;
+            return (
+              <View
+                key={m.id}
+                style={[
+                  e.materia,
+                  { backgroundColor: p.tarjeta },
+                  dudosa ? { borderColor: p.fuego, borderWidth: 1.5 } : { borderColor: p.linea },
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <TextInput
+                    value={m.nombre}
+                    onChangeText={(t) => setMaterias(materias.map((x) =>
+                      x.id === m.id ? { ...x, nombre: t } : x))}
+                    aria-label={`Nombre de ${m.nombre}`}
+                    style={[e.materiaNombre, { color: p.tinta }]}
+                  />
+                  <Text style={[e.materiaHoras, { color: p.tintaTenue }]}>
+                    {m.emoji} {m.hora_inicio}–{m.hora_fin} · {diasATexto(m.dias)}
+                  </Text>
+                  {dudosa && (
+                    <Text style={[e.materiaAviso, { color: p.fuego }]}>
+                      Salió borrosa. Leí «{m.texto_leido}»
+                    </Text>
+                  )}
+                </View>
+                <Pressable
+                  role="button"
+                  aria-label={`Quitar ${m.nombre}`}
+                  onPress={() => setMaterias(materias.filter((x) => x.id !== m.id))}
+                  style={[e.quitar, { borderColor: p.linea }]}
+                >
+                  <Text style={{ color: p.fuego, fontSize: 15 }}>✕</Text>
+                </Pressable>
+              </View>
+            );
+          })}
+
+          <Pressable
+            role="button"
+            onPress={() => {
+              if (j) cambiar({ ocupacion_inicio: j.inicio, ocupacion_fin: j.fin, dias_ocupados: j.dias });
+              setMaterias(null);
+            }}
+            style={[e.principal, { backgroundColor: p.alba }]}
+          >
+            <Text style={e.principalTexto}>
+              {j ? `Aceptar · de ${j.inicio} a ${j.fin}` : 'Aceptar'}
+            </Text>
+          </Pressable>
+          <Pressable role="button" onPress={() => setMaterias(null)} style={e.secundario}>
+            <Text style={[e.secundarioTexto, { color: p.tintaSuave }]}>No usar esta foto</Text>
+          </Pressable>
+        </ScrollView>
+      </SafeAreaView>
+    );
   }
 
   // ---------------------------------------------------------- la propuesta
@@ -70,6 +172,86 @@ export default function Arranque() {
               </View>
             ))}
           </View>
+
+          <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
+            Mira día por día, y quita lo que no quieras
+          </Text>
+          <View style={e.dias}>
+            {DIAS.map((d) => {
+              const puesto = d.n === diaPreview;
+              return (
+                <Pressable
+                  key={d.n}
+                  role="tab"
+                  aria-selected={puesto}
+                  aria-label={`Ver ${NOMBRE_DIA[d.n]}`}
+                  onPress={() => setDiaPreview(d.n)}
+                  style={[
+                    e.dia,
+                    puesto
+                      ? { backgroundColor: p.alba, borderColor: p.alba }
+                      : { backgroundColor: p.tarjeta, borderColor: p.linea },
+                  ]}
+                >
+                  <Text style={[e.diaTexto, { color: puesto ? '#FFF' : p.tintaSuave }]}>
+                    {d.corto}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {(() => {
+            const delDia = propuesta.rutina
+              .filter((b) => b.dia_semana === diaPreview)
+              .sort((a, b) => aMinutos(a.hora_inicio) - aMinutos(b.hora_inicio));
+            if (delDia.length === 0) {
+              return (
+                <Text style={[e.vacioDia, { color: p.tintaTenue }]}>
+                  Este día quedó libre.
+                </Text>
+              );
+            }
+            return delDia.map((b) => {
+              const a = propuesta.actividades.find((x) => x.id === b.actividad_id);
+              if (!a) return null;
+              return (
+                <View key={b.id} style={[e.bloque, { backgroundColor: p.tarjeta, borderColor: p.linea }]}>
+                  <View style={[e.rayaBloque, { backgroundColor: colorDeTipo(a.tipo, p) }]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[e.bloqueNombre, { color: p.tinta }]}>{a.emoji}  {a.nombre}</Text>
+                    <Text style={[e.bloqueHoras, { color: p.tintaTenue }]}>
+                      {b.hora_inicio} — {b.hora_fin}{a.es_fijo ? ' · no se mueve' : ''}
+                    </Text>
+                  </View>
+                  <Pressable
+                    role="button"
+                    aria-label={`Adelantar ${a.nombre} 15 minutos`}
+                    onPress={() => moverBloque(b.id, -15)}
+                    style={[e.mini, { borderColor: p.linea }]}
+                  >
+                    <Text style={{ color: p.tinta, fontSize: 12 }}>−15</Text>
+                  </Pressable>
+                  <Pressable
+                    role="button"
+                    aria-label={`Retrasar ${a.nombre} 15 minutos`}
+                    onPress={() => moverBloque(b.id, 15)}
+                    style={[e.mini, { borderColor: p.linea }]}
+                  >
+                    <Text style={{ color: p.tinta, fontSize: 12 }}>+15</Text>
+                  </Pressable>
+                  <Pressable
+                    role="button"
+                    aria-label={`Quitar ${a.nombre} del ${NOMBRE_DIA[diaPreview]}`}
+                    onPress={() => quitarBloque(b.id)}
+                    style={[e.mini, { borderColor: p.linea }]}
+                  >
+                    <Text style={{ color: p.fuego, fontSize: 13 }}>✕</Text>
+                  </Pressable>
+                </View>
+              );
+            });
+          })()}
 
           <View style={[e.cifras, { backgroundColor: p.albaPiso, borderColor: p.alba }]}>
             <Text style={[e.cifrasTexto, { color: p.alba }]}>
@@ -119,9 +301,25 @@ export default function Arranque() {
             />
             <Text style={[e.etiqueta, { color: p.tintaSuave }]}>¿Cuántos años tienes?</Text>
             <View style={e.opciones}>
-              {[8, 10, 12, 13, 15, 18, 30, 45].map((n) => (
-                <Chip key={n} texto={`${n}`} puesto={r.edad === n} onPress={() => cambiar({ edad: n })} />
+              {[8, 10, 12, 13, 15, 18].map((n) => (
+                <Chip key={n} texto={`${n}`} puesto={r.edad === n}
+                  onPress={() => { cambiar({ edad: n }); setEdadLibre(''); }} />
               ))}
+              <View style={[e.edadOtra, { backgroundColor: p.tarjeta, borderColor: edadLibre ? p.alba : p.linea }]}>
+                <TextInput
+                  value={edadLibre}
+                  onChangeText={(t) => {
+                    const limpio = t.replace(/[^0-9]/g, '').slice(0, 3);
+                    setEdadLibre(limpio);
+                    cambiar({ edad: limpio === '' ? null : Number(limpio) });
+                  }}
+                  placeholder="Otra"
+                  placeholderTextColor={p.tintaTenue}
+                  inputMode="numeric"
+                  aria-label="Escribe tu edad"
+                  style={[e.edadEntrada, { color: p.tinta }]}
+                />
+              </View>
             </View>
           </>
         )}
@@ -168,27 +366,53 @@ export default function Arranque() {
 
         {paso === 4 && (
           <>
-            <Text style={[e.titulo, { color: p.tinta }]}>Tu colegio o tu trabajo</Text>
+            <Text style={[e.titulo, { color: p.tinta }]}>¿A dónde vas cada día?</Text>
             <View style={e.opciones}>
-              {(['colegio', 'trabajo', 'ninguno'] as Ocupacion[]).map((o) => (
+              {OCUPACIONES.map((o) => (
                 <Chip
-                  key={o}
-                  texto={o === 'colegio' ? '📘 Colegio' : o === 'trabajo' ? '💼 Trabajo' : 'Ninguno'}
-                  puesto={r.ocupacion === o}
-                  onPress={() => cambiar({ ocupacion: o })}
+                  key={o.id}
+                  texto={o.id === 'ninguno' ? o.nombre : `${o.emoji} ${o.nombre}`}
+                  puesto={r.ocupacion === o.id}
+                  onPress={() => cambiar({ ocupacion: o.id as Ocupacion })}
                 />
               ))}
             </View>
 
             {r.ocupacion !== 'ninguno' && (
               <>
-                <View style={[e.foto, { borderColor: p.linea, backgroundColor: p.tarjeta2 }]}>
-                  <Text style={[e.fotoTitulo, { color: p.tintaSuave }]}>📷  ¿Tienes foto de tu horario?</Text>
-                  <Text style={[e.fotoTexto, { color: p.tintaTenue }]}>
-                    Leer la foto llega más adelante. Por ahora se escribe a mano,
-                    que son dos toques.
+                <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
+                  ¿Cómo quieres que se llame en tu horario?
+                </Text>
+                <TextInput
+                  value={r.ocupacion_nombre}
+                  onChangeText={(t) => cambiar({ ocupacion_nombre: t })}
+                  placeholder={OCUPACIONES.find((o) => o.id === r.ocupacion)?.nombre ?? ''}
+                  placeholderTextColor={p.tintaTenue}
+                  aria-label="Nombre de tu colegio o trabajo"
+                  style={[e.entrada, { color: p.tinta, backgroundColor: p.tarjeta, borderColor: p.linea }]}
+                />
+
+                <Pressable
+                  role="button"
+                  aria-label="Escanear mi horario"
+                  disabled={leyendo}
+                  onPress={async () => {
+                    setLeyendo(true);
+                    const h = await leerHorario();
+                    setLeyendo(false);
+                    setMaterias(h.materias);
+                  }}
+                  style={[e.foto, { borderColor: p.alba, backgroundColor: p.albaPiso }]}
+                >
+                  <Text style={[e.fotoTitulo, { color: p.alba }]}>
+                    {leyendo ? '⏳  Leyendo tu horario…' : '📷  Escanear mi horario de clases'}
                   </Text>
-                </View>
+                  <Text style={[e.fotoTexto, { color: p.tintaSuave }]}>
+                    {leyendo
+                      ? 'Buscando materias, días y horas.'
+                      : 'Tomas una foto y se meten todas las materias solas. Ejemplo de muestra por ahora.'}
+                  </Text>
+                </Pressable>
 
                 <View style={e.horas}>
                   <SelectorHora etiqueta="Entro a las" valor={r.ocupacion_inicio}
@@ -275,6 +499,16 @@ export default function Arranque() {
   );
 }
 
+const NOMBRE_DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+function diasATexto(dias: number[]): string {
+  if (dias.length === 0) return 'ningún día';
+  if (dias.length === 7) return 'todos los días';
+  const ordenados = [...dias].sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
+  if (ordenados.join() === '1,2,3,4,5') return 'de lunes a viernes';
+  return ordenados.map((d) => NOMBRE_DIA[d].slice(0, 3)).join(', ');
+}
+
 function Chip({ texto, puesto, onPress }: { texto: string; puesto: boolean; onPress: () => void }) {
   const p = usarPaleta();
   return (
@@ -336,6 +570,34 @@ const e = StyleSheet.create({
   textoResumen: { flex: 1, fontSize: 15, lineHeight: 22 },
   cifras: { borderWidth: 1, borderRadius: 13, padding: 13, alignItems: 'center', marginTop: 14 },
   cifrasTexto: { fontSize: 14, fontWeight: '700' },
+  edadOtra: {
+    borderRadius: 11, borderWidth: StyleSheet.hairlineWidth,
+    minWidth: 74, justifyContent: 'center',
+  },
+  edadEntrada: { paddingVertical: 11, paddingHorizontal: 15, fontSize: 14.5, fontWeight: '600' },
+  materia: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12,
+    borderRadius: 13, borderWidth: StyleSheet.hairlineWidth, marginBottom: 8,
+  },
+  materiaNombre: { fontSize: 15.5, fontWeight: '700', paddingVertical: 2 },
+  materiaHoras: { fontSize: 12.5, marginTop: 2 },
+  materiaAviso: { fontSize: 11.5, marginTop: 4, fontWeight: '600' },
+  quitar: {
+    width: 34, height: 34, borderRadius: 9, borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  bloque: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, padding: 11,
+    borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, marginBottom: 7, overflow: 'hidden',
+  },
+  rayaBloque: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
+  bloqueNombre: { fontSize: 14.5, fontWeight: '600', marginLeft: 6 },
+  bloqueHoras: { fontSize: 11.5, marginTop: 2, marginLeft: 6 },
+  mini: {
+    minWidth: 34, height: 30, borderRadius: 8, borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5,
+  },
+  vacioDia: { fontSize: 14, textAlign: 'center', paddingVertical: 22 },
   principal: { marginTop: 28, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
   principalTexto: { color: '#FFF', fontWeight: '700', fontSize: 16.5 },
   secundario: { marginTop: 10, paddingVertical: 13, alignItems: 'center' },
