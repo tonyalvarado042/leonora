@@ -45,6 +45,10 @@ await p.waitForTimeout(1200);
 // 3. El devocional dentro de la tarea de fe
 await p.getByRole('button', { name: /Devocional, / }).first().click();
 await p.waitForTimeout(900);
+// Desde que se puede hacer el devocional a tu manera, el texto de la app sale
+// cuando eliges hacerlo con la app. Es lo que se está probando aquí.
+await p.getByText('El de GraceDay').click();
+await p.waitForTimeout(600);
 const detalle = await p.locator('body').innerText();
 assert.ok(detalle.includes('DEVOCIONAL DE HOY'), 'la tarea de fe no trae devocional');
 assert.ok(detalle.includes('PARA PENSAR'), 'el devocional no trae pregunta');
@@ -54,7 +58,7 @@ await p.screenshot({ path: 'capturas/fase4-devocional.png', fullPage: true });
 console.log('✓ la tarea de fe abre con su devocional: pasaje, texto y pregunta');
 
 // 4. Y la respuesta se guarda
-await p.getByLabel('Nota de la tarea').fill('Necesito, no quiero. Eso me hizo pensar.');
+await p.getByLabel('Tu respuesta').fill('Necesito, no quiero. Eso me hizo pensar.');
 await p.getByText('Guardar', { exact: true }).click();
 await p.waitForTimeout(900);
 assert.ok((await p.locator('body').innerText()).includes('📝'), 'no se guardó la respuesta');

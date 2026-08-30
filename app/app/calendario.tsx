@@ -5,10 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Cabecera } from '@/componentes/Cabecera';
 import { useFocusEffect } from 'expo-router';
 
+import { EMOJI_TIPO_EVENTO, eventosDeFecha } from '@/lib/eventos';
 import { diasEntre, fechaLarga, fechaLocal, sumarDias } from '@/lib/fechas';
 import { repositorio, type ResumenDia } from '@/lib/repositorio';
 import { colorDeTipo, usarPaleta, type Paleta } from '@/lib/tema';
-import type { Fecha, TipoActividad } from '@/lib/tipos';
+import type { Evento, Fecha, TipoActividad } from '@/lib/tipos';
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -22,6 +23,10 @@ export default function Calendario() {
   const [salto, setSalto] = useState(0);
   const [resumen, setResumen] = useState<Map<Fecha, ResumenDia>>(new Map());
   const [zona, setZona] = useState('America/Guatemala');
+  // Los eventos se pintan aunque el día no esté guardado: un feriado del mes
+  // que viene tiene que verse ahora, no cuando llegue.
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [quien, setQuien] = useState('');
 
   const hoy = fechaLocal(new Date(), zona);
   const celdas = vista === 'semana' ? semanaDe(hoy, salto) : mesDe(hoy, salto);
@@ -30,6 +35,8 @@ export default function Calendario() {
   const cargar = useCallback(async () => {
     const persona = await repositorio.persona();
     setZona(persona.zona_horaria);
+    setQuien(persona.id);
+    setEventos(await repositorio.eventos());
     if (visibles.length === 0) return;
     const r = await repositorio.resumenDias(visibles[0], visibles[visibles.length - 1]);
     setResumen(new Map(r.map((x) => [x.fecha, x])));
@@ -105,14 +112,19 @@ export default function Calendario() {
             const futuro = f > hoy;
             const lleno = r && r.total > 0 ? r.porcentaje : null;
             const finde = r?.tipo_dia === 'fin_de_semana';
-            const feriado = r?.tipo_dia === 'feriado';
+            const suyos = eventosDeFecha(eventos, f, quien);
+            // El día guardado puede decir «feriado», pero un feriado del futuro
+            // todavía no tiene día guardado: por eso se mira también el evento.
+            const feriado = r?.tipo_dia === 'feriado'
+              || suyos.some((x) => x.efecto === 'libra_el_dia');
 
             return (
               <View
                 key={f}
                 accessible
                 aria-label={`${fechaLarga(f, zona)}${
-                  lleno === null ? ', sin nada' : `, ${r!.hechas} de ${r!.total} hechas`}`}
+                  lleno === null ? ', sin nada' : `, ${r!.hechas} de ${r!.total} hechas`}${
+                  suyos.length === 0 ? '' : `. ${suyos.map((x) => x.titulo).join(', ')}`}`}
                 style={[
                   e.celda,
                   {
@@ -132,6 +144,11 @@ export default function Calendario() {
                 ]}>
                   {Number(f.slice(8, 10))}
                 </Text>
+                {suyos.length > 0 && (
+                  <Text numberOfLines={1} style={e.eventoEmoji}>
+                    {suyos.slice(0, 3).map((x) => EMOJI_TIPO_EVENTO[x.tipo]).join('')}
+                  </Text>
+                )}
                 <Barras tareas={r?.tareas ?? []} p={p} />
               </View>
             );
@@ -169,6 +186,24 @@ export default function Calendario() {
                     </Text>
                   )}
                 </View>
+
+                {eventosDeFecha(eventos, f, quien).map((x) => (
+                  <View
+                    key={x.id}
+                    style={[
+                      e.eventoTira,
+                      {
+                        backgroundColor: x.efecto === 'libra_el_dia' ? p.verdePiso : p.tarjeta2,
+                        borderColor: x.efecto === 'libra_el_dia' ? p.verde : p.linea,
+                      },
+                    ]}
+                  >
+                    <Text style={[e.eventoTexto, { color: p.tinta }]}>
+                      {EMOJI_TIPO_EVENTO[x.tipo]}  {x.titulo}
+                      {x.efecto === 'libra_el_dia' ? ' · sin colegio' : ''}
+                    </Text>
+                  </View>
+                ))}
 
                 {tareas.length === 0 ? (
                   <Text style={[e.diaAgendaVacio, { color: p.tintaTenue }]}>
@@ -360,6 +395,12 @@ const e = StyleSheet.create({
     width: `${100 / 7}%`, aspectRatio: 1, borderRadius: 10,
     alignItems: 'center', justifyContent: 'center',
   },
+  eventoEmoji: { fontSize: 9, lineHeight: 11, marginTop: 1 },
+  eventoTira: {
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: 9,
+    paddingHorizontal: 9, paddingVertical: 7, marginBottom: 5,
+  },
+  eventoTexto: { fontSize: 12.5, fontWeight: '600' },
   numero: { fontSize: 14, fontVariant: ['tabular-nums'] },
   barras: { flexDirection: 'row', gap: 1.5, marginTop: 3, height: 3 },
   barraTipo: { width: 6, height: 3, borderRadius: 2 },

@@ -96,7 +96,7 @@ function act(id: string, e: Partial<Actividad> = {}): Actividad {
 function tarea(id: string, actividad_id: string | null, ini: string, fin: string,
                e: Partial<Tarea> = {}): Tarea {
   return {
-    id, dia_id: 'd', actividad_id, titulo: id, emoji: '•', tipo: 'casa',
+    id, dia_id: 'd', actividad_id, encargo_id: null, titulo: id, emoji: '•', tipo: 'casa',
     hora_inicio: ini, hora_fin: fin, orden: 0, es_fijo: false, origen: 'rutina',
     estado: 'pendiente', completado_en: null, nota: null, minutos_reales: null,
     termino_de_verdad: null, puntos: 0, ...e,

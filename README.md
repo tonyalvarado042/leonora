@@ -33,7 +33,8 @@ años y hecha para vendérsela a familias enteras.
 | 2 | Rachas, niveles y celebración | ✅ |
 | 3 | Bienvenida y arranque | ✅ |
 | 4 | Fe: devocionales y versículo del día | ✅ |
-| 5-11 | Familia, oraciones, el Muro, ciclo, amigas, cobro, foto | pendientes |
+| 5 | La familia, la campanita y las fechas importantes | ✅ |
+| 6-11 | Oraciones, el Muro, ciclo, amigas, cobro, foto | pendientes |
 
 Detalle de cada fase, y lo guardado para después (deporte + espíritu,
 entrenamientos, nutrición, widget de iOS): [DOCUMENTACION.md §7](DOCUMENTACION.md).
@@ -50,13 +51,15 @@ REGLAS.md                    ← el cerebro maestro
 DISENO.md · LANZAMIENTO.md
 docs/dia-de-leonora.html     ← el diseño visual
 
-supabase/migrations/         ← 0001 fase 1 · 0002 fase 2 · 0003 seguridad · 0004 fase 4 · 0005 método · 0006 repeticiones
+supabase/migrations/         ← 0001 fase 1 · 0002 fase 2 · 0003 seguridad · 0004 fase 4
+                               0005 método · 0006 repeticiones · 0007 fase 5 · 0008 esquema propio
 app/
   app/                       ← las pantallas (expo-router)
   src/lib/                   ← la lógica; lo puro va aparte de la plataforma
   src/componentes/
-  __tests__/                 ← 116 pruebas de la lógica pura
-  prueba-*.mjs               ← pruebas de extremo a extremo sobre el bundle real
+  __tests__/                 ← 217 pruebas: la lógica pura y el repositorio entero
+  arrancar.mjs               ← el recorrido de bienvenida, para las demás pruebas
+  prueba-*.mjs               ← once pruebas de extremo a extremo sobre el bundle real
 ```
 
 ## Arrancar
@@ -72,7 +75,7 @@ npm run web        # o en el navegador
 
 ```bash
 cd app
-npm test           # 116 pruebas de la lógica pura
+npm test           # 217 pruebas: la lógica pura y el repositorio
 npm run typecheck  # TypeScript estricto
 
 npx expo export --platform web --output-dir dist
@@ -82,11 +85,28 @@ node prueba-crear.mjs        # crear actividades y añadirlas
 node prueba-arranque.mjs     # el recorrido de alguien recién llegado
 node prueba-mejoras.mjs      # escaneo, preview editable, notas, calendario
 node prueba-navegacion.mjs   # volver atrás y la vista previa del calendario
+node prueba-avisos-campos.mjs # que ningún campo se quede callado (R2)
+node prueba-escuela.mjs      # que el horario de clases se cargue de verdad
+node prueba-fase4.mjs        # el versículo del día y el devocional
+node prueba-metodo.mjs       # el devocional hecho a tu manera
+node prueba-repeticion.mjs   # tareas que se repiten, como en un calendario
+node prueba-fase5.mjs        # la familia, la campanita y las fechas importantes
+```
+
+O todas de una:
+
+```bash
+for f in prueba-*.mjs; do echo "--- $f"; node $f; done
 ```
 
 ## La base de datos
 
-Proyecto propio de Supabase, aparte de cualquier otro. Seis migraciones
+Proyecto propio de Supabase, aparte de cualquier otro. Ocho migraciones
 aplicadas y verificadas contra la base real: los disparadores de alta, las
 restricciones del esquema y que el aislamiento por fila **de verdad aísla** —
 una persona no ve ni puede tocar nada de otra, y sin sesión no se ve nada.
+
+Desde la Fase 5 un tutor **lee** lo de sus hijos, con políticas que se suman a
+las de antes: mirar no es escribir. Las funciones que deciden quién ve qué
+viven en el esquema `claude_graceday`, fuera de la API pública (regla **R7**).
+**El asesor de seguridad da cero avisos.**

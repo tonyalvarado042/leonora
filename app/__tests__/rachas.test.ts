@@ -115,7 +115,7 @@ test('son 24 insignias, cuatro vías, sin ids repetidos', () => {
 
 function tarea(tipo: Tarea['tipo'], estado: Tarea['estado']): Tarea {
   return {
-    id: Math.random().toString(36), dia_id: 'd', actividad_id: null, titulo: 't',
+    id: Math.random().toString(36), dia_id: 'd', actividad_id: null, encargo_id: null, titulo: 't',
     emoji: '•', tipo, hora_inicio: '08:00', hora_fin: '09:00', orden: 0,
     es_fijo: false, origen: 'rutina', estado,
     completado_en: estado === 'hecha' ? '2026-09-02T12:00:00Z' : null,

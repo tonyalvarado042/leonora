@@ -107,3 +107,27 @@ mover sin efecto— **pasaban el typecheck**.
   sirva en una ruta que no sea la raíz.
 - **Los nombres van en español**, igual que las tablas, porque el dominio se
   piensa en español.
+
+---
+
+## R7 · Lo que se crea en una base de datos se llama `claude_<proyecto>`
+*Acordada el 2026-08-30*
+
+Todo lo que yo cree dentro de una base de datos —el proyecto, un esquema, un
+rol, un bucket— lleva el nombre del proyecto por delante:
+
+```
+claude_graceday
+```
+
+**Nada de nombres genéricos.** Un esquema llamado `interno`, `utils` o `temp`
+no dice de quién es ni de qué proyecto, y en una cuenta con varios proyectos
+—aquí conviven GraceDay y el CRM— eso se convierte en un montón de cosas
+sueltas que nadie sabe si se pueden borrar.
+
+Pasó el 2026-08-30: creé un esquema `interno` para sacar de la API las
+funciones que deciden quién ve el calendario de quién. La idea estaba bien, el
+nombre no. Se renombró a `claude_graceday` en la migración 0008.
+
+Las tablas de dentro **no** llevan prefijo: ya están dentro del esquema del
+proyecto, y `claude_graceday.claude_graceday_grupos` no ayuda a nadie.

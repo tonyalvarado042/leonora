@@ -15,6 +15,86 @@ export type Hora = string;
 /** "AAAA-MM-DD" en la zona horaria de la persona. */
 export type Fecha = string;
 
+// ------------------------------------------------------------------ grupos
+
+/** Una familia es un grupo de tipo familia. No hay tabla `familias` aparte:
+ *  así todo lo que sirve para la familia sirve igual para las amigas. */
+export type TipoGrupo = 'familia' | 'amigos' | 'iglesia' | 'otro';
+
+/** Solo dos: quien cuida y quien es cuidado. Quién creó el grupo no es un rol
+ *  —está en `Grupo.creado_por`—, porque si lo fuera, la niña que monta la app
+ *  para su familia sería la jefa y su mamá no podría mandarle nada. */
+export type RolGrupo = 'tutor' | 'miembro';
+
+export interface Grupo {
+  id: string;
+  nombre: string;
+  tipo: TipoGrupo;
+  emoji: string;
+  creado_por: string;
+}
+
+export interface MiembroGrupo {
+  grupo_id: string;
+  persona_id: string;
+  rol: RolGrupo;
+  /** Lo decide cada quien, por grupo, y se puede quitar cuando quiera. */
+  ve_mi_calendario: boolean;
+  estado: 'invitado' | 'activo' | 'salio';
+}
+
+// ---------------------------------------------------------------- encargos
+
+/** Lo que papá o mamá le manda a un hijo. */
+export type TipoEncargo = 'tarea' | 'recordatorio' | 'consejo';
+
+export interface Encargo {
+  id: string;
+  de_persona_id: string;
+  para_persona_id: string;
+  titulo: string;
+  nota: string | null;
+  fecha: Fecha;
+  hora_sugerida: Hora | null;
+  tipo: TipoEncargo;
+  estado: 'pendiente' | 'hecho' | 'archivado';
+  /** Lo que contesta el hijo. Lo ve quien lo mandó. */
+  respuesta: string | null;
+  respondido_en: string | null;
+  visto_en: string | null;
+  creado_en: string;
+}
+
+// ----------------------------------------------------------------- eventos
+
+export type TipoEvento =
+  | 'feriado' | 'escolar' | 'examen' | 'entrega' | 'cumpleanos' | 'cita' | 'viaje' | 'personal';
+
+/** Qué le hace un evento al día. */
+export type EfectoEvento = 'libra_el_dia' | 'bloquea_horas' | 'solo_avisa';
+
+export interface Evento {
+  id: string;
+  grupo_id: string | null;
+  /** null = es de todo el grupo. */
+  persona_id: string | null;
+  tipo: TipoEvento;
+  titulo: string;
+  descripcion: string | null;
+  fecha_inicio: Fecha;
+  fecha_fin: Fecha;
+  todo_el_dia: boolean;
+  hora_inicio: Hora | null;
+  hora_fin: Hora | null;
+  /** `anual` es lo que hace que un cumpleaños vuelva cada año. */
+  repeticion: 'ninguna' | 'anual';
+  efecto: EfectoEvento;
+  origen: 'manual' | 'foto' | 'sistema';
+  confianza: number | null;
+  /** Nada leído de una foto entra al horario sin que un humano lo apruebe. */
+  confirmado: boolean;
+}
+
 export interface Persona {
   id: string;
   nombre: string;
@@ -90,6 +170,9 @@ export interface BloqueRutina {
   activo: boolean;
 }
 
+/** Una tarea recién generada, antes de que la base de datos le ponga id. */
+export type TareaNueva = Omit<Tarea, 'id' | 'dia_id'>;
+
 export interface Dia {
   id: string;
   persona_id: string;
@@ -104,6 +187,9 @@ export interface Tarea {
   id: string;
   dia_id: string;
   actividad_id: string | null;
+  /** De qué encargo salió, si salió de uno. Es lo que hace que marcar la
+   *  tarea aquí se vea allá: el que la mandó se entera de que ya está. */
+  encargo_id: string | null;
   titulo: string;
   emoji: string;
   tipo: TipoActividad;

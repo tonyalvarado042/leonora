@@ -5,10 +5,15 @@
  * simular relojes. Guardar el resultado es trabajo del repositorio.
  */
 
+import { encargosDeFecha, tareaDeEncargo } from './encargos';
+import { EMOJI_TIPO_EVENTO, eventosDeFecha } from './eventos';
 import { aMinutos, diasEntre, diaSemana, sumarDias } from './fechas';
 import type {
-  Actividad, Ajustes, BloqueRutina, Fecha, Hora, ModoRutina, Tarea,
+  Actividad, Ajustes, BloqueRutina, Encargo, Evento, Fecha, Hora, ModoRutina,
+  Tarea, TareaNueva, TipoActividad, TipoEvento,
 } from './tipos';
+
+export type { TareaNueva };
 
 /** Cuántos días tiene el mes de una fecha. */
 function diasDelMes(fecha: Fecha): number {
@@ -58,15 +63,18 @@ export function tocaEsteDia(b: BloqueRutina, fecha: Fecha, zonaHoraria: string):
   }
 }
 
-/** Una tarea recién generada, antes de que la base de datos le ponga id. */
-export type TareaNueva = Omit<Tarea, 'id' | 'dia_id'>;
-
 export interface DiaGenerado {
   fecha: Fecha;
   dia_semana: number;
   tipo: 'escolar' | 'fin_de_semana' | 'feriado' | 'vacaciones' | 'especial';
   modo_usado: ModoRutina;
   tareas: TareaNueva[];
+  /** Lo que hay hoy en el calendario, ya filtrado para esta persona. La
+   *  pantalla lo enseña arriba: un feriado se anuncia, no se adivina. */
+  eventos: Evento[];
+  /** El evento que libró el día, si lo hay. Sirve para decir por qué hoy no
+   *  hay colegio en vez de dejar el hueco sin explicación. */
+  libre: Evento | null;
 }
 
 export interface OpcionesGenerar {
@@ -76,7 +84,20 @@ export interface OpcionesGenerar {
   actividades: Actividad[];
   rutina: BloqueRutina[];
   modo?: ModoRutina;
+  /** Feriados, exámenes, cumpleaños y citas. Sin ellos el día sale igual que
+   *  antes, así que quien todavía no los tiene no nota nada. */
+  eventos?: Evento[];
+  /** Lo que papá o mamá mandó para esa fecha. Un feriado no lo borra: el
+   *  colegio se cancela, sacar la basura no. */
+  encargos?: Encargo[];
 }
+
+/** Con qué color se pinta cada evento cuando entra al día como tarea. */
+const TIPO_DE_EVENTO: Record<TipoEvento, TipoActividad> = {
+  feriado: 'descanso', escolar: 'estudio', examen: 'estudio',
+  entrega: 'estudio', cumpleanos: 'familia', cita: 'familia',
+  viaje: 'descanso', personal: 'descanso',
+};
 
 /**
  * Arma el plan de una fecha a partir de la rutina.
@@ -90,16 +111,31 @@ export function generarDia(o: OpcionesGenerar): DiaGenerado {
   const modo = o.modo ?? 'escolar';
   const esDiaDeOcupacion = o.ajustes.dias_ocupados.includes(dow);
 
+  const eventos = eventosDeFecha(o.eventos ?? [], o.fecha, o.ajustes.persona_id);
+  const libre = eventos.find((e) => e.efecto === 'libra_el_dia') ?? null;
+  // Solo las citas con hora bloquean horas: una que dura todo el día no tapa
+  // nada en concreto, así que se anuncia y ya.
+  const ocupadas = eventos.flatMap((e) =>
+    e.efecto === 'bloquea_horas' && !e.todo_el_dia
+      && e.hora_inicio !== null && e.hora_fin !== null
+      ? [{ inicio: aMinutos(e.hora_inicio), fin: aMinutos(e.hora_fin) }]
+      : []);
+
   const porId = new Map(o.actividades.filter((a) => a.activa).map((a) => [a.id, a]));
 
-  const tareas = o.rutina
+  const deRutina = o.rutina
     .filter((b) => b.modo === modo && tocaEsteDia(b, o.fecha, o.zonaHoraria))
     .flatMap<TareaNueva>((b) => {
       const act = porId.get(b.actividad_id);
       // Un bloque que apunta a una actividad borrada o apagada no produce nada.
       if (!act) return [];
+      // Un feriado cancela el colegio y la tarea del colegio. El devocional,
+      // la cena y el cuarto siguen: se cancela el colegio, no la vida.
+      if (libre && act.tipo === 'estudio') return [];
+      if (chocaConUnaCita(b.hora_inicio, b.hora_fin, ocupadas) && !act.es_fijo) return [];
       return [{
         actividad_id: act.id,
+        encargo_id: null,
         titulo: act.nombre,
         emoji: act.emoji,
         tipo: act.tipo,
@@ -116,17 +152,70 @@ export function generarDia(o: OpcionesGenerar): DiaGenerado {
         puntos: 0,
         metodo_devocional: null,
       }];
-    })
+    });
+
+  const deEncargos = encargosDeFecha(o.encargos ?? [], o.fecha, o.ajustes.persona_id)
+    .map((e) => tareaDeEncargo(e));
+
+  const tareas = [...deRutina, ...tareasDeEventos(eventos), ...deEncargos]
     .sort(ordenarTareas)
     .map((t, i) => ({ ...t, orden: i }));
 
   return {
     fecha: o.fecha,
     dia_semana: dow,
-    tipo: esDiaDeOcupacion ? 'escolar' : 'fin_de_semana',
+    tipo: tipoDeDia(modo, libre, esDiaDeOcupacion),
     modo_usado: modo,
     tareas,
+    eventos,
+    libre,
   };
+}
+
+function tipoDeDia(
+  modo: ModoRutina, libre: Evento | null, esDiaDeOcupacion: boolean,
+): DiaGenerado['tipo'] {
+  if (modo === 'vacaciones') return 'vacaciones';
+  if (libre) return libre.tipo === 'feriado' ? 'feriado' : 'especial';
+  return esDiaDeOcupacion ? 'escolar' : 'fin_de_semana';
+}
+
+/** Un evento con hora entra al día como una tarea más, para que se vea en su
+ *  sitio del horario. Los de todo el día se anuncian arriba y no ocupan hora:
+ *  un cumpleaños no es algo que se marque a las 3 de la tarde. */
+function tareasDeEventos(eventos: Evento[]): TareaNueva[] {
+  return eventos.flatMap<TareaNueva>((e) => {
+    if (e.todo_el_dia || e.hora_inicio === null || e.hora_fin === null) return [];
+    return [{
+      actividad_id: null,
+      encargo_id: null,
+      titulo: e.titulo,
+      emoji: EMOJI_TIPO_EVENTO[e.tipo],
+      tipo: TIPO_DE_EVENTO[e.tipo],
+      hora_inicio: e.hora_inicio,
+      hora_fin: e.hora_fin,
+      orden: 0,
+      es_fijo: true,
+      origen: 'evento',
+      estado: 'pendiente',
+      completado_en: null,
+      nota: e.descripcion,
+      minutos_reales: null,
+      termino_de_verdad: null,
+      puntos: 0,
+      metodo_devocional: null,
+    }];
+  });
+}
+
+/** Se solapan si una empieza antes de que la otra termine, por los dos lados.
+ *  Tocarse de punta no es chocar: 14:00–15:00 y 15:00–16:00 caben las dos. */
+function chocaConUnaCita(
+  inicio: Hora, fin: Hora, citas: { inicio: number; fin: number }[],
+): boolean {
+  const a = aMinutos(inicio);
+  const b = aMinutos(fin);
+  return citas.some((c) => a < c.fin && c.inicio < b);
 }
 
 /** Por hora de inicio; a igual hora, primero las ancladas, luego alfabético.

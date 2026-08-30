@@ -7,6 +7,104 @@ Lo más nuevo arriba.
 
 ---
 
+## Fase 5 · La familia, la campanita y las fechas importantes · 2026-08-30
+
+La capa 2 del diseño —la que faltaba desde la Fase 1— ya existe, y con ella la
+app deja de ser de una sola persona.
+
+**Varias personas en el mismo teléfono.** Cada quien tiene su día, su rutina,
+sus rachas y sus chispas. Se cambia tocando el dibujo de arriba en Hoy, o desde
+Familia. Lo guardado antes de la Fase 5 **se convierte al arrancar** y se deja
+intacto por si hiciera falta rescatarlo: la persona que había pasa a ser la
+primera de la casa, con su racha y sus chispas.
+
+**Los grupos.** Una familia **es un grupo de tipo familia** — no hay tabla
+aparte, así que lo que sirve para la casa sirve igual para las amigas o la
+iglesia. Una cuenta nueva ya viene con su casa, para poder añadir a mamá sin
+pasar antes por una pantalla de «crear un grupo».
+
+**Solo dos roles, y esto fue un cambio de última hora que importaba.** Tenía
+tres —dueño, tutor, miembro— y con eso la niña de 13 años que monta la app
+para su familia salía como jefa del grupo, y **su mamá no podía mandarle
+nada**. Quién creó el grupo es un dato (`grupos.creado_por`), no un rol: da
+permiso para invitar y renombrar, no para tutelar.
+
+**Quién ve el calendario de quién.** En la familia manda el tutor: papá y mamá
+ven el día de sus hijos sin pedir permiso —para eso son los papás— y **la app
+se lo dice al hijo en su pantalla, por su nombre**, en vez de mirarlo a
+escondidas. En los demás grupos lo decide cada quien y lo puede apagar cuando
+quiera. La misma regla vive en `grupos.ts` y en la base de datos: la app puede
+equivocarse, la base de datos no.
+
+**La campanita.** Papá o mamá manda una **tarea** (entra en el horario de ese
+día), un **recordatorio** (solo avisa) o un **mensaje** (se lee y se contesta).
+El número rojo cuenta **lo no abierto, no lo no hecho**. Marcar la tarea aquí
+se ve allá: quien la mandó ve que ya está, y lee la respuesta.
+
+Un encargo no es una orden que se cuela en el horario sin avisar. Llega a la
+campanita, se ve quién lo mandó, y el que lo recibe puede contestar. Una app
+que le mete tareas a una niña sin que ella las vea llegar no es una agenda, es
+un vigilante.
+
+**Las fechas importantes.** Feriados, cumpleaños, exámenes, entregas, citas,
+viajes. **Un evento no borra la rutina, la tapa:** un feriado libra el día de
+colegio y la tarea del colegio, pero deja el devocional, la cena y el recado de
+mamá — el colegio se cancela, la vida no. Un cumpleaños anual vuelve cada año
+sin volver a apuntarlo, y el del 29 de febrero se celebra el 28 cuando el año
+no es bisiesto. Se ven en Hoy y en el calendario **aunque el día no esté
+guardado todavía**: un feriado del mes que viene tiene que verse ahora.
+
+**Dos fallos que encontró el navegador, no el typecheck:**
+
+1. **Cambiar a mamá te tiraba al asistente sin decir nada.** Tocabas su nombre
+   y aparecías en otra pantalla contestando un cuestionario que no pediste.
+   Ahora sale una tarjeta que lo explica y deja volver.
+2. **El nombre que oye un lector de pantalla no seguía al de la pantalla.** En
+   una tarea de fe se leía «Tu respuesta» y el lector decía «Nota de la tarea».
+
+**La base de datos.** Migración `0007_fase5_familia.sql`: `grupos`,
+`miembros_grupo`, `encargos`, `eventos`, más `tareas_dia.encargo_id`. Las
+políticas de lectura del tutor se **añaden** a las de antes: mirar no es
+escribir, y esto no le da a nadie permiso para marcarle las tareas a otro.
+
+Y `0008_esquema_claude_graceday.sql`, por la regla nueva: las seis funciones
+que deciden quién ve qué estaban en `public`, y todo lo que está en `public`
+sale publicado como endpoint REST. No enseñaban nada —todas contestan sobre
+`auth.uid()`— pero una función que decide quién ve el calendario de una niña no
+tiene por qué estar colgada de internet. Ahora viven en el esquema
+`claude_graceday`, que PostgREST no publica. **El asesor de seguridad da cero
+avisos.**
+
+**Regla nueva, R7:** lo que se crea en una base de datos se llama
+`claude_<proyecto>`. Un esquema llamado `interno` no dice de quién es ni de qué
+proyecto, y en una cuenta con varios proyectos eso se convierte en cosas
+sueltas que nadie sabe si se pueden borrar.
+
+*Verificado:* 217 pruebas (`npm test`), ahora también del repositorio entero
+con un AsyncStorage en memoria; y en el navegador, de punta a punta: añadir a
+mamá, cambiar de persona, mandar un recado, que le llegue a Leonora con número
+rojo y como tarea en su día, contestarlo, marcarlo, que mamá lo vea hecho y
+contestado, guardar un feriado, y que quite el colegio dejando el devocional y
+la cena — en Hoy, en el mes y en la semana.
+
+---
+
+## Las once pruebas de navegador, otra vez verdes · 2026-08-30
+
+Cinco de las once llevaban tiempo rotas y no lo sabía: no pasaban por la
+bienvenida —que llegó después de que se escribieran— y buscaban textos que
+habían cambiado de nombre. **Una red de seguridad rota no protege nada** (R5),
+y todas fallaban desde antes de la Fase 5.
+
+Ahora hay un `arrancar.mjs` compartido que hace el recorrido de bienvenida, y
+las que dependían de una hora concreta comprueban lo que de verdad importa
+—que las dos horas se muevan quince minutos juntas— en vez de un `08:00`
+escrito a mano que dependía de qué día se corriera la prueba.
+
+*Verificado:* las once pasan, 79 pasos en total.
+
+---
+
 ## Tareas que se repiten, como en un calendario · 2026-08-29
 
 Añadir una tarea ya no es «solo para hoy». Ahora pregunta **cada cuánto se

@@ -35,7 +35,7 @@ assert.ok(!t2.includes('DEVOCIONAL DE HOY'), 'leyendo la Biblia no debería impo
 assert.ok(t2.includes('Tu nota'));
 console.log('✓ con «Leí la Biblia» no impone su texto, solo pide la nota');
 
-await p.getByLabel('Nota de la tarea').fill('Salmos 91 entero, con papá.');
+await p.getByLabel('Tu nota').fill('Salmos 91 entero, con papá.');
 await p.getByText('Guardar', { exact: true }).click();
 await p.waitForTimeout(900);
 const fila = await p.locator('body').innerText();

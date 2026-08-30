@@ -37,6 +37,12 @@ export function DetalleTarea({ tarea, devocional, onCerrar, onGuardar, onEstado,
   const color = colorDeTipo(tarea.tipo, p);
   const planeados = duracionMin(tarea.hora_inicio, tarea.hora_fin);
 
+  // El nombre visible y el que oye un lector de pantalla tienen que ser el
+  // mismo. Estaban separados: la pantalla decía «Tu respuesta» y el lector
+  // seguía diciendo «Nota de la tarea».
+  const comoSeLlamaLaNota =
+    tarea?.tipo === 'fe' && devocional && metodo === 'app' ? 'Tu respuesta' : 'Tu nota';
+
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onCerrar}>
       <View style={e.fondo}>
@@ -114,10 +120,7 @@ export function DetalleTarea({ tarea, devocional, onCerrar, onGuardar, onEstado,
               </View>
             )}
 
-            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
-              {tarea.tipo === 'fe' && devocional && metodo === 'app'
-                ? 'Tu respuesta' : 'Tu nota'}
-            </Text>
+            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>{comoSeLlamaLaNota}</Text>
             <TextInput
               value={nota}
               onChangeText={setNota}
@@ -127,7 +130,7 @@ export function DetalleTarea({ tarea, devocional, onCerrar, onGuardar, onEstado,
                   ? 'Contesta la pregunta, o escribe lo que quieras…'
                   : 'Qué leíste, con quién, qué te quedó…'}
               placeholderTextColor={p.tintaTenue}
-              aria-label="Nota de la tarea"
+              aria-label={comoSeLlamaLaNota}
               multiline
               style={[e.entrada, { color: p.tinta, backgroundColor: p.tarjeta, borderColor: p.linea }]}
             />

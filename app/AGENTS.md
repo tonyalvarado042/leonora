@@ -22,6 +22,7 @@ Resumen para tenerlo a mano:
 | **R4** | El repositorio nunca entrega su estado interno |
 | **R5** | Se verifica en el navegador, no solo compilando |
 | **R6** | Detalles que ya costaron un rato (`role`/`aria-*`, `<Enlace>`, Modal y navegación, cabecera propia) |
+| **R7** | Lo que se crea en una base de datos se llama `claude_<proyecto>` |
 
 ## Antes de dar algo por hecho
 

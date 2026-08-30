@@ -54,7 +54,8 @@ await siguiente.click(); await p.waitForTimeout(500);
 
 // 5. Colegio
 assert.ok(await p.getByText('Pregunta 4 de 5').count());
-assert.ok(await p.getByText(/Tienes foto de tu horario/).count(), 'falta la nota de la foto');
+assert.ok(await p.getByRole('button', { name: 'Escanear mi horario' }).count(),
+  'falta el botón de escanear el horario');
 await p.getByLabel('Salgo a las: una hora antes').click();
 await p.waitForTimeout(300);
 assert.ok(await p.getByText('13:00').count());

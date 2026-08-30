@@ -6,6 +6,8 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
+import { arrancar } from './arrancar.mjs';
+
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const c = await b.newContext({ viewport: { width: 400, height: 900 }, timezoneId: 'America/Guatemala' });
@@ -17,8 +19,7 @@ async function avance() {
   return (await p.getByText(/^\d+\/\d+$/).first().innerText()).trim();
 }
 
-await p.goto(URL, { waitUntil: 'networkidle' });
-await p.waitForTimeout(1200);
+await arrancar(p, { url: URL });
 
 const casillas = p.getByRole('checkbox');
 const total = await casillas.count();
@@ -60,14 +61,26 @@ const horasAntes = (await fila.innerText()).match(/\d\d:\d\d — \d\d:\d\d/)[0];
 await boton.click();
 await p.waitForTimeout(800);
 const horasDespues = (await fila.innerText()).match(/\d\d:\d\d — \d\d:\d\d/)[0];
-assert.equal(horasAntes, '08:00 — 09:00');
-assert.equal(horasDespues, '08:15 — 09:15', '+15 debería mover inicio y fin a la vez');
+
+// La hora exacta depende de lo que armó el asistente, así que se comprueba lo
+// que de verdad importa: que las dos horas se muevan quince minutos juntas.
+const mas15 = (h) => {
+  const [a, b] = h.split(' — ').map((x) => {
+    const [hh, mm] = x.split(':').map(Number);
+    const t = hh * 60 + mm + 15;
+    return `${String(Math.floor(t / 60) % 24).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  });
+  return `${a} — ${b}`;
+};
+assert.equal(horasDespues, mas15(horasAntes), '+15 debería mover inicio y fin a la vez');
 console.log(`✓ mover un bloque: ${horasAntes} → ${horasDespues}`);
 
 // Y el cambio en la rutina tiene que verse hoy mismo.
-await p.goto(URL, { waitUntil: 'networkidle' });
+await p.getByRole('button', { name: 'Volver' }).click();
 await p.waitForTimeout(1400);
-assert.ok(await p.getByText('08:15').count(), 'el día no recogió el cambio de la rutina');
+const nuevaHora = horasDespues.split(' — ')[0];
+assert.ok(await p.getByText(nuevaHora).count(),
+  `el día no recogió el cambio de la rutina (esperaba ver ${nuevaHora})`);
 console.log('✓ mover la rutina cambia el día de hoy');
 
 await b.close();

@@ -4,6 +4,8 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
+import { arrancar } from './arrancar.mjs';
+
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const c = await b.newContext({ viewport: { width: 400, height: 900 }, timezoneId: 'America/Guatemala' });
@@ -11,14 +13,13 @@ const p = await c.newPage();
 const fallos = [];
 p.on('pageerror', (e) => fallos.push('PAGE ' + e.message));
 
-await p.goto(URL, { waitUntil: 'networkidle' });
-await p.waitForTimeout(1400);
+await arrancar(p, { url: URL });
 const antes = await p.getByRole('checkbox').count();
 
 // --- 1. Algo suelto solo para hoy ---
-await p.getByText('+ Añadir algo solo para hoy').click();
+await p.getByText('+ Añadir una tarea').click();
 await p.waitForTimeout(500);
-await p.getByLabel('Qué hay que hacer').fill('Llamar a la abuela');
+await p.getByLabel('¿Qué hay que hacer?').fill('Llamar a la abuela');
 await p.getByLabel('¿A qué hora?: una hora después').click();
 await p.getByText('Añadir a hoy').click();
 await p.waitForTimeout(700);
@@ -42,7 +43,7 @@ await p.waitForTimeout(600);
 await p.getByLabel('Crear una cosa nueva').click();
 await p.waitForTimeout(1200);
 
-await p.getByLabel('Nombre de la actividad').fill('Tocar guitarra');
+await p.getByLabel('¿Cómo se llama?').fill('Tocar guitarra');
 await p.getByRole('radio', { name: 'Emoji 🎸' }).click();
 await p.getByText('Deporte').click();
 await p.getByText('45 min').click();

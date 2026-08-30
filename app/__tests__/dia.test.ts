@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { foco, generarDia, porcentajeCumplido, proximaOcupacion, resumenAvance, tocaEsteDia } from '../src/lib/dia.ts';
-import type { Actividad, Ajustes, BloqueRutina, Tarea } from '../src/lib/tipos.ts';
+import { EFECTO_POR_TIPO } from '../src/lib/eventos.ts';
+import type { Actividad, Ajustes, BloqueRutina, Evento, Tarea } from '../src/lib/tipos.ts';
 
 const ZONA = 'America/Guatemala';
 
@@ -104,7 +105,7 @@ test('generar dos veces da exactamente lo mismo', () => {
 
 function tarea(id: string, ini: string, fin: string, estado: Tarea['estado'] = 'pendiente'): Tarea {
   return {
-    id, dia_id: 'd', actividad_id: null, titulo: id, emoji: '•', tipo: 'casa',
+    id, dia_id: 'd', actividad_id: null, encargo_id: null, titulo: id, emoji: '•', tipo: 'casa',
     hora_inicio: ini, hora_fin: fin, orden: 0, es_fijo: false, origen: 'rutina',
     estado, completado_en: estado === 'hecha' ? '2026-09-02T12:00:00Z' : null,
     nota: null, minutos_reales: null, termino_de_verdad: null, puntos: 0, metodo_devocional: null,
@@ -292,4 +293,131 @@ test('el generador del día mezcla repeticiones distintas', () => {
     ],
   });
   assert.deepEqual(d.tareas.map((t) => t.titulo), ['diaria', 'semanal', 'mensual']);
+});
+
+// ------------------------------------------------------------------ eventos
+
+function evento(id: string, e: Partial<Evento> = {}): Evento {
+  const tipo = e.tipo ?? 'personal';
+  return {
+    id, grupo_id: 'g', persona_id: null, tipo, titulo: id, descripcion: null,
+    fecha_inicio: MIERCOLES, fecha_fin: MIERCOLES, todo_el_dia: true,
+    hora_inicio: null, hora_fin: null, repeticion: 'ninguna',
+    efecto: EFECTO_POR_TIPO[tipo], origen: 'manual', confianza: null,
+    confirmado: true, ...e,
+  };
+}
+
+/** Un miércoles cualquiera: colegio, tarea del colegio, devocional y cena. */
+function diaCompleto(eventos: Evento[] = []) {
+  return generarDia({
+    fecha: MIERCOLES, zonaHoraria: ZONA, ajustes, eventos,
+    actividades: [
+      act('Colegio', { tipo: 'estudio', es_fijo: true }),
+      act('Terminar de estudiar', { tipo: 'estudio' }),
+      act('Devocional', { tipo: 'fe', es_fijo: true }),
+      act('Cena', { tipo: 'familia', es_fijo: true }),
+    ],
+    rutina: [
+      bloque('r1', 'Colegio', 3, '08:00', '15:00'),
+      bloque('r2', 'Terminar de estudiar', 3, '15:00', '15:45'),
+      bloque('r3', 'Devocional', 3, '06:30', '07:30'),
+      bloque('r4', 'Cena', 3, '19:00', '19:45'),
+    ],
+  });
+}
+
+test('sin eventos el día sale exactamente igual que antes', () => {
+  const d = diaCompleto();
+  assert.deepEqual(d.tareas.map((t) => t.titulo),
+    ['Devocional', 'Colegio', 'Terminar de estudiar', 'Cena']);
+  assert.equal(d.tipo, 'escolar');
+  assert.equal(d.libre, null);
+  assert.deepEqual(d.eventos, []);
+});
+
+test('un feriado quita el colegio pero deja el devocional y la cena', () => {
+  const d = diaCompleto([evento('Independencia', { tipo: 'feriado' })]);
+  assert.deepEqual(d.tareas.map((t) => t.titulo), ['Devocional', 'Cena']);
+  assert.equal(d.tipo, 'feriado');
+  assert.equal(d.libre?.titulo, 'Independencia');
+});
+
+test('un viaje también libra el día, pero el día no es feriado', () => {
+  const d = diaCompleto([evento('Viaje a la playa', { tipo: 'viaje' })]);
+  assert.deepEqual(d.tareas.map((t) => t.titulo), ['Devocional', 'Cena']);
+  assert.equal(d.tipo, 'especial');
+});
+
+test('un examen no quita nada: solo se anuncia', () => {
+  const d = diaCompleto([evento('Examen de mate', { tipo: 'examen' })]);
+  assert.equal(d.tareas.length, 4);
+  assert.equal(d.tipo, 'escolar');
+  assert.deepEqual(d.eventos.map((e) => e.titulo), ['Examen de mate']);
+});
+
+test('el feriado de otra persona no me quita el colegio a mí', () => {
+  const d = diaCompleto([evento('Feriado de Emma', { tipo: 'feriado', persona_id: 'otra' })]);
+  assert.equal(d.tareas.length, 4);
+  assert.equal(d.libre, null);
+  assert.deepEqual(d.eventos, []);
+});
+
+test('un feriado sin confirmar no libra nada', () => {
+  const d = diaCompleto([evento('¿Feriado?', { tipo: 'feriado', origen: 'foto', confirmado: false })]);
+  assert.equal(d.tareas.length, 4);
+  assert.equal(d.libre, null);
+});
+
+test('un evento con hora entra al horario como una tarea más', () => {
+  const d = diaCompleto([evento('Dentista', {
+    tipo: 'cita', todo_el_dia: false, hora_inicio: '16:00', hora_fin: '17:00',
+    descripcion: 'Llevar la cartilla',
+  })]);
+  const cita = d.tareas.find((t) => t.titulo === 'Dentista');
+  assert.equal(cita?.origen, 'evento');
+  assert.equal(cita?.actividad_id, null);
+  assert.equal(cita?.es_fijo, true);
+  assert.equal(cita?.nota, 'Llevar la cartilla');
+  assert.deepEqual(d.tareas.map((t) => t.titulo),
+    ['Devocional', 'Colegio', 'Terminar de estudiar', 'Dentista', 'Cena']);
+});
+
+test('un evento de todo el día se anuncia arriba, no ocupa una hora', () => {
+  const d = diaCompleto([evento('Cumple de mamá', { tipo: 'cumpleanos' })]);
+  assert.equal(d.tareas.length, 4);
+  assert.deepEqual(d.eventos.map((e) => e.titulo), ['Cumple de mamá']);
+});
+
+test('una cita se lleva por delante lo flexible que le estorba, no lo anclado', () => {
+  const d = diaCompleto([evento('Dentista', {
+    tipo: 'cita', todo_el_dia: false, hora_inicio: '15:10', hora_fin: '16:00',
+  })]);
+  // «Terminar de estudiar» (15:00–15:45) es flexible y choca: se va.
+  // El colegio (08:00–15:00) no choca; la cena (19:00) tampoco.
+  assert.deepEqual(d.tareas.map((t) => t.titulo),
+    ['Devocional', 'Colegio', 'Dentista', 'Cena']);
+});
+
+test('tocarse de punta no es chocar', () => {
+  const d = diaCompleto([evento('Dentista', {
+    tipo: 'cita', todo_el_dia: false, hora_inicio: '15:45', hora_fin: '16:30',
+  })]);
+  assert.ok(d.tareas.some((t) => t.titulo === 'Terminar de estudiar'));
+});
+
+test('una cita de todo el día no bloquea horas, porque no tapa ninguna', () => {
+  const d = diaCompleto([evento('Cita', { tipo: 'cita' })]);
+  assert.equal(d.tareas.length, 4);
+});
+
+test('un cumpleaños anual cae cada año, aunque se guardó una vez', () => {
+  const d = generarDia({
+    fecha: '2027-09-02', zonaHoraria: ZONA, ajustes, actividades: [], rutina: [],
+    eventos: [evento('Cumple de Leonora', {
+      tipo: 'cumpleanos', repeticion: 'anual',
+      fecha_inicio: '2012-09-02', fecha_fin: '2012-09-02',
+    })],
+  });
+  assert.deepEqual(d.eventos.map((e) => e.titulo), ['Cumple de Leonora']);
 });

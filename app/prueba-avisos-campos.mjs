@@ -64,7 +64,7 @@ await p.getByText('Armar mi semana').click(); await p.waitForTimeout(900);
 await p.getByText('Me gusta, empezar').click(); await p.waitForTimeout(1800);
 
 // --- Añadir algo a hoy, sin texto ---
-await p.getByText('+ Añadir algo solo para hoy').click();
+await p.getByText('+ Añadir una tarea').click();
 await p.waitForTimeout(600);
 await p.getByText('Añadir a hoy').click();
 await p.waitForTimeout(500);

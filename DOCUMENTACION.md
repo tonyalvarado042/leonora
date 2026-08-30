@@ -4,8 +4,8 @@ App nativa de iOS y Android para organizar el día, los hábitos de fe y las
 fechas importantes. Pensada para una niña de 13 años y vendible a familias
 enteras.
 
-**Estado: fases 1, 2, 3 y 4 hechas y verificadas.**
-Última actualización: 2026-08-29
+**Estado: fases 1, 2, 3, 4 y 5 hechas y verificadas.**
+Última actualización: 2026-08-30
 
 - **Índice del repositorio:** `README.md`
 - **Las reglas del proyecto:** `REGLAS.md`
@@ -25,7 +25,7 @@ importante; sin ella, el primer día feriado rompe la app.
 | Capa | Qué es | Dónde vive | Cada cuánto cambia |
 |---|---|---|---|
 | **1. Rutina** | Cómo es un lunes *normal* | `rutina` | Casi nunca |
-| **2. Eventos** | Feriados, exámenes, cumpleaños | `eventos` (fase 5) | Siempre |
+| **2. Eventos** | Feriados, exámenes, cumpleaños | `eventos` | Siempre |
 | **3. El día** | El plan del martes 3 | `dias` + `tareas_dia` | Se genera cada día |
 
 La capa 3 se **genera** combinando 1 y 2, y es una **copia**: mover algo hoy no
@@ -35,7 +35,7 @@ toca la rutina, y regenerar el día con los mismos datos da siempre lo mismo.
 
 ## 2. Las tablas
 
-14 tablas creadas. Las de fases posteriores están en la sección 7.
+18 tablas creadas. Las de fases posteriores están en la sección 7.
 
 ### 2.1 `personas` — quién usa la app
 Una fila por persona. La clave es la misma que la de `auth.users`: una cuenta,
@@ -231,7 +231,98 @@ PK `(persona_id, versiculo_id)` · `guardado_en`. Los favoritos de cada quien.
 `tareas_dia` gana **`devocional_id`** para saber qué devocional le tocó a cada
 día de fe.
 
-### 2.14 Cómo se relacionan
+### 2.14 `grupos` — la familia y los demás
+
+Una familia **es un grupo de tipo `familia`**. No hay tabla `familias` aparte,
+así que todo lo que sirve para la casa sirve igual para las amigas o la
+iglesia.
+
+| Campo | Tipo | Qué es |
+|---|---|---|
+| `id` | uuid | |
+| `nombre` | texto 1-60 | Como lo llama quien lo creó |
+| `tipo` | `familia` · `amigos` · `iglesia` · `otro` | Decide las reglas de quién ve qué |
+| `emoji` | texto | 🏠 💬 ⛪ 👥 |
+| `creado_por` | uuid → personas | Quien lo montó. **No es un rol** |
+| `creado_en` | timestamptz | |
+
+Al crearse una persona, un disparador le crea su casa (`Mi familia`) y la mete
+dentro como **miembro**, no como tutor: montar la app para tu casa no te hace
+la mamá de nadie.
+
+---
+
+### 2.15 `miembros_grupo` — quién está en qué grupo
+
+| Campo | Tipo | Qué es |
+|---|---|---|
+| `grupo_id` + `persona_id` | uuid | Clave compuesta |
+| `rol` | `tutor` · `miembro` | Solo dos: quien cuida y quien es cuidado |
+| `ve_mi_calendario` | booleano | Lo decide cada quien, por grupo, y lo puede apagar |
+| `estado` | `invitado` · `activo` · `salio` | Una invitación espera hasta que la contestan |
+| `entro_en` | timestamptz | |
+
+**Por qué solo dos roles.** «Dueño» era un rol y estaba mal: la niña de 13 años
+que monta la app para su familia salía como jefa del grupo, y su mamá no podía
+mandarle nada. Quién lo creó vive en `grupos.creado_por` y solo da permisos de
+administración (invitar, renombrar), no de tutela.
+
+---
+
+### 2.16 `encargos` — lo que papá o mamá manda
+
+| Campo | Tipo | Qué es |
+|---|---|---|
+| `id` | uuid | |
+| `de_persona_id` | uuid → personas | Quien lo manda |
+| `para_persona_id` | uuid → personas | Quien lo recibe |
+| `titulo` | texto 1-120 | |
+| `nota` | texto | Algo más que decirle |
+| `fecha` | date | De qué día es |
+| `hora_sugerida` | time | Opcional. Sin ella cae a las 18:00 |
+| `tipo` | `tarea` · `recordatorio` · `consejo` | Solo `tarea` entra al horario |
+| `estado` | `pendiente` · `hecho` · `archivado` | |
+| `respuesta` | texto | Lo que contesta quien lo recibe |
+| `respondido_en` | timestamptz | |
+| `visto_en` | timestamptz | Cuándo lo abrió. Es lo que apaga el número rojo |
+| `creado_en` | timestamptz | |
+
+**Restricciones:** nadie se manda recados a sí mismo (`a_otra_persona`), y una
+respuesta lleva siempre su fecha (`respuesta_coherente`) — una respuesta sin
+fecha no se puede ordenar, y una fecha sin respuesta miente.
+
+`tareas_dia` gana una columna **`encargo_id`**: es lo que hace que marcar la
+tarea aquí se vea allá, y que quien la mandó se entere de que ya está.
+
+---
+
+### 2.17 `eventos` — la capa 2, la que faltaba desde la Fase 1
+
+| Campo | Tipo | Qué es |
+|---|---|---|
+| `id` | uuid | |
+| `grupo_id` | uuid → grupos | O es del grupo entero… |
+| `persona_id` | uuid → personas | …o de una sola persona |
+| `tipo` | `feriado` `escolar` `examen` `entrega` `cumpleanos` `cita` `viaje` `personal` | |
+| `titulo` | texto 1-120 | |
+| `descripcion` | texto | |
+| `fecha_inicio` / `fecha_fin` | date | Un viaje dura varios días |
+| `todo_el_dia` | booleano | |
+| `hora_inicio` / `hora_fin` | time | Solo si no es de todo el día |
+| `repeticion` | `ninguna` · `anual` | `anual` es lo que hace volver un cumpleaños |
+| `efecto` | `libra_el_dia` · `bloquea_horas` · `solo_avisa` | |
+| `origen` | `manual` · `foto` · `sistema` | |
+| `confianza` | 0-1 | Solo lo leído de una foto |
+| `confirmado` | booleano | **Nada leído de una foto entra al horario sin que un humano lo apruebe** |
+
+**Restricciones:** un evento es de alguien (`de_alguien`); las fechas van en
+orden; un evento con hora lleva las dos y ordenadas, y uno de todo el día no
+lleva ninguna (`horas_coherentes`) — media hora suelta no se puede pintar en el
+horario; y la confianza solo la trae lo leído de una foto.
+
+---
+
+### 2.18 Cómo se relacionan
 
 ```
 auth.users
@@ -247,7 +338,13 @@ personas ──1:1──► ajustes
     │
     ├──1:N──► avisos
     ├──1:4──► rachas
-    └──1:N──► logros_ganados ──N:1──► logros
+    ├──1:N──► logros_ganados ──N:1──► logros
+    │
+    ├──N:M──► grupos  (por miembros_grupo, con rol y ve_mi_calendario)
+    ├──1:N──► encargos (de / para) ───┐
+    └──1:N──► eventos                 │
+                                      ▼
+                            tareas_dia.encargo_id (set null)
 ```
 
 **Los borrados:** quitar la cuenta se lleva todo. Quitar una actividad se lleva
@@ -258,7 +355,7 @@ null`), porque el historial no se borra.
 
 ## 3. Seguridad
 
-RLS activo en las 10 tablas. Cuatro reglas:
+RLS activo en las 18 tablas. Las reglas:
 
 1. **Cada quien ve lo suyo y nada más.** `persona_id = auth.uid()`.
 2. `tareas_dia` se filtra por su `dias` padre.
@@ -266,15 +363,50 @@ RLS activo en las 10 tablas. Cuatro reglas:
 4. Las funciones de disparador son `SECURITY DEFINER` y tienen **revocado el
    EXECUTE** de `anon` y `authenticated` (migración 0003): si no, quedaban
    publicadas como RPC.
+5. **Un tutor lee lo de sus hijos** (migración 0007). Son políticas de
+   **solo lectura** que se suman a las de antes: mirar no es escribir, y esto
+   no le da a nadie permiso para marcarle las tareas a otro.
+6. **Un encargo solo lo manda un tutor, y solo a los suyos**
+   (`soy_tutor_de`). Lo ven las dos partes y nadie más.
+7. Un evento de grupo lo ve el grupo; uno de persona, quien puede ver su
+   calendario.
+
+### 3.1 Quién ve el calendario de quién
+
+La misma regla vive en dos sitios, a propósito: en `src/lib/grupos.ts` para
+que la pantalla sepa qué enseñar, y en la base de datos para que se cumpla.
+**La app puede equivocarse; la base de datos no.**
+
+- **En la familia manda el tutor.** Papá y mamá ven el día de sus hijos sin
+  pedir permiso —para eso son los papás—, y la app se lo dice al hijo en su
+  pantalla de Familia en vez de mirarlo a escondidas.
+- **En los demás grupos manda cada quien.** Una amiga enseña su calendario
+  solo si ella lo enciende, y lo puede apagar cuando quiera.
+- **Lo mío siempre lo veo yo.**
+
+### 3.2 Las ayudas de las políticas viven fuera de la API
+
+Seis funciones deciden todo esto: `mis_grupos`, `mis_grupos_y_invitaciones`,
+`administro`, `soy_tutor_de`, `comparto_grupo_con` y
+`puedo_ver_calendario_de`. Son `SECURITY DEFINER` porque **una política sobre
+`miembros_grupo` que consultara `miembros_grupo` se llamaría a sí misma sin
+parar**.
+
+Pero todo lo que vive en `public` sale publicado como endpoint REST, así que
+cualquiera con la clave anónima podía llamar a `/rest/v1/rpc/soy_tutor_de`. No
+enseñaban nada —todas contestan sobre `auth.uid()`—, pero una función que
+decide quién ve el calendario de una niña no tiene por qué estar colgada de
+internet. Viven en el esquema **`claude_graceday`**, que PostgREST no publica
+(migración 0008, regla **R7**).
 
 **Verificado contra la base real:** con dos personas, una no ve ni puede tocar
-nada de la otra; sin sesión no se ve nada; y las restricciones rechazan una
+nada de la otra; sin sesión no se ve nada; las restricciones rechazan una
 duración de cero, un bloque al revés, un día fuera de 0-6, una tarea «hecha»
-sin fecha y una racha por encima de su récord.
+sin fecha y una racha por encima de su récord. **El asesor de seguridad de
+Supabase da cero avisos.**
 
 Para fases posteriores: el tutor verá a sus hijos **menos `ciclo`**; una
-oración se ve según su `visibilidad`; un calendario solo si su dueño puso
-`ve_mi_calendario`.
+oración se ve según su `visibilidad`.
 
 ---
 
@@ -296,7 +428,12 @@ Estos módulos **no importan nada de React Native ni de Expo** a propósito.
 - `proximaOcupacion(fecha, dias, zona)` → cuándo vuelve el colegio. Un día sin
   colegio y sin decir por qué se lee como si la app no hubiera guardado el
   horario.
-- `generarDia(opciones)` → el plan de una fecha. Determinista.
+- `generarDia(opciones)` → el plan de una fecha. Determinista. Suma las tres
+  capas: la rutina, los eventos y los encargos. **Un feriado cancela el
+  colegio y la tarea del colegio, pero deja el devocional, la cena y el recado
+  de mamá: se cancela el colegio, no la vida.** Una cita con hora se lleva por
+  delante lo flexible que le estorba, no lo anclado, y tocarse de punta no es
+  chocar.
 - `foco(tareas, hora)` → qué toca ahora, o lo siguiente si no hay nada en curso.
 - `porcentajeCumplido` / `resumenAvance` — las omitidas salen del total.
 
@@ -323,6 +460,37 @@ Estos módulos **no importan nada de React Native ni de Expo** a propósito.
 - `armarSemana(respuestas, personaId)` → catálogo + rutina + ajustes + resumen.
 - Catálogos: `OCUPACIONES` (6) · `QUEHACERES` (6) · `GUSTOS` (6)
 
+**`src/lib/eventos.ts`** — la capa 2: lo que tapa la rutina.
+- `caeEnFecha(evento, fecha)` — los de varios días caen en todos; los anuales
+  comparan mes y día, y **un cumpleaños del 29 de febrero se celebra el 28**
+  cuando el año no es bisiesto.
+- `eventosDeFecha(eventos, fecha, personaId)` — lo del grupo sale para todos;
+  lo de una persona, solo para ella. **Lo que no está confirmado no sale.**
+- `libraElDia` · `proximos` · `anosQueCumple` · `enPalabras`
+- Catálogos: `NOMBRE_TIPO_EVENTO` · `EMOJI_TIPO_EVENTO` · `EFECTO_POR_TIPO`
+
+**`src/lib/grupos.ts`** — quién ve lo mío y quién me puede mandar algo.
+- `puedoVerElCalendarioDe(grupos, miembros, yo, otra)` — la regla de la
+  sección 3.1, en un solo sitio y probada sola.
+- `quienVeMiCalendario` — para poder decírselo a la persona **por su nombre**.
+- `aQuienPuedoMandar` — solo un tutor, solo en la familia, solo a quien no es
+  tutor. Una amiga no le pone tareas a otra, y un hijo no le manda deberes a
+  su papá.
+- `misGrupos` · `invitacionesPendientes` · `activos` · `miRolEn` · `mandaEn` ·
+  `conQuienComparto`
+
+**`src/lib/encargos.ts`** — los recados y la campanita.
+- `sinLeer(encargos, personaId)` — el número rojo cuenta **lo no abierto, no
+  lo no hecho**: un recado leído sigue en la lista pero deja de gritar.
+- `tareaDeEncargo(encargo)` — sin hora sugerida cae a las 18:00, no a
+  medianoche: un recado sin hora es «hoy, cuando puedas».
+- `faltanEnElDia(tareas, encargos, fecha, personaId)` — el día se genera una
+  vez y se guarda; si mamá manda un recado a media tarde, sin esto se quedaría
+  fuera del horario hasta mañana. Se comparan por `encargo_id`, así que volver
+  a llamarlo no duplica nada.
+- `paraMi` · `queMande` · `esperanRespuesta` · `encargosDeFecha` ·
+  `entraAlHorario` · `comoSeLee`
+
 **`src/lib/horarioFoto.ts`** — leer un horario de una foto.
 - `leerHorario()` — **todavía devuelve un ejemplo, no lee de verdad.**
 - `dudosas` · `aBloques` · `jornada`
@@ -338,11 +506,37 @@ Una interfaz `Repositorio`, dos implementaciones intercambiables:
 `RepositorioLocal` (AsyncStorage, funciona sin montar nada) y
 `RepositorioSupabase` (la base real).
 
-`persona` · `guardarPersona` · `ajustes` · `guardarAjustes` · `actividades` ·
+**El día y la rutina:** `ajustes` · `guardarAjustes` · `actividades` ·
 `guardarActividad` · `borrarActividad` · `rutina` · `guardarBloque` ·
 `borrarBloque` · `dia` · `regenerarDia` · `marcarTarea` · `anadirTareaHoy` ·
-`borrarTarea` · `guardarNota` · `resumenDias` · `rachas` · `logrosGanados` ·
-`chispasTotales` · `registrarApertura` · `aplicarArranque` · `empezarDeNuevo`
+`anadirRepetida` · `borrarTarea` · `guardarDetalle` · `resumenDias` ·
+`rachas` · `logrosGanados` · `chispasTotales` · `registrarApertura` ·
+`aplicarArranque` · `empezarDeNuevo`
+
+**Las personas:** `persona` (quien está usando la app) · `guardarPersona` ·
+`personas` · `cambiarPersona` · `anadirPersona` · `borrarPersona`
+
+**Los grupos:** `grupos` · `miembros` · `crearGrupo` · `guardarGrupo` ·
+`invitarAGrupo` · `responderInvitacion` · `verMiCalendario` · `salirDelGrupo`
+
+**Los recados:** `encargos` · `mandarEncargo` · `verEncargo` ·
+`responderEncargo` · `archivarEncargo`
+
+**Las fechas:** `eventos` · `guardarEvento` · `borrarEvento`
+
+**Cómo guarda `RepositorioLocal`.** Desde la Fase 5 el almacén es de varias
+personas: `personas[]`, `persona_activa`, y un bloque `por_persona` con los
+ajustes, el catálogo, la rutina, los días, las rachas, los logros y las
+chispas de cada una. Los grupos, los recados y los eventos son de la casa
+entera, no de una persona. Lo guardado antes de la Fase 5 (clave
+`graceday.v1`) **se convierte al arrancar** y se deja intacto por si hiciera
+falta rescatarlo: la persona que había pasa a ser la primera de la casa, con
+su racha y sus chispas.
+
+**Cómo mira `RepositorioSupabase`.** En la nube cada quien entra con su
+correo, así que no se le puede crear la cuenta a otro desde aquí —y lo dice en
+vez de fallar en silencio. `cambiarPersona` mueve un puntero interno, y lo que
+se pueda leer de ahí lo decide la base de datos, no la app.
 
 > **Regla:** el repositorio nunca entrega su estado interno. Todos los lectores
 > devuelven copias; si no, React ve la misma referencia y no vuelve a pintar.
@@ -354,7 +548,10 @@ Una interfaz `Repositorio`, dos implementaciones intercambiables:
 |---|---|
 | `bienvenida` | Lo primero al instalar: qué es la app y un video |
 | `arranque` | Cinco preguntas → escaneo opcional → **preview editable** → guardar |
-| `index` (Hoy) | Lo de ahora arriba, la lista, marcar, añadir algo suelto |
+| `index` (Hoy) | Lo de ahora arriba, la lista, marcar, añadir algo suelto, la campanita y quién eres |
+| `campanita` | Los recados: los que me mandan y los que mando, con respuesta |
+| `familia` | Quién usa la app, los grupos, quién ve mi calendario |
+| `eventos` | Feriados, cumpleaños, exámenes y citas |
 | `calendario` | Semana y mes, hacia atrás y adelante, historial de cumplimiento |
 | `rutina` | Editar la semana: mover, quitar, añadir |
 | `actividad` | Crear o cambiar una cosa del catálogo |
@@ -365,7 +562,8 @@ Una interfaz `Repositorio`, dos implementaciones intercambiables:
 
 **Componentes:** `Cabecera` · `CampoTexto` · `Aviso` · `Repeticion` ·
 `TarjetaVersiculo` · `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
-`AnilloProgreso` · `Celebracion` · `SelectorHora` · `PreguntaTerminaste` · `Enlace`
+`AnilloProgreso` · `Celebracion` · `SelectorHora` · `PreguntaTerminaste` ·
+`Enlace` · `Campanita`
 
 > **`CampoTexto` y `Aviso` existen para cumplir R2** (`REGLAS.md`): ningún
 > campo se queda callado. `CampoTexto` trae etiqueta, ayuda, marca de
@@ -517,6 +715,49 @@ repiten de otra manera.
 - **Dejar apretado** la salta — y saltada se ve **distinta** de hecha:
   fondo gris, etiqueta SALTADA y un guion en vez del tic.
 
+### 5.11 La familia, y quién ve a quién
+
+- Una cuenta nueva **ya tiene casa**: se puede añadir a mamá sin pasar antes
+  por una pantalla de «crear un grupo».
+- Quien instala entra como **miembro**, no como tutor.
+- Cambiar de persona cambia **todo**: el día, la rutina, las rachas y las
+  chispas son suyos.
+- Cambiar a alguien que todavía no armó su día **no te tira al asistente sin
+  decir nada**: tocaste el nombre de mamá, no pediste un cuestionario. Sale una
+  tarjeta que lo explica y deja volver.
+- La pantalla de Familia dice **por su nombre** quién ve tu calendario. Que
+  papá y mamá te vean está bien; que no te lo digan, no.
+
+### 5.12 Los recados
+
+- Solo un tutor manda recados, y solo a los suyos.
+- Tres tipos: una **tarea** entra en el horario de ese día; un
+  **recordatorio** solo avisa; un **mensaje** se lee y se contesta.
+- **El número rojo cuenta lo no abierto, no lo no hecho.** Un recado leído
+  sigue en la lista pero deja de gritar.
+- Un recado que llega con el día ya armado **entra igual**, y no dos veces.
+- **Marcar la tarea aquí se ve allá:** quien la mandó ve que ya está.
+- Quien lo recibe puede contestar, y quien lo mandó ve la respuesta.
+
+> Un encargo no es una orden que se cuela en el horario sin avisar. Llega a la
+> campanita, se ve quién lo mandó, y el que lo recibe puede contestar. Una app
+> que le mete tareas a una niña sin que ella las vea llegar no es una agenda,
+> es un vigilante.
+
+### 5.13 Las fechas importantes
+
+- **Un evento no borra la rutina, la tapa.** Un feriado libra el día de
+  colegio pero deja el devocional y la cena, porque el colegio se cancela y la
+  vida no. El recado de mamá tampoco se va: sacar la basura no es feriado.
+- Un feriado guardado hoy **rehace los días que aún no han pasado**, no los ya
+  vividos: rehacer el martes pasado borraría lo que la persona ya marcó.
+- Un evento con hora entra al horario como una tarea más; uno de todo el día
+  se anuncia arriba y no ocupa hora — un cumpleaños no se marca a las 3 de la
+  tarde.
+- Los eventos se pintan en el calendario **aunque el día no esté guardado**:
+  un feriado del mes que viene tiene que verse ahora, no cuando llegue.
+- **Nada leído de una foto entra al horario sin que un humano lo apruebe.**
+
 ---
 
 ## 6. Cómo está montado
@@ -530,8 +771,10 @@ repiten de otra manera.
 | Cobro | Compras dentro de la app (fase 10) | |
 | IA | Claude — cuando entre | Hoy el arranque va con reglas |
 
-**Verificación:** 83 pruebas de la lógica pura (`npm test`), TypeScript
-estricto, y cuatro pruebas de extremo a extremo sobre el bundle web real.
+**Verificación:** 217 pruebas (`npm test`) — la lógica pura y el repositorio
+entero, con un AsyncStorage en memoria que lo sustituye fuera del teléfono—,
+TypeScript estricto, y **once pruebas de extremo a extremo** sobre el bundle
+web real, con navegador.
 
 ---
 
@@ -543,7 +786,7 @@ estricto, y cuatro pruebas de extremo a extremo sobre el bundle web real.
 | 2 | Rachas, niveles y celebración | +3 | ✅ |
 | 3 | Bienvenida y arranque | +0 | ✅ |
 | 4 | Fe: devocionales y versículo del día | +4 | ✅ |
-| 5 | La familia y la campanita | +4 | pendiente |
+| 5 | La familia y la campanita | +4 | ✅ |
 | 6 | Oraciones | +2 | pendiente |
 | 7 | El Muro público | +1 | pendiente |
 | 8 | Lo privado: calendario de ciclo | +1 | pendiente |
@@ -552,10 +795,6 @@ estricto, y cuatro pruebas de extremo a extremo sobre el bundle web real.
 | 11 | **Leer el horario de una foto de verdad** | +1 | pendiente |
 
 ### 7.1 Lo que falta de cada fase pendiente
-
-**Fase 5 — La familia.** `grupos` (**una familia es un grupo de tipo familia**),
-`miembros_grupo` con `ve_mi_calendario`, `encargos` (tarea, recordatorio o
-consejo, con respuesta), `eventos`. La campanita junta todo.
 
 **Fase 6 — Oraciones.** `oraciones` con cinco niveles de visibilidad,
 `oraciones_apoyo`. Las contestadas son un filtro, no una tabla.
@@ -612,3 +851,10 @@ Lo leído entra a `eventos` **sin confirmar**.
 | El método del devocional se elige, no se fotografía | Tocar una lista es más rápido, y la foto necesita cámara y almacenamiento |
 | El versículo se elige por la fecha | No puede cambiar a media mañana ni al volver a abrir |
 | Lo puro separado de la plataforma | Zonas horarias y medianoche se prueban sin simulador |
+| Solo dos roles de grupo: tutor y miembro | «Dueño» como rol convertía en jefa a la niña que monta la app para su casa, y su mamá no podía mandarle nada. Quién lo creó vive en `grupos.creado_por` |
+| El tutor ve el calendario del hijo, y la app se lo dice al hijo | Para eso son los papás; mirarlo a escondidas es otra cosa |
+| El número rojo cuenta lo no abierto | Un recado leído y aún sin hacer ya no es una novedad: sigue en la lista, pero deja de gritar |
+| Un recado sin hora cae a las 18:00 | Es «hoy, cuando puedas»; a medianoche se quedaría fuera del día |
+| Un feriado no rehace los días ya vividos | Rehacerlos borraría lo que la persona ya marcó |
+| Las ayudas de las políticas viven en `claude_graceday` | Todo lo que está en `public` sale publicado como REST, y quién ve el calendario de una niña no se decide desde internet |
+| El almacén local se migró a una clave nueva | `graceday.v1` se deja intacto: si la conversión fallara, lo de antes sigue ahí |

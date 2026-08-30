@@ -23,14 +23,19 @@ import {
   type Logro, type Marcado, type Racha, type Via,
 } from './rachas';
 import type {
-  DetalleGuardable, DiaCompleto, Premio, ReglaNueva, Repositorio, ResumenDia,
-  TareaLigera, TareaSuelta,
+  DetalleGuardable, DiaCompleto, EncargoNuevo, Premio, ReglaNueva, Repositorio,
+  ResumenDia, TareaLigera, TareaSuelta,
 } from './repositorio';
 import type {
-  Actividad, Ajustes, BloqueRutina, Dia, EstadoTarea, Fecha, Persona, Tarea,
+  Actividad, Ajustes, BloqueRutina, Dia, Encargo, EstadoTarea, Evento, Fecha,
+  Grupo, MiembroGrupo, Persona, RolGrupo, Tarea, TipoGrupo,
 } from './tipos';
 
 const VIAS = ['devocional', 'dia', 'apertura', 'oracion'] as const;
+
+const EMOJI_GRUPO: Record<TipoGrupo, string> = {
+  familia: '🏠', amigos: '💬', iglesia: '⛪', otro: '👥',
+};
 
 const URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const CLAVE = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -65,14 +70,30 @@ function pedir<T>(r: { data: T | null; error: { message: string } | null }, que:
 export class RepositorioSupabase implements Repositorio {
   constructor(private readonly sb: SupabaseClient = crearCliente()) {}
 
+  /**
+   * A quién estoy mirando.
+   *
+   * Normalmente soy yo. Un papá puede ponerlo en un hijo para ver su día; lo
+   * que pueda leer o escribir de ahí lo decide la base de datos, no esta
+   * variable: aquí solo se dice a quién se pregunta.
+   */
+  private viendoA: string | null = null;
+
   private async miId(): Promise<string> {
     const { data } = await this.sb.auth.getUser();
     if (!data.user) throw new Error('No hay sesión iniciada.');
     return data.user.id;
   }
 
+  private async aQuienMiro(): Promise<string> {
+    return this.viendoA ?? await this.miId();
+  }
+
   async persona(): Promise<Persona> {
-    return pedir(await this.sb.from('personas').select('*').single(), 'leer la persona');
+    return pedir(
+      await this.sb.from('personas').select('*').eq('id', await this.aQuienMiro()).single(),
+      'leer la persona',
+    );
   }
 
   async guardarPersona(cambios: Partial<Persona>): Promise<Persona> {
@@ -83,7 +104,11 @@ export class RepositorioSupabase implements Repositorio {
   }
 
   async ajustes(): Promise<Ajustes> {
-    return pedir(await this.sb.from('ajustes').select('*').single(), 'leer los ajustes');
+    return pedir(
+      await this.sb.from('ajustes').select('*')
+        .eq('persona_id', await this.aQuienMiro()).single(),
+      'leer los ajustes',
+    );
   }
 
   async guardarAjustes(cambios: Partial<Ajustes>): Promise<Ajustes> {
@@ -97,14 +122,16 @@ export class RepositorioSupabase implements Repositorio {
 
   async actividades(): Promise<Actividad[]> {
     return pedir(
-      await this.sb.from('actividades').select('*').eq('activa', true).order('nombre'),
+      await this.sb.from('actividades').select('*')
+        .eq('persona_id', await this.aQuienMiro()).eq('activa', true).order('nombre'),
       'leer las actividades',
     );
   }
 
   async rutina(): Promise<BloqueRutina[]> {
     return pedir(
-      await this.sb.from('rutina').select('*').eq('activo', true)
+      await this.sb.from('rutina').select('*')
+        .eq('persona_id', await this.aQuienMiro()).eq('activo', true)
         .order('dia_semana').order('hora_inicio'),
       'leer la rutina',
     );
@@ -137,6 +164,7 @@ export class RepositorioSupabase implements Repositorio {
     const filas = pedir(
       await this.sb.from('dias')
         .select('fecha, tipo, porcentaje_cumplido, tareas_dia(titulo, emoji, tipo, hora_inicio, estado)')
+        .eq('persona_id', await this.aQuienMiro())
         .gte('fecha', desde).lte('fecha', hasta).order('fecha'),
       'leer el historial',
     ) as {
@@ -226,7 +254,8 @@ export class RepositorioSupabase implements Repositorio {
 
   async dia(fecha: Fecha): Promise<DiaCompleto> {
     const { data: existente } = await this.sb
-      .from('dias').select('*').eq('fecha', fecha).maybeSingle();
+      .from('dias').select('*').eq('persona_id', await this.aQuienMiro())
+      .eq('fecha', fecha).maybeSingle();
 
     if (existente) {
       const tareas = pedir(
@@ -246,18 +275,21 @@ export class RepositorioSupabase implements Repositorio {
   async regenerarDia(fecha: Fecha): Promise<DiaCompleto> {
     // `tareas_dia` cuelga de `dias` con borrado en cascada, así que basta con
     // quitar el día.
-    const { error } = await this.sb.from('dias').delete().eq('fecha', fecha);
+    const { error } = await this.sb.from('dias').delete()
+      .eq('persona_id', await this.aQuienMiro()).eq('fecha', fecha);
     if (error) throw new Error(`regenerar el día: ${error.message}`);
     return this.crear(fecha);
   }
 
   private async crear(fecha: Fecha): Promise<DiaCompleto> {
-    const [persona, ajustes, actividades, rutina] = await Promise.all([
+    const [persona, ajustes, actividades, rutina, eventos, encargos] = await Promise.all([
       this.persona(), this.ajustes(), this.actividades(), this.rutina(),
+      this.eventos(), this.encargos(),
     ]);
 
     const generado = generarDia({
       fecha, zonaHoraria: persona.zona_horaria, ajustes, actividades, rutina,
+      eventos, encargos,
     });
 
     const dia = pedir(
@@ -342,7 +374,10 @@ export class RepositorioSupabase implements Repositorio {
   }
 
   async rachas(): Promise<Racha[]> {
-    const filas = pedir(await this.sb.from('rachas').select('*'), 'leer las rachas') as Racha[];
+    const filas = pedir(
+      await this.sb.from('rachas').select('*').eq('persona_id', await this.aQuienMiro()),
+      'leer las rachas',
+    ) as Racha[];
     const porVia = new Map(filas.map((r) => [r.via, r]));
     // Una vía sin fila todavía es una racha en cero, no un error.
     return VIAS.map((v) => porVia.get(v) ?? rachaVacia(v));
@@ -350,14 +385,19 @@ export class RepositorioSupabase implements Repositorio {
 
   async logrosGanados(): Promise<string[]> {
     const filas = pedir(
-      await this.sb.from('logros_ganados').select('logro_id'), 'leer las insignias',
+      await this.sb.from('logros_ganados').select('logro_id')
+        .eq('persona_id', await this.aQuienMiro()),
+      'leer las insignias',
     ) as { logro_id: string }[];
     return filas.map((f) => f.logro_id);
   }
 
   async chispasTotales(): Promise<number> {
     const filas = pedir(
-      await this.sb.from('tareas_dia').select('puntos'), 'sumar las chispas',
+      await this.sb.from('tareas_dia')
+        .select('puntos, dias!inner(persona_id)')
+        .eq('dias.persona_id', await this.aQuienMiro()),
+      'sumar las chispas',
     ) as { puntos: number }[];
     return filas.reduce((t, f) => t + f.puntos, 0);
   }
@@ -398,7 +438,193 @@ export class RepositorioSupabase implements Repositorio {
     await this.dia(fecha);
   }
 
+  // --------------------------------------------------------- las personas
+
+  /** Las personas que puedo ver: yo y con quien comparto grupo. Las políticas
+   *  de la migración 0007 deciden cuáles son; aquí no se filtra a mano. */
+  async personas(): Promise<Persona[]> {
+    return pedir(
+      await this.sb.from('personas').select('*').order('nombre'),
+      'leer las personas',
+    );
+  }
+
+  /** Mirar el día de otra persona —un papá el de su hija. Lo que se pueda leer
+   *  lo decide la base de datos: si no toca, la consulta no devuelve nada. */
+  async cambiarPersona(id: string): Promise<Persona> {
+    const yo = await this.miId();
+    if (id === yo) {
+      this.viendoA = null;
+      return this.persona();
+    }
+    const quien = pedir(
+      await this.sb.from('personas').select('*').eq('id', id).maybeSingle(),
+      'buscar a esa persona',
+    ) as Persona | null;
+    if (!quien) throw new Error('No puedes ver el calendario de esa persona.');
+    this.viendoA = id;
+    return quien;
+  }
+
+  async anadirPersona(): Promise<Persona> {
+    // En la nube cada quien entra con su propio correo: crearle la cuenta a
+    // otro desde aquí sería crearle una contraseña que no eligió.
+    throw new Error(
+      'En la nube cada persona entra con su correo. Invítala desde Familia y ' +
+      'le llegará la invitación.',
+    );
+  }
+
+  async borrarPersona(): Promise<void> {
+    throw new Error(
+      'Una cuenta se borra desde sus propios ajustes. Aquí puedes sacarla del ' +
+      'grupo con «Salir del grupo».',
+    );
+  }
+
+  // ----------------------------------------------------------- los grupos
+
+  async grupos(): Promise<Grupo[]> {
+    return pedir(await this.sb.from('grupos').select('*').order('nombre'), 'leer los grupos');
+  }
+
+  async miembros(): Promise<MiembroGrupo[]> {
+    return pedir(await this.sb.from('miembros_grupo').select('*'), 'leer los miembros');
+  }
+
+  async crearGrupo(nombre: string, tipo: TipoGrupo): Promise<Grupo> {
+    const limpio = nombre.trim();
+    if (limpio === '') throw new Error('Ponle un nombre al grupo.');
+    const yo = await this.miId();
+    const grupo = pedir(
+      await this.sb.from('grupos')
+        .insert({ nombre: limpio, tipo, emoji: EMOJI_GRUPO[tipo], creado_por: yo })
+        .select().single(),
+      'crear el grupo',
+    ) as Grupo;
+    const { error } = await this.sb.from('miembros_grupo').insert({
+      grupo_id: grupo.id, persona_id: yo, rol: 'miembro',
+      ve_mi_calendario: true, estado: 'activo',
+    });
+    if (error) throw new Error(`entrar al grupo: ${error.message}`);
+    return grupo;
+  }
+
+  async guardarGrupo(cambios: Partial<Grupo> & { id: string }): Promise<Grupo> {
+    const { id, ...resto } = cambios;
+    return pedir(
+      await this.sb.from('grupos').update(resto).eq('id', id).select().single(),
+      'guardar el grupo',
+    );
+  }
+
+  async invitarAGrupo(grupoId: string, personaId: string, rol: RolGrupo): Promise<void> {
+    const { error } = await this.sb.from('miembros_grupo').upsert({
+      grupo_id: grupoId, persona_id: personaId, rol,
+      ve_mi_calendario: false, estado: 'invitado',
+    });
+    if (error) throw new Error(`invitar: ${error.message}`);
+  }
+
+  async responderInvitacion(grupoId: string, acepta: boolean): Promise<void> {
+    const { error } = await this.sb.from('miembros_grupo')
+      .update({ estado: acepta ? 'activo' : 'salio' })
+      .eq('grupo_id', grupoId).eq('persona_id', await this.miId());
+    if (error) throw new Error(`contestar la invitación: ${error.message}`);
+  }
+
+  async verMiCalendario(grupoId: string, ve: boolean): Promise<void> {
+    const { error } = await this.sb.from('miembros_grupo')
+      .update({ ve_mi_calendario: ve })
+      .eq('grupo_id', grupoId).eq('persona_id', await this.miId());
+    if (error) throw new Error(`cambiar quién ve tu calendario: ${error.message}`);
+  }
+
+  async salirDelGrupo(grupoId: string): Promise<void> {
+    const { error } = await this.sb.from('miembros_grupo')
+      .update({ estado: 'salio' })
+      .eq('grupo_id', grupoId).eq('persona_id', await this.miId());
+    if (error) throw new Error(`salir del grupo: ${error.message}`);
+  }
+
+  // --------------------------------------------------------- los encargos
+
+  async encargos(): Promise<Encargo[]> {
+    return pedir(
+      await this.sb.from('encargos').select('*').order('creado_en', { ascending: false }),
+      'leer los recados',
+    );
+  }
+
+  async mandarEncargo(n: EncargoNuevo): Promise<Encargo> {
+    const titulo = n.titulo.trim();
+    if (titulo === '') throw new Error('Escribe qué le quieres mandar.');
+    const encargo = pedir(
+      await this.sb.from('encargos').insert({
+        de_persona_id: await this.miId(),
+        para_persona_id: n.para_persona_id,
+        titulo, nota: n.nota?.trim() || null,
+        fecha: n.fecha, hora_sugerida: n.hora_sugerida, tipo: n.tipo,
+      }).select().single(),
+      'mandar el recado',
+    ) as Encargo;
+    // El día del que lo recibe se rehace solo la próxima vez que lo abra: la
+    // tarea entra por `generarDia`, no se inserta a mano aquí.
+    return encargo;
+  }
+
+  async verEncargo(id: string): Promise<void> {
+    const { error } = await this.sb.from('encargos')
+      .update({ visto_en: new Date().toISOString() })
+      .eq('id', id).is('visto_en', null);
+    if (error) throw new Error(`marcar el recado como visto: ${error.message}`);
+  }
+
+  async responderEncargo(id: string, texto: string): Promise<Encargo> {
+    const limpio = texto.trim();
+    if (limpio === '') throw new Error('Escribe tu respuesta antes de mandarla.');
+    const ahora = new Date().toISOString();
+    return pedir(
+      await this.sb.from('encargos')
+        .update({ respuesta: limpio, respondido_en: ahora, visto_en: ahora })
+        .eq('id', id).select().single(),
+      'contestar el recado',
+    );
+  }
+
+  async archivarEncargo(id: string): Promise<void> {
+    const { error } = await this.sb.from('encargos')
+      .update({ estado: 'archivado' }).eq('id', id);
+    if (error) throw new Error(`archivar el recado: ${error.message}`);
+  }
+
+  // ---------------------------------------------------------- los eventos
+
+  async eventos(): Promise<Evento[]> {
+    return pedir(
+      await this.sb.from('eventos').select('*').order('fecha_inicio'),
+      'leer los eventos',
+    );
+  }
+
+  async guardarEvento(evento: Evento): Promise<Evento> {
+    if (evento.titulo.trim() === '') throw new Error('Ponle un nombre al evento.');
+    if (evento.fecha_fin < evento.fecha_inicio) {
+      throw new Error('El evento no puede terminar antes de empezar.');
+    }
+    return pedir(
+      await this.sb.from('eventos').upsert(evento).select().single(),
+      'guardar el evento',
+    );
+  }
+
+  async borrarEvento(id: string): Promise<void> {
+    const { error } = await this.sb.from('eventos').delete().eq('id', id);
+    if (error) throw new Error(`borrar el evento: ${error.message}`);
+  }
+
   async empezarDeNuevo(): Promise<void> {
+    this.viendoA = null;
     const persona_id = await this.miId();
     // `rutina` y `tareas_dia` caen en cascada con sus padres.
     await this.sb.from('dias').delete().eq('persona_id', persona_id);

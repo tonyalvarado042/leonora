@@ -5,6 +5,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 
 import { AnilloProgreso } from '@/componentes/AnilloProgreso';
 import { Aviso } from '@/componentes/Aviso';
+import { Campanita } from '@/componentes/Campanita';
 import { CampoTexto } from '@/componentes/CampoTexto';
 import { DetalleTarea } from '@/componentes/DetalleTarea';
 import { useCelebrar } from '@/componentes/Celebracion';
@@ -15,6 +16,8 @@ import { SelectorHora } from '@/componentes/SelectorHora';
 import { FilaTarea } from '@/componentes/FilaTarea';
 import { TarjetaAhora } from '@/componentes/TarjetaAhora';
 import { TarjetaVersiculo } from '@/componentes/TarjetaVersiculo';
+import { sinLeer } from '@/lib/encargos';
+import { EMOJI_TIPO_EVENTO, enPalabras, eventosDeFecha, proximos } from '@/lib/eventos';
 import { devocionalDelDia, versiculoDelDia } from '@/lib/fe';
 import { avisosDelDia } from '@/lib/avisos';
 import { prepararAvisos, reprogramar } from '@/lib/avisosTelefono';
@@ -25,7 +28,7 @@ import { OCUPACIONES } from '@/lib/arranque';
 import { preguntarSiTermino, type Marcado, type Racha } from '@/lib/rachas';
 import { repositorio, type DiaCompleto } from '@/lib/repositorio';
 import { usarPaleta } from '@/lib/tema';
-import type { Actividad, Ajustes, Persona } from '@/lib/tipos';
+import type { Actividad, Ajustes, Encargo, Evento, Persona } from '@/lib/tipos';
 
 export default function Hoy() {
   const p = usarPaleta();
@@ -35,6 +38,10 @@ export default function Hoy() {
   const [dia, setDia] = useState<DiaCompleto | null>(null);
   const [rachas, setRachas] = useState<Racha[]>([]);
   const [chispas, setChispas] = useState(0);
+  const [encargos, setEncargos] = useState<Encargo[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [cambiando, setCambiando] = useState(false);
+  const [personas, setPersonas] = useState<Persona[]>([]);
   const [preguntando, setPreguntando] = useState<string | null>(null);
   const [suelta, setSuelta] = useState<{ titulo: string; hora: string } | null>(null);
   const [abierta, setAbierta] = useState<string | null>(null);
@@ -50,17 +57,26 @@ export default function Hoy() {
   const hora = horaLocal(ahora, zona);
 
   const cargar = useCallback(async () => {
-    const [pe, aj, ac] = await Promise.all([
+    const [pe, aj, ac, ps] = await Promise.all([
       repositorio.persona(), repositorio.ajustes(), repositorio.actividades(),
+      repositorio.personas(),
     ]);
-    // Quien nunca contestó el asistente no debería aterrizar en un día vacío
+    // Quien abre la app por primera vez no debería aterrizar en un día vacío
     // que no entiende: primero la bienvenida.
-    if (!aj.arranque_hecho) { router.replace('/bienvenida'); return; }
+    //
+    // Pero si en el teléfono hay más gente, cambiar a alguien que todavía no
+    // armó su día NO puede tirarte al asistente sin decir nada: tocaste el
+    // nombre de mamá y apareciste en otra pantalla. Ahí se enseña una tarjeta
+    // que lo explica y deja volver.
+    if (!aj.arranque_hecho && ps.length <= 1) { router.replace('/bienvenida'); return; }
 
+    setPersonas(ps);
     setPersona(pe); setAjustes(aj); setActividades(ac);
     setDia(await repositorio.dia(fechaLocal(new Date(), pe.zona_horaria)));
     setRachas(await repositorio.rachas());
     setChispas(await repositorio.chispasTotales());
+    setEncargos(await repositorio.encargos());
+    setEventos(await repositorio.eventos());
   }, [router]);
 
   // Al volver de Rutina o Ajustes hay que releer: el día pudo cambiar.
@@ -169,17 +185,30 @@ export default function Hoy() {
     || OCUPACIONES.find((o) => o.id === ajustes.ocupacion)?.nombre
     || 'el colegio';
 
+  const nuevos = sinLeer(encargos, persona.id);
+  // Los de todo el día se anuncian arriba, porque no ocupan una hora del
+  // horario: los que sí la ocupan ya bajaron a la lista de tareas.
+  const hoyHay = eventosDeFecha(eventos, fecha, persona.id);
+  const libra = hoyHay.find((x) => x.efecto === 'libra_el_dia') ?? null;
+  const queVienen = proximos(eventos, fecha, persona.id, 14).slice(0, 3);
+
   return (
     <SafeAreaView style={[e.pantalla, { backgroundColor: p.papel }]} edges={['top']}>
       <ScrollView contentContainerStyle={e.cuerpo}>
         <View style={e.barra}>
-          <View style={[e.avatar, { backgroundColor: p.albaPiso }]}>
+          <Pressable
+            role="button"
+            aria-label={`${persona.nombre || 'Sin nombre'}. Tocar para cambiar de persona`}
+            onPress={() => (personas.length > 1 ? setCambiando(true) : router.push('/familia'))}
+            style={[e.avatar, { backgroundColor: p.albaPiso }]}
+          >
             <Text style={e.avatarTexto}>{persona.avatar_valor}</Text>
-          </View>
+          </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={[e.saludo, { color: p.tinta }]}>{saludo(hora)}, {persona.nombre}</Text>
             <Text style={[e.fecha, { color: p.tintaTenue }]}>{fechaLarga(fecha, zona)}</Text>
           </View>
+          <Campanita sinLeer={nuevos} />
           <Enlace
             href="/ajustes"
             etiqueta="Ajustes"
@@ -189,12 +218,51 @@ export default function Hoy() {
           </Enlace>
         </View>
 
+        {!ajustes.arranque_hecho && (
+          <View style={[e.libre, { backgroundColor: p.albaPiso, borderColor: p.alba }]}>
+            <Text style={[e.libreTitulo, { color: p.alba }]}>
+              {persona.nombre || 'Esta persona'} todavía no armó su día
+            </Text>
+            <Text style={[e.libreTexto, { color: p.tintaSuave }]}>
+              De momento tiene la rutina de fábrica. Contesta cinco preguntas y
+              la app le arma la semana entera a su medida.
+            </Text>
+            <Enlace href="/bienvenida" estilo={[e.botonGrande, { backgroundColor: p.alba, marginTop: 12 }]}>
+              <Text style={e.botonGrandeTexto}>Armar su día</Text>
+            </Enlace>
+          </View>
+        )}
+
         <TarjetaVersiculo versiculo={versiculo} onAbrir={() => router.push('/versiculo')} />
 
         <TarjetaAhora foco={foco} avisarAntes={avisarAntes} />
         <AnilloProgreso hechas={avance.hechas} total={avance.total} />
 
-        {vuelve && (
+        {libra && (
+          <View style={[e.libre, { backgroundColor: p.verdePiso, borderColor: p.verde }]}>
+            <Text style={[e.libreTitulo, { color: p.verde }]}>
+              {EMOJI_TIPO_EVENTO[libra.tipo]}  {libra.titulo}
+            </Text>
+            <Text style={[e.libreTexto, { color: p.tintaSuave }]}>
+              Hoy no hay {comoSeLlama.toLowerCase()}. Tu horario está guardado y
+              vuelve solo mañana; el devocional y la cena siguen puestos.
+            </Text>
+          </View>
+        )}
+
+        {hoyHay.filter((x) => x.todo_el_dia && x.id !== libra?.id).map((x) => (
+          <View
+            key={x.id}
+            style={[e.libre, { backgroundColor: p.tarjeta2, borderColor: p.linea }]}
+          >
+            <Text style={[e.libreTitulo, { color: p.tinta }]}>
+              {EMOJI_TIPO_EVENTO[x.tipo]}  {x.titulo}
+            </Text>
+            <Text style={[e.libreTexto, { color: p.tintaSuave }]}>Es hoy.</Text>
+          </View>
+        ))}
+
+        {!libra && vuelve && (
           <View style={[e.libre, { backgroundColor: p.tarjeta2, borderColor: p.linea }]}>
             <Text style={[e.libreTitulo, { color: p.tinta }]}>
               Hoy no hay {comoSeLlama.toLowerCase()}
@@ -252,6 +320,18 @@ export default function Hoy() {
           <Text style={[e.enlaceTexto, { color: p.dia }]}>📅  Ver mi semana y mi mes →</Text>
         </Enlace>
 
+        <Enlace href="/eventos" estilo={[e.enlace, { borderColor: p.linea }]}>
+          <Text style={[e.enlaceTexto, { color: p.tarde }]}>
+            {queVienen.length === 0
+              ? '🎂  Fechas importantes →'
+              : `${EMOJI_TIPO_EVENTO[queVienen[0].evento.tipo]}  ${queVienen[0].evento.titulo}, ${enPalabras(queVienen[0].enCuantos)} →`}
+          </Text>
+        </Enlace>
+
+        <Enlace href="/familia" estilo={[e.enlace, { borderColor: p.linea }]}>
+          <Text style={[e.enlaceTexto, { color: p.verde }]}>🏠  Mi familia y mis grupos →</Text>
+        </Enlace>
+
         <Enlace href="/rutina" estilo={[e.enlace, { borderColor: p.linea }]}>
           <Text style={[e.enlaceTexto, { color: p.alba }]}>Editar mi rutina de la semana →</Text>
         </Enlace>
@@ -261,6 +341,64 @@ export default function Hoy() {
           pulsado si te la saltaste.
         </Text>
       </ScrollView>
+
+      <Modal
+        visible={cambiando}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setCambiando(false)}
+      >
+        <View style={e.fondo}>
+          <View style={[e.hoja, { backgroundColor: p.papel }]}>
+            <Text style={[e.hojaTitulo, { color: p.tinta }]}>¿Quién eres?</Text>
+            <Text style={[e.hojaAyuda, { color: p.tintaSuave }]}>
+              Cada quien tiene su propio horario, sus rachas y sus chispas.
+            </Text>
+
+            <View style={e.quienes}>
+              {personas.map((x) => (
+                <Pressable
+                  key={x.id}
+                  role="radio"
+                  aria-checked={x.id === persona.id}
+                  onPress={async () => {
+                    setCambiando(false);
+                    if (x.id === persona.id) return;
+                    await repositorio.cambiarPersona(x.id);
+                    aperturaHecha.current = false;
+                    await cargar();
+                  }}
+                  style={[
+                    e.quien,
+                    {
+                      borderColor: x.id === persona.id ? p.alba : p.linea,
+                      backgroundColor: x.id === persona.id ? p.albaPiso : p.tarjeta,
+                    },
+                  ]}
+                >
+                  <Text style={e.quienAvatar}>{x.avatar_valor}</Text>
+                  <Text
+                    numberOfLines={1}
+                    style={[e.quienNombre, { color: x.id === persona.id ? p.alba : p.tinta }]}
+                  >
+                    {x.nombre.trim() === '' ? 'Sin nombre' : x.nombre}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable
+              role="button"
+              onPress={() => { setCambiando(false); router.push('/familia'); }}
+              style={[e.secundarioSolo, { borderColor: p.linea }]}
+            >
+              <Text style={[e.cerrarTexto, { color: p.tintaSuave }]}>
+                Añadir a alguien de mi familia
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <DetalleTarea
         tarea={dia.tareas.find((t) => t.id === abierta) ?? null}
@@ -451,6 +589,17 @@ const e = StyleSheet.create({
   hoja: { borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 20, paddingBottom: 34, gap: 12 },
   hojaTitulo: { fontSize: 19, fontWeight: '700' },
   hojaAyuda: { fontSize: 13.5, marginTop: -6 },
+  quienes: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 6 },
+  quien: {
+    borderWidth: 1.5, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11,
+    alignItems: 'center', gap: 4, minWidth: 84,
+  },
+  quienAvatar: { fontSize: 26 },
+  quienNombre: { fontSize: 13.5, fontWeight: '700', maxWidth: 90 },
+  secundarioSolo: {
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: 13,
+    paddingVertical: 14, alignItems: 'center', marginTop: 8,
+  },
   entrada: {
     borderWidth: StyleSheet.hairlineWidth, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 13, fontSize: 16,

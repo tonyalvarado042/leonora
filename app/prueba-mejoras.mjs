@@ -33,7 +33,7 @@ for (const o of ['Colegio', 'Escuela', 'Universidad', 'Trabajo', 'Otra cosa', 'N
 }
 await p.getByText('🎓 Universidad').click();
 await p.waitForTimeout(400);
-await p.getByLabel('Nombre de tu colegio o trabajo').fill('Facultad de Medicina');
+await p.getByLabel('¿Cómo quieres que se llame en tu horario?').fill('Facultad de Medicina');
 await tiro('2-ocupacion');
 console.log('✓ 2. seis ocupaciones, y se le puede poner el nombre que uno quiera');
 
@@ -90,8 +90,8 @@ console.log('✓ 5. saltarse una tarea se ve como SALTADA, no como hecha a media
 // 6. Detalle con nota
 await p.getByRole('button', { name: /Devocional, / }).first().click();
 await p.waitForTimeout(700);
-assert.ok(await p.getByLabel('Nota de la tarea').count(), 'no abre el detalle');
-await p.getByLabel('Nota de la tarea').fill('Salmos 23. Hoy me costó concentrarme.');
+assert.ok(await p.getByLabel('Tu nota').count(), 'no abre el detalle');
+await p.getByLabel('Tu nota').fill('Salmos 23. Hoy me costó concentrarme.');
 await p.getByText('Guardar', { exact: true }).click();
 await p.waitForTimeout(800);
 hoy = await p.locator('body').innerText();

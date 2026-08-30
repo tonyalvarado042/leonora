@@ -1,8 +1,9 @@
 /** La rutina con la que arranca una cuenta nueva. Se edita entera desde la app. */
 
-import type { Actividad, Ajustes, BloqueRutina, Persona } from '@/lib/tipos';
+import type { Actividad, Ajustes, BloqueRutina, Grupo, MiembroGrupo, Persona } from '@/lib/tipos';
 
 export const PERSONA_LOCAL = 'local';
+export const FAMILIA_LOCAL = 'grupo-familia';
 
 export const personaInicial: Persona = {
   id: PERSONA_LOCAL,
@@ -30,6 +31,26 @@ export const ajustesIniciales: Ajustes = {
   tema: 'auto',
   celebraciones: true,
   arranque_hecho: false,
+};
+
+/** La casa, creada de fábrica. Una cuenta nueva ya tiene familia: así se puede
+ *  añadir a mamá sin pasar antes por una pantalla de «crear un grupo». */
+export const familiaInicial: Grupo = {
+  id: FAMILIA_LOCAL,
+  nombre: 'Mi familia',
+  tipo: 'familia',
+  emoji: '🏠',
+  creado_por: PERSONA_LOCAL,
+};
+
+/** Quien instala la app entra como miembro, no como tutor: montar la app para
+ *  tu casa no te hace la mamá. Si eres papá, lo cambias en Familia. */
+export const miembroInicial: MiembroGrupo = {
+  grupo_id: FAMILIA_LOCAL,
+  persona_id: PERSONA_LOCAL,
+  rol: 'miembro',
+  ve_mi_calendario: true,
+  estado: 'activo',
 };
 
 type ActividadSemilla = Omit<Actividad, 'persona_id'>;
