@@ -32,7 +32,8 @@ años y hecha para vendérsela a familias enteras.
 | 1 | El día con alarmas | ✅ |
 | 2 | Rachas, niveles y celebración | ✅ |
 | 3 | Bienvenida y arranque | ✅ |
-| 4-11 | Fe, familia, oraciones, el Muro, ciclo, amigas, cobro, foto | pendientes |
+| 4 | Fe: devocionales y versículo del día | ✅ |
+| 5-11 | Familia, oraciones, el Muro, ciclo, amigas, cobro, foto | pendientes |
 
 Detalle de cada fase, y lo guardado para después (deporte + espíritu,
 entrenamientos, nutrición, widget de iOS): [DOCUMENTACION.md §7](DOCUMENTACION.md).
@@ -49,12 +50,12 @@ REGLAS.md                    ← el cerebro maestro
 DISENO.md · LANZAMIENTO.md
 docs/dia-de-leonora.html     ← el diseño visual
 
-supabase/migrations/         ← 0001 fase 1 · 0002 fase 2 · 0003 seguridad
+supabase/migrations/         ← 0001 fase 1 · 0002 fase 2 · 0003 seguridad · 0004 fase 4
 app/
   app/                       ← las pantallas (expo-router)
   src/lib/                   ← la lógica; lo puro va aparte de la plataforma
   src/componentes/
-  __tests__/                 ← 83 pruebas de la lógica pura
+  __tests__/                 ← 99 pruebas de la lógica pura
   prueba-*.mjs               ← pruebas de extremo a extremo sobre el bundle real
 ```
 
@@ -71,7 +72,7 @@ npm run web        # o en el navegador
 
 ```bash
 cd app
-npm test           # 83 pruebas de la lógica pura
+npm test           # 99 pruebas de la lógica pura
 npm run typecheck  # TypeScript estricto
 
 npx expo export --platform web --output-dir dist
@@ -85,7 +86,7 @@ node prueba-navegacion.mjs   # volver atrás y la vista previa del calendario
 
 ## La base de datos
 
-Proyecto propio de Supabase, aparte de cualquier otro. Tres migraciones
+Proyecto propio de Supabase, aparte de cualquier otro. Cuatro migraciones
 aplicadas y verificadas contra la base real: los disparadores de alta, las
 restricciones del esquema y que el aislamiento por fila **de verdad aísla** —
 una persona no ve ni puede tocar nada de otra, y sin sesión no se ve nada.

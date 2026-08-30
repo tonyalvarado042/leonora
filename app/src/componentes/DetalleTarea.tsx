@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import type { Devocional } from '@/datos/devocionales';
 import { duracionMin } from '@/lib/fechas';
 import { colorDeTipo, NOMBRE_TIPO, usarPaleta } from '@/lib/tema';
 import type { EstadoTarea, Tarea } from '@/lib/tipos';
 
 interface Props {
   tarea: Tarea | null;
+  /** Solo llega en las tareas de tipo fe. */
+  devocional?: Devocional | null;
   onCerrar: () => void;
   onGuardar: (nota: string) => void;
   onEstado: (estado: EstadoTarea) => void;
@@ -18,7 +21,7 @@ interface Props {
  * sitio donde apuntar lo que pasó — «hoy sí me concentré», «me costó», lo que
  * sea. El devocional sin dónde escribir es una casilla vacía.
  */
-export function DetalleTarea({ tarea, onCerrar, onGuardar, onEstado, onBorrar }: Props) {
+export function DetalleTarea({ tarea, devocional, onCerrar, onGuardar, onEstado, onBorrar }: Props) {
   const p = usarPaleta();
   const [nota, setNota] = useState('');
 
@@ -57,11 +60,28 @@ export function DetalleTarea({ tarea, onCerrar, onGuardar, onEstado, onBorrar }:
               </View>
             )}
 
-            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>Tu nota</Text>
+            {tarea.tipo === 'fe' && devocional && (
+              <View style={[e.devocional, { backgroundColor: p.albaPiso, borderColor: p.alba }]}>
+                <Text style={[e.devRotulo, { color: p.alba }]}>DEVOCIONAL DE HOY</Text>
+                <Text style={[e.devTitulo, { color: p.tinta }]}>{devocional.titulo}</Text>
+                <Text style={[e.devPasaje, { color: p.alba }]}>{devocional.pasaje}</Text>
+                <Text style={[e.devTexto, { color: p.tinta }]}>{devocional.texto}</Text>
+                <View style={[e.devPregunta, { borderTopColor: p.alba }]}>
+                  <Text style={[e.devPreguntaRotulo, { color: p.alba }]}>PARA PENSAR</Text>
+                  <Text style={[e.devPreguntaTexto, { color: p.tinta }]}>{devocional.pregunta}</Text>
+                </View>
+              </View>
+            )}
+
+            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
+              {tarea.tipo === 'fe' && devocional ? 'Tu respuesta' : 'Tu nota'}
+            </Text>
             <TextInput
               value={nota}
               onChangeText={setNota}
-              placeholder="Cómo te fue, qué aprendiste, qué te costó…"
+              placeholder={tarea.tipo === 'fe' && devocional
+                ? 'Contesta la pregunta, o escribe lo que quieras…'
+                : 'Cómo te fue, qué aprendiste, qué te costó…'}
               placeholderTextColor={p.tintaTenue}
               aria-label="Nota de la tarea"
               multiline
@@ -127,6 +147,14 @@ const e = StyleSheet.create({
     borderRadius: 12, padding: 13, marginTop: 14,
   },
   cifra: { fontSize: 14, fontWeight: '600' },
+  devocional: { borderWidth: 1, borderRadius: 15, padding: 17, marginTop: 18 },
+  devRotulo: { fontSize: 10, fontWeight: '700', letterSpacing: 1.1 },
+  devTitulo: { fontSize: 18, fontWeight: '700', marginTop: 7 },
+  devPasaje: { fontSize: 13, fontWeight: '700', marginTop: 3 },
+  devTexto: { fontSize: 14.5, lineHeight: 22, marginTop: 12 },
+  devPregunta: { marginTop: 15, paddingTop: 13, borderTopWidth: StyleSheet.hairlineWidth },
+  devPreguntaRotulo: { fontSize: 10, fontWeight: '700', letterSpacing: 1.1, marginBottom: 5 },
+  devPreguntaTexto: { fontSize: 15.5, fontWeight: '600', lineHeight: 22 },
   etiqueta: { fontSize: 13.5, fontWeight: '700', marginTop: 20, marginBottom: 8 },
   entrada: {
     borderWidth: StyleSheet.hairlineWidth, borderRadius: 13, padding: 14,

@@ -7,6 +7,36 @@ Lo más nuevo arriba.
 
 ---
 
+## Fase 4 — Fe: devocionales y versículo del día · 2026-08-29
+
+**El versículo del día** sale arriba en Hoy y se abre en una lámina que **es**
+la imagen para compartir. **El devocional** vive dentro de la tarea de fe: al
+abrirla salen el pasaje, el texto y la pregunta, y la nota pasa a llamarse «Tu
+respuesta».
+
+Ambos se eligen **por la fecha**, no por el reloj ni por sorteo: no cambian a
+media mañana ni al volver a abrir la app.
+
+**Sobre los derechos de autor.** El texto bíblico que trae la app es de la
+**Reina-Valera 1909, de dominio público**. NVI, NTV, RVR1960 y DHH tienen
+derechos y necesitan licencia del editor para venderse dentro de una app. Por
+eso `versiculos_versiones` es una tabla aparte y no una columna: añadir una
+versión licenciada será **meter filas**, no tocar la app. La pantalla del
+versículo lo explica, en vez de dejarlo como un hueco raro.
+
+Contenido de arranque: **30 versículos y 7 devocionales**, escritos para esta
+app. Antes de publicar hay que ampliar los versículos a 366 y **revisar cada
+texto**.
+
+Migración `0004_fase4_fe.sql`: `devocionales`, `versiculos`,
+`versiculos_versiones`, `versiculos_guardados`, y `tareas_dia.devocional_id`.
+
+*Verificado:* el versículo en Hoy y en su pantalla, la nota de derechos, el
+devocional dentro de la tarea de fe con su pregunta, que la respuesta se
+guarda, y que una tarea que no es de fe no trae devocional.
+
+---
+
 ## Ningún campo se queda callado · 2026-08-29
 
 **Arreglado — el botón «Siguiente» se quedaba muerto sin decir nada.** Al no

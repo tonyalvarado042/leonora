@@ -18,6 +18,7 @@ export type Fecha = string;
 export interface Persona {
   id: string;
   nombre: string;
+  fecha_nacimiento?: string | null;
   avatar_tipo: 'emoji' | 'ilustracion' | 'foto';
   avatar_valor: string;
   foto_url?: string | null;

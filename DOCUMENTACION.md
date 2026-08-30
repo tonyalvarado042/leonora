@@ -4,7 +4,7 @@ App nativa de iOS y Android para organizar el día, los hábitos de fe y las
 fechas importantes. Pensada para una niña de 13 años y vendible a familias
 enteras.
 
-**Estado: fases 1, 2 y 3 hechas y verificadas.**
+**Estado: fases 1, 2, 3 y 4 hechas y verificadas.**
 Última actualización: 2026-08-29
 
 - **Índice del repositorio:** `README.md`
@@ -35,7 +35,7 @@ toca la rutina, y regenerar el día con los mismos datos da siempre lo mismo.
 
 ## 2. Las tablas
 
-10 tablas creadas. Las de fases posteriores están en la sección 7.
+14 tablas creadas. Las de fases posteriores están en la sección 7.
 
 ### 2.1 `personas` — quién usa la app
 Una fila por persona. La clave es la misma que la de `auth.users`: una cuenta,
@@ -197,7 +197,29 @@ una fila. `unique(via, dias_requeridos)`.
 ### 2.10 `logros_ganados` — quién ganó qué
 PK `(persona_id, logro_id)`. `visto_en` null = falta enseñarle la celebración.
 
-### 2.11 Cómo se relacionan
+### 2.11 `devocionales` — el contenido de la fe
+`id` · `titulo` · `pasaje` · `texto` · **`pregunta`** · `minutos` ·
+`edad_min` / `edad_max` (`edad_max > edad_min`) · `activo`
+
+Sin la pregunta, «Devocional 6:30-7:30» vuelve a ser una casilla vacía.
+
+### 2.12 `versiculos` y `versiculos_versiones`
+`versiculos`: `id` · `referencia` · `tema` · `dia_del_anio` (1-366, único) · `activo`
+`versiculos_versiones`: PK `(versiculo_id, version)` · `texto`
+
+**Por qué son dos tablas y no una columna:** el texto bíblico tiene derechos de
+autor. La app distribuye **Reina-Valera 1909**, que es de dominio público; NVI,
+NTV, RVR1960 y DHH necesitan licencia del editor para venderse dentro de una
+app. Con esta forma, añadir una versión licenciada es **meter filas**, sin
+tocar la app ni el esquema.
+
+### 2.13 `versiculos_guardados`
+PK `(persona_id, versiculo_id)` · `guardado_en`. Los favoritos de cada quien.
+
+`tareas_dia` gana **`devocional_id`** para saber qué devocional le tocó a cada
+día de fe.
+
+### 2.14 Cómo se relacionan
 
 ```
 auth.users
@@ -269,6 +291,15 @@ Estos módulos **no importan nada de React Native ni de Expo** a propósito.
 - `cumplioHoy(via, tareas)` · `chispas(tipo, planeados, marcado)` ·
   `preguntarSiTermino` · `celebracionPor`
 
+**`src/lib/fe.ts`** — el versículo y el devocional del día.
+- `diaDelAnio(fecha)` — cuenta bien también en año bisiesto.
+- `versiculoDelDia` / `devocionalDelDia` — **se deciden por la fecha, no por el
+  reloj ni por sorteo**: no cambian a media mañana ni al volver a abrir la app,
+  y dos personas en la misma fecha ven lo mismo.
+- `textoEn` · `versionesDe` · `textoParaCompartir`
+- El devocional se filtra por edad, pero si ninguno encaja se sirve algo igual:
+  mejor dar algo que dejar el día vacío.
+
 **`src/lib/arranque.ts`** — cinco respuestas → una semana.
 - `armarSemana(respuestas, personaId)` → catálogo + rutina + ajustes + resumen.
 - Catálogos: `OCUPACIONES` (6) · `QUEHACERES` (6) · `GUSTOS` (6)
@@ -308,11 +339,12 @@ Una interfaz `Repositorio`, dos implementaciones intercambiables:
 | `calendario` | Semana y mes, hacia atrás y adelante, historial de cumplimiento |
 | `rutina` | Editar la semana: mover, quitar, añadir |
 | `actividad` | Crear o cambiar una cosa del catálogo |
+| `versiculo` | El versículo del día en grande, su versión y compartir |
 | `rachas` | Las cuatro vías, sus escaleras y las 24 insignias |
 | `ajustes` | Nombre, ícono, avisos, sonidos, celebraciones, empezar de nuevo |
 | `+not-found` | Enseña Hoy: la app arranca aunque no se sirva en la raíz |
 
-**Componentes:** `Cabecera` · `CampoTexto` · `Aviso` · `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
+**Componentes:** `Cabecera` · `CampoTexto` · `Aviso` · `TarjetaVersiculo` · `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
 `AnilloProgreso` · `Celebracion` · `SelectorHora` · `PreguntaTerminaste` · `Enlace`
 
 > **`CampoTexto` y `Aviso` existen para cumplir R2** (`REGLAS.md`): ningún
@@ -392,7 +424,18 @@ Ambas navegan hacia atrás y adelante, con «Volver a hoy» cuando te alejas.
 lista ligera de tareas (`titulo`, `emoji`, `tipo`, `hora_inicio`, `estado`) —
 lo justo para dibujar sin cargar el día entero.
 
-### 5.6 Los formularios avisan, no se apagan
+### 5.6 La fe en el día
+- **El versículo del día** sale arriba en Hoy, corto. Al tocarlo se abre en
+  grande: la lámina **es** la imagen para compartir, se ve igual en pantalla
+  que en una captura. Compartir el PNG como archivo necesita
+  `react-native-view-shot`; por ahora se comparte el texto, que es lo que la
+  gente pega en WhatsApp de todos modos.
+- **El devocional** vive dentro de la tarea de tipo `fe`: al abrirla salen el
+  pasaje, el texto y **la pregunta**, y el campo de nota pasa a llamarse «Tu
+  respuesta». Lo que escribe se guarda en `tareas_dia.nota`.
+- Una tarea que no es de fe no trae devocional.
+
+### 5.7 Los formularios avisan, no se apagan
 Ningún botón se queda muerto sin decir por qué (R2). Al tocar «Siguiente» o
 «Guardar» con algo sin llenar:
 
@@ -411,7 +454,7 @@ creyendo que falta algo.
 **La única excepción:** un botón puede apagarse *mientras trabaja*, y solo si
 lo dice («⏳ Leyendo tu horario…»).
 
-### 5.7 Los tres gestos de una tarea
+### 5.8 Los tres gestos de una tarea
 - **El círculo** marca y desmarca.
 - **El cuerpo** abre el detalle (nota, minutos, chispas).
 - **Dejar apretado** la salta — y saltada se ve **distinta** de hecha:
@@ -442,7 +485,7 @@ estricto, y cuatro pruebas de extremo a extremo sobre el bundle web real.
 | 1 | El día con alarmas | 7 | ✅ |
 | 2 | Rachas, niveles y celebración | +3 | ✅ |
 | 3 | Bienvenida y arranque | +0 | ✅ |
-| 4 | Fe: devocionales y versículo del día | +4 | pendiente |
+| 4 | Fe: devocionales y versículo del día | +4 | ✅ |
 | 5 | La familia y la campanita | +4 | pendiente |
 | 6 | Oraciones | +2 | pendiente |
 | 7 | El Muro público | +1 | pendiente |
@@ -452,11 +495,6 @@ estricto, y cuatro pruebas de extremo a extremo sobre el bundle web real.
 | 11 | **Leer el horario de una foto de verdad** | +1 | pendiente |
 
 ### 7.1 Lo que falta de cada fase pendiente
-
-**Fase 4 — Fe.** `devocionales` (pasaje, texto, pregunta), `versiculos` con
-`dia_del_año`, `versiculos_versiones` (RVR, NVI, NTV), `versiculos_guardados`.
-El versículo arriba en Hoy; al tocarlo, varias versiones y una imagen para
-compartir que se genera en el teléfono.
 
 **Fase 5 — La familia.** `grupos` (**una familia es un grupo de tipo familia**),
 `miembros_grupo` con `ve_mi_calendario`, `encargos` (tarea, recordatorio o
@@ -510,4 +548,6 @@ Lo leído entra a `eventos` **sin confirmar**.
 | La foto nunca sale en el Muro | Es una menor en una página abierta |
 | El ciclo, ni los tutores | Es información de salud suya |
 | Rachas persistidas, no consulta | Se leen en cada apertura y hay que saber cuándo se ganó cada insignia |
+| El texto bíblico, en tabla aparte por versión | Las traducciones modernas tienen derechos: añadir una licenciada debe ser meter filas |
+| El versículo se elige por la fecha | No puede cambiar a media mañana ni al volver a abrir |
 | Lo puro separado de la plataforma | Zonas horarias y medianoche se prueban sin simulador |

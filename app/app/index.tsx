@@ -13,6 +13,8 @@ import { PreguntaTerminaste } from '@/componentes/PreguntaTerminaste';
 import { SelectorHora } from '@/componentes/SelectorHora';
 import { FilaTarea } from '@/componentes/FilaTarea';
 import { TarjetaAhora } from '@/componentes/TarjetaAhora';
+import { TarjetaVersiculo } from '@/componentes/TarjetaVersiculo';
+import { devocionalDelDia, versiculoDelDia } from '@/lib/fe';
 import { avisosDelDia } from '@/lib/avisos';
 import { prepararAvisos, reprogramar } from '@/lib/avisosTelefono';
 import { foco as calcularFoco, resumenAvance } from '@/lib/dia';
@@ -97,6 +99,14 @@ export default function Hoy() {
     }));
   }, [ajustes, dia, actividades, zona]);
 
+  // El versículo y el devocional se deciden por la fecha, no por el reloj:
+  // no cambian a media mañana ni al volver a abrir la app.
+  const versiculo = useMemo(() => versiculoDelDia(fecha), [fecha]);
+  const devocional = useMemo(
+    () => devocionalDelDia(fecha, edadDe(persona?.fecha_nacimiento)),
+    [fecha, persona],
+  );
+
   const foco = useMemo(
     () => (dia ? calcularFoco(dia.tareas, hora) : null),
     [dia, hora],
@@ -164,6 +174,8 @@ export default function Hoy() {
           </Enlace>
         </View>
 
+        <TarjetaVersiculo versiculo={versiculo} onAbrir={() => router.push('/versiculo')} />
+
         <TarjetaAhora foco={foco} avisarAntes={avisarAntes} />
         <AnilloProgreso hechas={avance.hechas} total={avance.total} />
 
@@ -220,6 +232,7 @@ export default function Hoy() {
 
       <DetalleTarea
         tarea={dia.tareas.find((t) => t.id === abierta) ?? null}
+        devocional={devocional}
         onCerrar={() => setAbierta(null)}
         onGuardar={async (nota) => {
           if (!abierta) return;
@@ -326,6 +339,18 @@ function textoPremio(premio: { logros: { nombre: string; emoji: string }[]; dia_
   }
   if (premio.dia_perfecto) return '⭐  ¡Día completo!';
   return undefined;
+}
+
+/** Los años cumplidos, o null si no se sabe la fecha de nacimiento. */
+function edadDe(nacimiento: string | null | undefined): number | null {
+  if (!nacimiento) return null;
+  const n = new Date(`${nacimiento}T12:00:00Z`);
+  const hoy = new Date();
+  let anios = hoy.getUTCFullYear() - n.getUTCFullYear();
+  const cumplioYa = hoy.getUTCMonth() > n.getUTCMonth()
+    || (hoy.getUTCMonth() === n.getUTCMonth() && hoy.getUTCDate() >= n.getUTCDate());
+  if (!cumplioYa) anios -= 1;
+  return anios >= 0 && anios < 130 ? anios : null;
 }
 
 function saludo(hora: string): string {
