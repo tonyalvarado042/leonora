@@ -40,6 +40,8 @@ export interface Ajustes {
   silencio_hasta: Hora | null;
   tema: Tema;
   celebraciones: boolean;
+  /** false hasta que se contesta el asistente de arranque. */
+  arranque_hecho: boolean;
 }
 
 export interface Actividad {

@@ -8,6 +8,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import type { Propuesta } from './arranque';
 import { generarDia, porcentajeCumplido, type TareaNueva } from './dia';
 import {
   avanzar, celebracionPor, chispas, CHISPAS_BASE, CHISPAS_DIA_PERFECTO,
@@ -72,6 +73,10 @@ export interface Repositorio {
   chispasTotales(): Promise<number>;
   /** Suma el día a la racha de abrir la app. Se llama una vez al arrancar. */
   registrarApertura(fecha: Fecha): Promise<Premio>;
+  /** Sustituye catálogo y rutina de golpe con lo que armó el asistente. */
+  aplicarArranque(p: Propuesta, nombre: string, fecha: Fecha): Promise<void>;
+  /** Deja la cuenta como recién instalada. Vuelve a salir la bienvenida. */
+  empezarDeNuevo(): Promise<void>;
 }
 
 const CLAVE = 'graceday.v1';
@@ -323,8 +328,21 @@ export class RepositorioLocal implements Repositorio {
     });
   }
 
-  /** Solo para pruebas y para el botón de «empezar de nuevo». */
-  async borrarTodo(): Promise<void> {
+  aplicarArranque(p: Propuesta, nombre: string, fecha: Fecha) {
+    return this.escribir<void>((a) => {
+      a.persona = { ...a.persona, nombre };
+      a.ajustes = { ...a.ajustes, ...p.ajustes, arranque_hecho: true };
+      // Se sustituye entero, no se mezcla: mezclar con la rutina de fábrica
+      // dejaría bloques que la persona nunca pidió.
+      a.actividades = p.actividades;
+      a.rutina = p.rutina;
+      a.dias = {};
+      construirDia(a, fecha);
+    });
+  }
+
+  async empezarDeNuevo(): Promise<void> {
+    this.cola = Promise.resolve();
     this.cache = null;
     await AsyncStorage.removeItem(CLAVE);
   }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 import { AnilloProgreso } from '@/componentes/AnilloProgreso';
 import { useCelebrar } from '@/componentes/Celebracion';
@@ -30,6 +30,7 @@ export default function Hoy() {
   const [chispas, setChispas] = useState(0);
   const [preguntando, setPreguntando] = useState<string | null>(null);
   const [suelta, setSuelta] = useState<{ titulo: string; hora: string } | null>(null);
+  const router = useRouter();
   const celebrar = useCelebrar();
   // Se guarda el minuto para que «lo que toca ahora» se mueva solo con el reloj.
   const [ahora, setAhora] = useState(() => new Date());
@@ -42,11 +43,15 @@ export default function Hoy() {
     const [pe, aj, ac] = await Promise.all([
       repositorio.persona(), repositorio.ajustes(), repositorio.actividades(),
     ]);
+    // Quien nunca contestó el asistente no debería aterrizar en un día vacío
+    // que no entiende: primero la bienvenida.
+    if (!aj.arranque_hecho) { router.replace('/bienvenida'); return; }
+
     setPersona(pe); setAjustes(aj); setActividades(ac);
     setDia(await repositorio.dia(fechaLocal(new Date(), pe.zona_horaria)));
     setRachas(await repositorio.rachas());
     setChispas(await repositorio.chispasTotales());
-  }, []);
+  }, [router]);
 
   // Al volver de Rutina o Ajustes hay que releer: el día pudo cambiar.
   useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));

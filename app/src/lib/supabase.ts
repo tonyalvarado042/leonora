@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import 'react-native-url-polyfill/auto';
 
+import type { Propuesta } from './arranque';
 import { generarDia, porcentajeCumplido } from './dia';
 import {
   avanzar, celebracionPor, chispas, CHISPAS_BASE, CHISPAS_DIA_PERFECTO,
@@ -296,6 +297,39 @@ export class RepositorioSupabase implements Repositorio {
       // Abrir la app no merece confeti todos los días; solo si desbloqueó algo.
       celebracion: av.logros.length > 0 ? 'confeti' : null,
     };
+  }
+
+  async aplicarArranque(p: Propuesta, nombre: string, fecha: Fecha): Promise<void> {
+    const persona_id = await this.miId();
+    // Se borra lo anterior y se pone lo nuevo: `rutina.actividad_id` cae en
+    // cascada, así que basta con quitar las actividades.
+    await this.sb.from('dias').delete().eq('persona_id', persona_id);
+    await this.sb.from('actividades').delete().eq('persona_id', persona_id);
+
+    const conDueno = <T extends { persona_id: string }>(xs: T[]) =>
+      xs.map((x) => ({ ...x, persona_id }));
+
+    const e1 = (await this.sb.from('actividades').insert(conDueno(p.actividades))).error;
+    if (e1) throw new Error(`guardar las actividades: ${e1.message}`);
+    const e2 = (await this.sb.from('rutina').insert(conDueno(p.rutina))).error;
+    if (e2) throw new Error(`guardar la rutina: ${e2.message}`);
+
+    await this.guardarPersona({ nombre });
+    await this.guardarAjustes({ ...p.ajustes, arranque_hecho: true });
+    await this.dia(fecha);
+  }
+
+  async empezarDeNuevo(): Promise<void> {
+    const persona_id = await this.miId();
+    // `rutina` y `tareas_dia` caen en cascada con sus padres.
+    await this.sb.from('dias').delete().eq('persona_id', persona_id);
+    await this.sb.from('actividades').delete().eq('persona_id', persona_id);
+    await this.sb.from('logros_ganados').delete().eq('persona_id', persona_id);
+    await this.sb.from('rachas').update({
+      racha_actual: 0, racha_mejor: 0, total_dias: 0,
+      ultimo_dia: null, gracia_usada_mes: null,
+    }).eq('persona_id', persona_id);
+    await this.guardarAjustes({ arranque_hecho: false });
   }
 
   private async guardarRacha(racha: Racha, logros: Logro[]): Promise<void> {

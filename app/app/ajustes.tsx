@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 import { usarPaleta } from '@/lib/tema';
 import { repositorio } from '@/lib/repositorio';
@@ -12,6 +12,8 @@ const SONIDOS = ['campana', 'agua', 'pájaros', 'arpa', 'marimba'];
 
 export default function Ajustes() {
   const p = usarPaleta();
+  const router = useRouter();
+  const [confirmando, setConfirmando] = useState(false);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [aj, setAj] = useState<TipoAjustes | null>(null);
 
@@ -122,8 +124,36 @@ export default function Ajustes() {
         </Fila>
       </Grupo>
 
+      <Grupo titulo="EMPEZAR DE NUEVO">
+        <Fila
+          titulo={confirmando ? '¿Seguro? Se borra todo' : 'Volver a contestar el asistente'}
+          sub={confirmando
+            ? 'Tu rutina, tus rachas y tus insignias. No se puede deshacer.'
+            : 'Se borra tu rutina y vuelve a salir la bienvenida.'}
+        >
+          <Pressable
+            role="button"
+            onPress={async () => {
+              if (!confirmando) { setConfirmando(true); return; }
+              await repositorio.empezarDeNuevo();
+              router.replace('/bienvenida');
+            }}
+            style={[
+              e.peligro,
+              confirmando
+                ? { backgroundColor: p.fuego, borderColor: p.fuego }
+                : { backgroundColor: 'transparent', borderColor: p.fuego },
+            ]}
+          >
+            <Text style={[e.peligroTexto, { color: confirmando ? '#FFF' : p.fuego }]}>
+              {confirmando ? 'Sí, borrar' : 'Empezar de nuevo'}
+            </Text>
+          </Pressable>
+        </Fila>
+      </Grupo>
+
       <Text style={[e.version, { color: p.tintaTenue }]}>
-        GraceDay · Fase 1 · tu día, con alarmas
+        GraceDay · tu día, tu fe y tu gente
       </Text>
     </ScrollView>
   );
@@ -197,5 +227,9 @@ const e = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   chipTexto: { fontSize: 13, fontWeight: '600' },
+  peligro: {
+    paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, borderWidth: 1.5,
+  },
+  peligroTexto: { fontSize: 13.5, fontWeight: '700' },
   version: { fontSize: 12, textAlign: 'center', marginTop: 8 },
 });

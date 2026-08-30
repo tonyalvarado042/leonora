@@ -11,7 +11,7 @@ const ajustes: Ajustes = {
   ocupacion: 'colegio', hora_fin_ocupacion: '14:00', dias_ocupados: [1, 2, 3, 4, 5],
   avisos_activos: true, avisar_antes_min: 10, sonido_aviso: 'campana',
   sonido_devocional: 'arpa', vibrar: true, silencio_desde: null, silencio_hasta: null,
-  tema: 'auto', celebraciones: true,
+  tema: 'auto', celebraciones: true, arranque_hecho: true,
 };
 
 function act(id: string, extra: Partial<Actividad> = {}): Actividad {

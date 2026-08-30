@@ -6,7 +6,7 @@ export const PERSONA_LOCAL = 'local';
 
 export const personaInicial: Persona = {
   id: PERSONA_LOCAL,
-  nombre: 'Leonora',
+  nombre: '',
   avatar_tipo: 'emoji',
   avatar_valor: '👧',
   zona_horaria: 'America/Guatemala',
@@ -28,6 +28,7 @@ export const ajustesIniciales: Ajustes = {
   silencio_hasta: '06:00',
   tema: 'auto',
   celebraciones: true,
+  arranque_hecho: false,
 };
 
 type ActividadSemilla = Omit<Actividad, 'persona_id'>;

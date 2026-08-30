@@ -107,6 +107,29 @@ neutros — la app se vende a familias enteras y a un papá no le puede salir
 - **La celebración cae por encima de toda la app** (`Celebracion.tsx`), vive en
   la raíz del enrutador y respeta «menos movimiento» del sistema.
 
+## Fase 3 — Bienvenida y arranque
+
+`app/bienvenida.tsx` es lo primero que ve alguien recién instalada la app: qué
+es y por qué le sirve, no un formulario.
+
+`app/arranque.tsx` son cinco preguntas —nombre y edad, a qué hora vives, tu
+devocional, colegio o trabajo, quehaceres y gustos— y al final la semana
+propuesta con su resumen antes de guardar nada.
+
+`src/lib/arranque.ts` la arma. **Con reglas, no con IA todavía**: es puro y
+determinista, así que se prueba sin bundler y funciona sin red ni clave de API.
+Cuando entre la IA sustituye a `armarSemana` y devuelve la misma forma; el
+resto de la app no se entera.
+
+Reglas que sigue: el devocional primero, antes que nada; el estudio justo al
+salir del colegio; los quehaceres después, y **solo si caben antes de la cena**
+—apilarlos haría un día que no se puede cumplir—; un gusto al día, rotando; y
+el fin de semana se empieza una hora más tarde, porque nadie madruga el sábado
+igual que el martes.
+
+`ajustes.arranque_hecho` decide si se abre la bienvenida o el día. Se puede
+volver a empezar desde Ajustes.
+
 ## Crear y modificar
 
 - `app/actividad.tsx` — crear o cambiar una cosa del catálogo.

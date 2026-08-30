@@ -29,6 +29,8 @@ export default function Disposicion() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+        <Stack.Screen name="bienvenida" options={{ headerShown: false }} />
+        <Stack.Screen name="arranque" options={{ headerShown: false }} />
         <Stack.Screen name="rutina" options={{ title: 'Tu rutina' }} />
         <Stack.Screen name="ajustes" options={{ title: 'Ajustes' }} />
         <Stack.Screen name="rachas" options={{ title: 'Tus rachas' }} />
