@@ -50,12 +50,12 @@ REGLAS.md                    ← el cerebro maestro
 DISENO.md · LANZAMIENTO.md
 docs/dia-de-leonora.html     ← el diseño visual
 
-supabase/migrations/         ← 0001 fase 1 · 0002 fase 2 · 0003 seguridad · 0004 fase 4 · 0005 método
+supabase/migrations/         ← 0001 fase 1 · 0002 fase 2 · 0003 seguridad · 0004 fase 4 · 0005 método · 0006 repeticiones
 app/
   app/                       ← las pantallas (expo-router)
   src/lib/                   ← la lógica; lo puro va aparte de la plataforma
   src/componentes/
-  __tests__/                 ← 104 pruebas de la lógica pura
+  __tests__/                 ← 116 pruebas de la lógica pura
   prueba-*.mjs               ← pruebas de extremo a extremo sobre el bundle real
 ```
 
@@ -72,7 +72,7 @@ npm run web        # o en el navegador
 
 ```bash
 cd app
-npm test           # 104 pruebas de la lógica pura
+npm test           # 116 pruebas de la lógica pura
 npm run typecheck  # TypeScript estricto
 
 npx expo export --platform web --output-dir dist
@@ -86,7 +86,7 @@ node prueba-navegacion.mjs   # volver atrás y la vista previa del calendario
 
 ## La base de datos
 
-Proyecto propio de Supabase, aparte de cualquier otro. Cinco migraciones
+Proyecto propio de Supabase, aparte de cualquier otro. Seis migraciones
 aplicadas y verificadas contra la base real: los disparadores de alta, las
 restricciones del esquema y que el aislamiento por fila **de verdad aísla** —
 una persona no ve ni puede tocar nada de otra, y sin sesión no se ve nada.

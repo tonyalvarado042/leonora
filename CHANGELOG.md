@@ -7,6 +7,34 @@ Lo más nuevo arriba.
 
 ---
 
+## Tareas que se repiten, como en un calendario · 2026-08-29
+
+Añadir una tarea ya no es «solo para hoy». Ahora pregunta **cada cuánto se
+repite**, con las mismas opciones que un calendario: todos los días, cada
+semana (marcando qué días), cada tantos días, cada mes, cada año, o solo ese
+día.
+
+**Una sola tabla de reglas, no dos sistemas.** Antes `rutina` solo entendía de
+días de la semana y el resto no existía. Ahora es la tabla de repeticiones, y
+una única función —`tocaEsteDia`— decide si a un bloque le toca en una fecha.
+
+Los casos raros están cubiertos y probados: **el día 31 cae en el 30 de abril y
+en el 28 de febrero**, y **el 29 de febrero cae el 28** cuando el año no es
+bisiesto. Quien puso «el 31» quiere decir «el último», no «sáltate febrero».
+
+La hoja dice en palabras qué va a pasar —«Se repetirá cada L, X, V»— antes de
+guardar, y «cada semana» sin marcar ningún día avisa en lugar de apagarse (R2).
+
+Migración `0006_repeticiones.sql`, con una restricción que obliga a que cada
+repetición lleve lo suyo y nada más: sin ella se pueden guardar reglas que no
+significan nada y el generador las ignora en silencio.
+
+*Verificado:* las seis opciones, el aviso al faltar los días, que una semanal
+de siete días aparece hoy y en la rutina el lunes, el miércoles y el domingo,
+y que una mensual también entra.
+
+---
+
 ## El horario que «no cargaba», y el devocional propio · 2026-08-29
 
 **La pulga del horario.** Poner escuela de 08:00 a 15:00 y no verla parecía que

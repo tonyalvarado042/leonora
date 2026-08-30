@@ -41,18 +41,25 @@ export default function Rutina() {
   }, []);
   useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));
 
-  const delDia = bloques
-    .filter((b) => b.activo && b.dia_semana === dia)
+  // Esta pantalla edita la semana, así que enseña las reglas semanales. Las
+  // que se repiten cada mes o cada año viven en el calendario, no aquí.
+  const semanales = bloques.filter((b) => b.activo && b.repeticion === 'semanal');
+
+  const delDia = semanales
+    .filter((b) => b.dia_semana === dia)
     .sort((a, b) => aMinutos(a.hora_inicio) - aMinutos(b.hora_inicio));
 
   // Qué días sí tienen algo, para no dejar a nadie creyendo que la rutina no
   // se guardó cuando lo que pasa es que hoy es sábado.
-  const conAlgo = DIAS.filter((d) => bloques.some((b) => b.activo && b.dia_semana === d.n));
+  const conAlgo = DIAS.filter((d) => semanales.some((b) => b.dia_semana === d.n));
 
   const cuentaPorDia = new Map<number, number>();
-  for (const b of bloques) {
-    if (b.activo) cuentaPorDia.set(b.dia_semana, (cuentaPorDia.get(b.dia_semana) ?? 0) + 1);
+  for (const b of semanales) {
+    if (b.dia_semana === null) continue;
+    cuentaPorDia.set(b.dia_semana, (cuentaPorDia.get(b.dia_semana) ?? 0) + 1);
   }
+
+  const otras = bloques.filter((b) => b.activo && b.repeticion !== 'semanal');
 
   async function mover(b: BloqueRutina, minutos: number) {
     const largo = duracionMin(b.hora_inicio, b.hora_fin);
@@ -90,7 +97,10 @@ export default function Rutina() {
       persona_id: persona.id,
       actividad_id: act.id,
       modo: 'escolar',
+      repeticion: 'semanal',
       dia_semana: dia,
+      cada_n: null, dia_mes: null, mes: null,
+      desde: fechaLocal(new Date(), zona), hasta: null,
       hora_inicio: inicio,
       hora_fin: aHora(aMinutos(inicio) + act.duracion_min),
       activo: true,
@@ -208,6 +218,16 @@ export default function Rutina() {
           </View>
         );
       })}
+
+      {otras.length > 0 && (
+        <View style={[e.otras, { backgroundColor: p.tarjeta2, borderColor: p.linea }]}>
+          <Text style={[e.otrasTexto, { color: p.tintaSuave }]}>
+            Tienes {otras.length} {otras.length === 1 ? 'cosa que se repite' : 'cosas que se repiten'}{' '}
+            de otra manera (cada tantos días, cada mes o cada año). Salen en tu
+            día cuando toquen.
+          </Text>
+        </View>
+      )}
 
       <Pressable
         role="button"
@@ -330,6 +350,11 @@ const e = StyleSheet.create({
   },
   listo: { marginTop: 12, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   listoTexto: { color: '#FFF', fontWeight: '700', fontSize: 16 },
+  otras: {
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: 12,
+    padding: 13, marginTop: 12,
+  },
+  otrasTexto: { fontSize: 13, lineHeight: 18 },
   anadir: {
     marginTop: 14, borderRadius: 12, paddingVertical: 14,
     alignItems: 'center', borderWidth: 1.5, borderStyle: 'dashed',

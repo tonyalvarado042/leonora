@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { Propuesta } from './arranque';
 import { generarDia, porcentajeCumplido, type TareaNueva } from './dia';
+import { duracionMin } from './fechas';
 import {
   avanzar, celebracionPor, chispas, CHISPAS_BASE, CHISPAS_DIA_PERFECTO,
   cumplioHoy, rachaVacia,
@@ -18,6 +19,7 @@ import {
 import type { MetodoDevocional } from '@/datos/metodos';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, EstadoTarea, Fecha, Persona, Tarea,
+  TipoRepeticion,
 } from './tipos';
 import {
   actividadesIniciales, ajustesIniciales, personaInicial, PERSONA_LOCAL, rutinaInicial,
@@ -47,6 +49,14 @@ export interface ResumenDia {
   porcentaje: number;
   tipo_dia: Dia['tipo'];
   tareas: TareaLigera[];
+}
+
+/** Cada cuánto se repite, tal como lo eligió la persona. */
+export interface ReglaNueva {
+  repeticion: TipoRepeticion;
+  /** Solo en `semanal`: uno o varios días. */
+  dias_semana?: number[];
+  cada_n?: number;
 }
 
 export interface DetalleGuardable {
@@ -82,8 +92,10 @@ export interface Repositorio {
   rutina(): Promise<BloqueRutina[]>;
   guardarBloque(bloque: BloqueRutina): Promise<void>;
   borrarBloque(id: string): Promise<void>;
-  /** Una tarea que solo existe hoy y no toca la rutina. */
+  /** Una tarea que solo existe ese día y no toca la rutina. */
   anadirTareaHoy(fecha: Fecha, tarea: TareaSuelta): Promise<DiaCompleto>;
+  /** Una tarea que se repite: crea la actividad y su regla, y rehace el día. */
+  anadirRepetida(fecha: Fecha, t: TareaSuelta, cada: ReglaNueva): Promise<DiaCompleto>;
   borrarTarea(fecha: Fecha, tareaId: string): Promise<DiaCompleto>;
   /** La nota y, en las de fe, cómo se hizo el devocional. */
   guardarDetalle(fecha: Fecha, tareaId: string, d: DetalleGuardable): Promise<DiaCompleto>;
@@ -261,6 +273,58 @@ export class RepositorioLocal implements Repositorio {
       };
       a.dias[fecha] = despues;
       return copia(despues);
+    });
+  }
+
+  anadirRepetida(fecha: Fecha, t: TareaSuelta, cada: ReglaNueva) {
+    return this.escribir((a) => {
+      const marca = Date.now();
+      const actividad: Actividad = {
+        id: `act-${marca}`,
+        persona_id: a.persona.id,
+        nombre: t.titulo, emoji: t.emoji, tipo: t.tipo,
+        duracion_min: Math.max(5, duracionMin(t.hora_inicio, t.hora_fin)),
+        es_habito: cada.repeticion === 'diaria' || cada.repeticion === 'semanal',
+        es_fijo: false, avisar: true, avisar_antes_min: null, activa: true,
+      };
+      a.actividades = [...a.actividades, actividad];
+
+      const [, mes, dia] = fecha.split('-').map(Number);
+      const comun = {
+        persona_id: a.persona.id,
+        actividad_id: actividad.id,
+        modo: 'escolar' as const,
+        cada_n: null as number | null,
+        dia_mes: null as number | null,
+        mes: null as number | null,
+        desde: fecha,
+        hasta: null,
+        hora_inicio: t.hora_inicio,
+        hora_fin: t.hora_fin,
+        activo: true,
+      };
+
+      // «Cada semana» puede ser varios días: una regla por día, para que la
+      // pantalla de la rutina las pueda mover y quitar una a una.
+      const nuevas: BloqueRutina[] =
+        cada.repeticion === 'semanal'
+          ? (cada.dias_semana ?? []).map((d) => ({
+              ...comun, id: `rut-${marca}-${d}`,
+              repeticion: 'semanal' as const, dia_semana: d,
+            }))
+          : [{
+              ...comun,
+              id: `rut-${marca}`,
+              repeticion: cada.repeticion,
+              dia_semana: null,
+              cada_n: cada.repeticion === 'cada_n_dias' ? (cada.cada_n ?? 15) : null,
+              dia_mes: cada.repeticion === 'mensual' || cada.repeticion === 'anual' ? dia : null,
+              mes: cada.repeticion === 'anual' ? mes : null,
+            }];
+
+      a.rutina = [...a.rutina, ...nuevas];
+      delete a.dias[fecha];
+      return copia(construirDia(a, fecha));
     });
   }
 

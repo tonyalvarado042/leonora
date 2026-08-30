@@ -5,10 +5,58 @@
  * simular relojes. Guardar el resultado es trabajo del repositorio.
  */
 
-import { aMinutos, diaSemana, sumarDias } from './fechas';
+import { aMinutos, diasEntre, diaSemana, sumarDias } from './fechas';
 import type {
   Actividad, Ajustes, BloqueRutina, Fecha, Hora, ModoRutina, Tarea,
 } from './tipos';
+
+/** Cuántos días tiene el mes de una fecha. */
+function diasDelMes(fecha: Fecha): number {
+  const [a, m] = fecha.split('-').map(Number);
+  return new Date(Date.UTC(a, m, 0)).getUTCDate();
+}
+
+/**
+ * ¿Le toca a este bloque en esta fecha?
+ *
+ * Una sola función para todas las repeticiones, en vez de un sistema para la
+ * semana y otro para el resto. Los casos raros —el día 31 en un mes de 30, el
+ * 29 de febrero en un año que no es bisiesto— **caen en el último día del
+ * mes** en lugar de saltarse: quien puso «el 31» quiere decir «el último».
+ */
+export function tocaEsteDia(b: BloqueRutina, fecha: Fecha, zonaHoraria: string): boolean {
+  if (!b.activo) return false;
+  if (fecha < b.desde) return false;
+  if (b.hasta !== null && fecha > b.hasta) return false;
+
+  const [, mes, dia] = fecha.split('-').map(Number);
+
+  switch (b.repeticion) {
+    case 'diaria':
+      return true;
+
+    case 'semanal':
+      return b.dia_semana !== null && diaSemana(fecha, zonaHoraria) === b.dia_semana;
+
+    case 'cada_n_dias': {
+      if (b.cada_n === null || b.cada_n < 1) return false;
+      return diasEntre(b.desde, fecha) % b.cada_n === 0;
+    }
+
+    case 'mensual': {
+      if (b.dia_mes === null) return false;
+      const ultimo = diasDelMes(fecha);
+      return dia === Math.min(b.dia_mes, ultimo);
+    }
+
+    case 'anual': {
+      if (b.dia_mes === null || b.mes === null) return false;
+      if (mes !== b.mes) return false;
+      const ultimo = diasDelMes(fecha);
+      return dia === Math.min(b.dia_mes, ultimo);
+    }
+  }
+}
 
 /** Una tarea recién generada, antes de que la base de datos le ponga id. */
 export type TareaNueva = Omit<Tarea, 'id' | 'dia_id'>;
@@ -45,7 +93,7 @@ export function generarDia(o: OpcionesGenerar): DiaGenerado {
   const porId = new Map(o.actividades.filter((a) => a.activa).map((a) => [a.id, a]));
 
   const tareas = o.rutina
-    .filter((b) => b.activo && b.modo === modo && b.dia_semana === dow)
+    .filter((b) => b.modo === modo && tocaEsteDia(b, o.fecha, o.zonaHoraria))
     .flatMap<TareaNueva>((b) => {
       const act = porId.get(b.actividad_id);
       // Un bloque que apunta a una actividad borrada o apagada no produce nada.

@@ -16,13 +16,14 @@ import 'react-native-url-polyfill/auto';
 
 import type { Propuesta } from './arranque';
 import { generarDia, porcentajeCumplido } from './dia';
+import { duracionMin } from './fechas';
 import {
   avanzar, celebracionPor, chispas, CHISPAS_BASE, CHISPAS_DIA_PERFECTO,
   cumplioHoy, rachaVacia,
   type Logro, type Marcado, type Racha, type Via,
 } from './rachas';
 import type {
-  DetalleGuardable, DiaCompleto, Premio, Repositorio, ResumenDia,
+  DetalleGuardable, DiaCompleto, Premio, ReglaNueva, Repositorio, ResumenDia,
   TareaLigera, TareaSuelta,
 } from './repositorio';
 import type {
@@ -167,6 +168,44 @@ export class RepositorioSupabase implements Repositorio {
     }).eq('id', tareaId);
     if (error) throw new Error(`guardar el detalle: ${error.message}`);
     return this.dia(fecha);
+  }
+
+  async anadirRepetida(
+    fecha: Fecha, t: TareaSuelta, cada: ReglaNueva,
+  ): Promise<DiaCompleto> {
+    const persona_id = await this.miId();
+    const actividad = pedir(
+      await this.sb.from('actividades').insert({
+        persona_id, nombre: t.titulo, emoji: t.emoji, tipo: t.tipo,
+        duracion_min: Math.max(5, duracionMin(t.hora_inicio, t.hora_fin)),
+        es_habito: cada.repeticion === 'diaria' || cada.repeticion === 'semanal',
+      }).select().single(),
+      'crear la actividad',
+    ) as Actividad;
+
+    const [, mes, dia] = fecha.split('-').map(Number);
+    const comun = {
+      persona_id, actividad_id: actividad.id, modo: 'escolar',
+      desde: fecha, hasta: null,
+      hora_inicio: t.hora_inicio, hora_fin: t.hora_fin, activo: true,
+    };
+    // Las dos ramas devuelven la misma forma a propósito: si una lleva menos
+    // campos, el cliente infiere el tipo de la primera y rechaza la otra.
+    const base = {
+      ...comun,
+      repeticion: cada.repeticion,
+      dia_semana: null as number | null,
+      cada_n: cada.repeticion === 'cada_n_dias' ? (cada.cada_n ?? 15) : null,
+      dia_mes: cada.repeticion === 'mensual' || cada.repeticion === 'anual' ? dia : null,
+      mes: cada.repeticion === 'anual' ? mes : null,
+    };
+    const filas = cada.repeticion === 'semanal'
+      ? (cada.dias_semana ?? []).map((d) => ({ ...base, dia_semana: d }))
+      : [base];
+
+    const { error } = await this.sb.from('rutina').insert(filas);
+    if (error) throw new Error(`guardar la repetición: ${error.message}`);
+    return this.regenerarDia(fecha);
   }
 
   async borrarTarea(fecha: Fecha, tareaId: string): Promise<DiaCompleto> {

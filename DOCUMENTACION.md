@@ -103,8 +103,9 @@ fusión quitó tres tablas del diseño original.
 
 Índice: `(persona_id) where activa`.
 
-### 2.4 `rutina` — la capa 1
-Un bloque = una actividad, un día de la semana, una hora.
+### 2.4 `rutina` — la capa 1, y todas las repeticiones
+Un bloque = una actividad, **una regla de repetición** y una hora. Es la única
+tabla de recurrencia: no hay un sistema para la semana y otro para el resto.
 
 | Campo | Tipo | Para qué |
 |---|---|---|
@@ -112,11 +113,21 @@ Un bloque = una actividad, un día de la semana, una hora.
 | `persona_id` | uuid → `personas` | |
 | `actividad_id` | uuid → `actividades` (cascada) | |
 | `modo` | enum `escolar｜vacaciones` | Dos rutinas distintas sin duplicar tabla |
-| `dia_semana` | smallint 0-6 | **0 = domingo**, igual que `Date.getDay()` |
+| **`repeticion`** | enum | `diaria｜semanal｜cada_n_dias｜mensual｜anual` |
+| `dia_semana` | smallint 0-6, null | Solo en `semanal`. **0 = domingo**, igual que `Date.getDay()` |
+| `cada_n` | smallint 1-366, null | Solo en `cada_n_dias`, contado desde `desde` |
+| `dia_mes` | smallint 1-31, null | En `mensual` y `anual` |
+| `mes` | smallint 1-12, null | Solo en `anual` |
+| `desde` | date | Desde cuándo vale, y ancla de `cada_n_dias` |
+| `hasta` | date, null | Hasta cuándo, o para siempre |
 | `hora_inicio` / `hora_fin` | time | `hora_fin > hora_inicio` |
 | `activo` | boolean | |
 
-Índice: `(persona_id, modo, dia_semana) where activo`.
+`repeticion_completa` obliga a que cada repetición lleve **lo suyo y nada
+más**: sin esa restricción se pueden guardar reglas que no significan nada y
+el generador las ignora en silencio.
+
+Índice: `(persona_id, modo, repeticion) where activo`.
 
 ### 2.5 `dias` — la capa 3, la cabecera
 Un plan por persona y fecha (`unique(persona_id, fecha)`).
@@ -278,6 +289,10 @@ Estos módulos **no importan nada de React Native ni de Expo** a propósito.
 `diasEntre` · `sumarDias` · `mesDe`
 
 **`src/lib/dia.ts`** — la capa 1 → la capa 3.
+- **`tocaEsteDia(bloque, fecha, zona)`** — una sola función para las cinco
+  repeticiones. Los casos raros —el día 31 en un mes de 30, el 29 de febrero
+  en un año que no es bisiesto— **caen en el último día del mes** en vez de
+  saltarse: quien puso «el 31» quiere decir «el último».
 - `proximaOcupacion(fecha, dias, zona)` → cuándo vuelve el colegio. Un día sin
   colegio y sin decir por qué se lee como si la app no hubiera guardado el
   horario.
@@ -348,7 +363,8 @@ Una interfaz `Repositorio`, dos implementaciones intercambiables:
 | `ajustes` | Nombre, ícono, avisos, sonidos, celebraciones, empezar de nuevo |
 | `+not-found` | Enseña Hoy: la app arranca aunque no se sirva en la raíz |
 
-**Componentes:** `Cabecera` · `CampoTexto` · `Aviso` · `TarjetaVersiculo` · `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
+**Componentes:** `Cabecera` · `CampoTexto` · `Aviso` · `Repeticion` ·
+`TarjetaVersiculo` · `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
 `AnilloProgreso` · `Celebracion` · `SelectorHora` · `PreguntaTerminaste` · `Enlace`
 
 > **`CampoTexto` y `Aviso` existen para cumplir R2** (`REGLAS.md`): ningún
@@ -478,7 +494,24 @@ guardado nada. Los datos estaban bien; lo que faltaba era decirlo:
   ve de un vistazo que L-V tienen más que S-D y que el colegio sigue ahí.
 - Un día del todo vacío dice qué días sí tienen cosas, con un atajo para saltar.
 
-### 5.9 Los tres gestos de una tarea
+### 5.9 Añadir una tarea, y cada cuánto
+El botón dice **«Añadir una tarea»**, no «solo para hoy», y pregunta cada
+cuánto se repite — las mismas opciones que un calendario normal:
+
+| Opción | Qué guarda |
+|---|---|
+| Solo este día | una tarea suelta en `tareas_dia` |
+| Todos los días | una regla `diaria` |
+| Cada semana | una regla `semanal` **por cada día marcado**, para poder moverlas y quitarlas una a una |
+| Cada tantos días | una regla `cada_n_dias` anclada en la fecha |
+| Cada mes el N | una regla `mensual` |
+| Cada año el N de M | una regla `anual` |
+
+La hoja dice en palabras qué va a pasar —«Se repetirá cada L, X, V»— antes de
+guardar. La pantalla de la rutina edita las semanales y avisa de cuántas se
+repiten de otra manera.
+
+### 5.10 Los tres gestos de una tarea
 - **El círculo** marca y desmarca.
 - **El cuerpo** abre el detalle (nota, minutos, chispas).
 - **Dejar apretado** la salta — y saltada se ve **distinta** de hecha:
@@ -573,6 +606,8 @@ Lo leído entra a `eventos` **sin confirmar**.
 | El ciclo, ni los tutores | Es información de salud suya |
 | Rachas persistidas, no consulta | Se leen en cada apertura y hay que saber cuándo se ganó cada insignia |
 | El texto bíblico, en tabla aparte por versión | Las traducciones modernas tienen derechos: añadir una licenciada debe ser meter filas |
+| Una sola tabla de repeticiones | Dos sistemas —la semana por un lado, el resto por otro— se contradicen en cuanto crecen |
+| El día 31 cae en el último del mes | Quien puso «el 31» quiere decir «el último», no «sáltate febrero» |
 | Un día vacío explica por qué | Sin eso, un sábado sin colegio se lee como que la app perdió el horario |
 | El método del devocional se elige, no se fotografía | Tocar una lista es más rápido, y la foto necesita cámara y almacenamiento |
 | El versículo se elige por la fecha | No puede cambiar a media mañana ni al volver a abrir |

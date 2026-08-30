@@ -10,6 +10,7 @@ import { DetalleTarea } from '@/componentes/DetalleTarea';
 import { useCelebrar } from '@/componentes/Celebracion';
 import { Enlace } from '@/componentes/Enlace';
 import { PreguntaTerminaste } from '@/componentes/PreguntaTerminaste';
+import { Repeticion, comoSeLee, type Cada } from '@/componentes/Repeticion';
 import { SelectorHora } from '@/componentes/SelectorHora';
 import { FilaTarea } from '@/componentes/FilaTarea';
 import { TarjetaAhora } from '@/componentes/TarjetaAhora';
@@ -38,6 +39,7 @@ export default function Hoy() {
   const [suelta, setSuelta] = useState<{ titulo: string; hora: string } | null>(null);
   const [abierta, setAbierta] = useState<string | null>(null);
   const [faltaSuelta, setFaltaSuelta] = useState<string | null>(null);
+  const [cada, setCada] = useState<Cada>({ tipo: 'unica' });
   const router = useRouter();
   const celebrar = useCelebrar();
   // Se guarda el minuto para que «lo que toca ahora» se mueva solo con el reloj.
@@ -230,10 +232,14 @@ export default function Hoy() {
 
         <Pressable
           role="button"
-          onPress={() => { setFaltaSuelta(null); setSuelta({ titulo: '', hora }); }}
+          onPress={() => {
+            setFaltaSuelta(null);
+            setCada({ tipo: 'unica' });
+            setSuelta({ titulo: '', hora });
+          }}
           style={[e.anadir, { borderColor: p.alba, backgroundColor: p.albaPiso }]}
         >
-          <Text style={[e.anadirTexto, { color: p.alba }]}>+ Añadir algo solo para hoy</Text>
+          <Text style={[e.anadirTexto, { color: p.alba }]}>+ Añadir una tarea</Text>
         </Pressable>
 
         <Enlace href="/rachas" estilo={[e.enlace, { borderColor: p.linea, marginTop: 12 }]}>
@@ -288,9 +294,11 @@ export default function Hoy() {
       >
         <View style={e.fondo}>
           <View style={[e.hoja, { backgroundColor: p.papel }]}>
-            <Text style={[e.hojaTitulo, { color: p.tinta }]}>Algo solo para hoy</Text>
+            <Text style={[e.hojaTitulo, { color: p.tinta }]}>Una tarea nueva</Text>
             <Text style={[e.hojaAyuda, { color: p.tintaSuave }]}>
-              No entra en tu rutina: aparece hoy y ya está.
+              {cada.tipo === 'unica'
+                ? 'Aparece hoy y ya está: no entra en tu rutina.'
+                : `Se repetirá ${comoSeLee(cada, fecha)}, sin volver a meterla.`}
             </Text>
             <CampoTexto
               etiqueta="¿Qué hay que hacer?"
@@ -309,6 +317,8 @@ export default function Hoy() {
               valor={suelta?.hora ?? '12:00'}
               onCambiar={(h) => setSuelta((s) => (s ? { ...s, hora: h } : s))}
             />
+
+            <Repeticion valor={cada} onCambiar={setCada} fecha={fecha} />
             <Aviso texto={faltaSuelta} />
 
             <Pressable
@@ -319,16 +329,29 @@ export default function Hoy() {
                   setFaltaSuelta('Falta decir qué hay que hacer.');
                   return;
                 }
+                if (cada.tipo === 'semanal' && (cada.dias_semana ?? []).length === 0) {
+                  setFaltaSuelta('Marca al menos un día de la semana.');
+                  return;
+                }
                 setSuelta(null);
                 setFaltaSuelta(null);
-                setDia(await repositorio.anadirTareaHoy(fecha, {
-                  titulo: s.titulo.trim(), emoji: '⭐', tipo: 'casa',
+                const tarea = {
+                  titulo: s.titulo.trim(), emoji: '⭐', tipo: 'casa' as const,
                   hora_inicio: s.hora, hora_fin: aHora(aMinutos(s.hora) + 30),
-                }));
+                };
+                setDia(cada.tipo === 'unica'
+                  ? await repositorio.anadirTareaHoy(fecha, tarea)
+                  : await repositorio.anadirRepetida(fecha, tarea, {
+                      repeticion: cada.tipo,
+                      dias_semana: cada.dias_semana,
+                      cada_n: cada.cada_n,
+                    }));
               }}
               style={[e.hojaBoton, { backgroundColor: p.alba }]}
             >
-              <Text style={e.hojaBotonTexto}>Añadir a hoy</Text>
+              <Text style={e.hojaBotonTexto}>
+                {cada.tipo === 'unica' ? 'Añadir a hoy' : 'Añadir y repetir'}
+              </Text>
             </Pressable>
             <Pressable
               role="button"

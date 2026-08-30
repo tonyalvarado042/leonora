@@ -61,7 +61,9 @@ export const actividadesIniciales: ActividadSemilla[] = [
     avisar: true, avisar_antes_min: 30 },
 ];
 
-type BloqueSemilla = Omit<BloqueRutina, 'id' | 'persona_id' | 'modo' | 'activo'>;
+/** Lo mínimo de un bloque de la semilla: el resto lo pone `rutinaInicial`. */
+type BloqueSemilla = Pick<BloqueRutina, 'actividad_id' | 'hora_inicio' | 'hora_fin'>
+  & { dia_semana: number };
 
 const ENTRE_SEMANA: Omit<BloqueSemilla, 'dia_semana'>[] = [
   { actividad_id: 'act-devocional', hora_inicio: '06:30', hora_fin: '07:30' },
@@ -93,7 +95,10 @@ export function rutinaInicial(): Omit<BloqueRutina, 'persona_id'>[] {
         id: `rut-${dia}-${b.actividad_id}`,
         actividad_id: b.actividad_id,
         modo: 'escolar',
+        repeticion: 'semanal',
         dia_semana: dia,
+        cada_n: null, dia_mes: null, mes: null,
+        desde: '2020-01-01', hasta: null,
         hora_inicio: b.hora_inicio,
         hora_fin: b.hora_fin,
         activo: true,

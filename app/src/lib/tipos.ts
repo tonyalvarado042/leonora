@@ -63,12 +63,28 @@ export interface Actividad {
   activa: boolean;
 }
 
+/** Cada cuánto se repite algo. Cubre lo mismo que un calendario normal. */
+export type TipoRepeticion =
+  | 'diaria' | 'semanal' | 'cada_n_dias' | 'mensual' | 'anual';
+
 export interface BloqueRutina {
   id: string;
   persona_id: string;
   actividad_id: string;
   modo: ModoRutina;
-  dia_semana: number;
+  repeticion: TipoRepeticion;
+  /** Solo en `semanal`. 0 = domingo … 6 = sábado. */
+  dia_semana: number | null;
+  /** Solo en `cada_n_dias`. Se cuenta desde `desde`. */
+  cada_n: number | null;
+  /** En `mensual` y `anual`. 1-31; si el mes es más corto, cae en el último día. */
+  dia_mes: number | null;
+  /** Solo en `anual`. 1-12. */
+  mes: number | null;
+  /** Desde cuándo vale la regla. Es también el ancla de `cada_n_dias`. */
+  desde: Fecha;
+  /** Hasta cuándo, o null para siempre. */
+  hasta: Fecha | null;
   hora_inicio: Hora;
   hora_fin: Hora;
   activo: boolean;

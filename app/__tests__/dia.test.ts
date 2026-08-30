@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { foco, generarDia, porcentajeCumplido, proximaOcupacion, resumenAvance } from '../src/lib/dia.ts';
+import { foco, generarDia, porcentajeCumplido, proximaOcupacion, resumenAvance, tocaEsteDia } from '../src/lib/dia.ts';
 import type { Actividad, Ajustes, BloqueRutina, Tarea } from '../src/lib/tipos.ts';
 
 const ZONA = 'America/Guatemala';
@@ -25,7 +25,9 @@ function act(id: string, extra: Partial<Actividad> = {}): Actividad {
 function bloque(id: string, actividad_id: string, dia: number, ini: string, fin: string,
                 extra: Partial<BloqueRutina> = {}): BloqueRutina {
   return {
-    id, persona_id: 'p', actividad_id, modo: 'escolar', dia_semana: dia,
+    id, persona_id: 'p', actividad_id, modo: 'escolar',
+    repeticion: 'semanal', dia_semana: dia, cada_n: null, dia_mes: null, mes: null,
+    desde: '2020-01-01', hasta: null,
     hora_inicio: ini, hora_fin: fin, activo: true, ...extra,
   };
 }
@@ -188,4 +190,106 @@ test('con un solo día ocupado, da la vuelta a la semana', () => {
 
 test('sin días ocupados no hay próxima', () => {
   assert.equal(proximaOcupacion('2026-09-05', [], ZONA), null);
+});
+
+// ------------------------------------------------------------ repeticiones
+
+function regla(e: Partial<BloqueRutina>): BloqueRutina {
+  return {
+    id: 'r', persona_id: 'p', actividad_id: 'a', modo: 'escolar',
+    repeticion: 'diaria', dia_semana: null, cada_n: null, dia_mes: null, mes: null,
+    desde: '2026-01-01', hasta: null,
+    hora_inicio: '08:00', hora_fin: '09:00', activo: true, ...e,
+  };
+}
+
+test('diaria toca todos los días', () => {
+  const r = regla({ repeticion: 'diaria' });
+  for (const f of ['2026-09-02', '2026-09-03', '2026-09-05', '2026-12-31']) {
+    assert.equal(tocaEsteDia(r, f, ZONA), true, f);
+  }
+});
+
+test('semanal toca solo su día', () => {
+  const r = regla({ repeticion: 'semanal', dia_semana: 3 }); // miércoles
+  assert.equal(tocaEsteDia(r, '2026-09-02', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2026-09-03', ZONA), false);
+  assert.equal(tocaEsteDia(r, '2026-09-09', ZONA), true);
+});
+
+test('cada n días cuenta desde su ancla', () => {
+  const r = regla({ repeticion: 'cada_n_dias', cada_n: 15, desde: '2026-09-01' });
+  assert.equal(tocaEsteDia(r, '2026-09-01', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2026-09-16', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2026-10-01', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2026-09-15', ZONA), false);
+});
+
+test('cada n días no toca antes de su ancla', () => {
+  const r = regla({ repeticion: 'cada_n_dias', cada_n: 3, desde: '2026-09-10' });
+  assert.equal(tocaEsteDia(r, '2026-09-07', ZONA), false);
+  assert.equal(tocaEsteDia(r, '2026-09-10', ZONA), true);
+});
+
+test('mensual toca su día del mes', () => {
+  const r = regla({ repeticion: 'mensual', dia_mes: 3 });
+  assert.equal(tocaEsteDia(r, '2026-09-03', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2026-10-03', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2026-09-04', ZONA), false);
+});
+
+test('el día 31 cae en el último día de los meses cortos', () => {
+  const r = regla({ repeticion: 'mensual', dia_mes: 31 });
+  assert.equal(tocaEsteDia(r, '2026-01-31', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2026-04-30', ZONA), true, 'abril tiene 30: debería caer el 30');
+  assert.equal(tocaEsteDia(r, '2026-02-28', ZONA), true, 'febrero: el último día');
+  assert.equal(tocaEsteDia(r, '2026-04-29', ZONA), false);
+});
+
+test('anual toca su mes y su día', () => {
+  const r = regla({ repeticion: 'anual', mes: 3, dia_mes: 14 });
+  assert.equal(tocaEsteDia(r, '2026-03-14', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2027-03-14', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2026-03-15', ZONA), false);
+  assert.equal(tocaEsteDia(r, '2026-04-14', ZONA), false);
+});
+
+test('el 29 de febrero cae el 28 cuando el año no es bisiesto', () => {
+  // La regla tiene que empezar antes de las fechas que se prueban.
+  const r = regla({ repeticion: 'anual', mes: 2, dia_mes: 29, desde: '2020-01-01' });
+  assert.equal(tocaEsteDia(r, '2024-02-29', ZONA), true, '2024 es bisiesto');
+  assert.equal(tocaEsteDia(r, '2026-02-28', ZONA), true, '2026 no lo es: cae el 28');
+  assert.equal(tocaEsteDia(r, '2026-02-27', ZONA), false);
+});
+
+test('una regla apagada no toca nunca', () => {
+  assert.equal(tocaEsteDia(regla({ activo: false }), '2026-09-02', ZONA), false);
+});
+
+test('la regla no vale antes de empezar ni después de terminar', () => {
+  const r = regla({ repeticion: 'diaria', desde: '2026-09-01', hasta: '2026-09-30' });
+  assert.equal(tocaEsteDia(r, '2026-08-31', ZONA), false);
+  assert.equal(tocaEsteDia(r, '2026-09-15', ZONA), true);
+  assert.equal(tocaEsteDia(r, '2026-10-01', ZONA), false);
+});
+
+test('una regla incompleta no toca, en vez de reventar', () => {
+  assert.equal(tocaEsteDia(regla({ repeticion: 'semanal', dia_semana: null }), '2026-09-02', ZONA), false);
+  assert.equal(tocaEsteDia(regla({ repeticion: 'cada_n_dias', cada_n: 0 }), '2026-09-02', ZONA), false);
+  assert.equal(tocaEsteDia(regla({ repeticion: 'mensual', dia_mes: null }), '2026-09-02', ZONA), false);
+  assert.equal(tocaEsteDia(regla({ repeticion: 'anual', mes: null, dia_mes: 1 }), '2026-09-02', ZONA), false);
+});
+
+test('el generador del día mezcla repeticiones distintas', () => {
+  const d = generarDia({
+    fecha: '2026-09-02', zonaHoraria: ZONA, ajustes, // miércoles, día 2 del mes
+    actividades: [act('diaria'), act('semanal'), act('mensual'), act('anual')],
+    rutina: [
+      regla({ id: 'r1', actividad_id: 'diaria', repeticion: 'diaria', hora_inicio: '06:00', hora_fin: '06:30' }),
+      regla({ id: 'r2', actividad_id: 'semanal', repeticion: 'semanal', dia_semana: 3, hora_inicio: '08:00', hora_fin: '09:00' }),
+      regla({ id: 'r3', actividad_id: 'mensual', repeticion: 'mensual', dia_mes: 2, hora_inicio: '10:00', hora_fin: '11:00' }),
+      regla({ id: 'r4', actividad_id: 'anual', repeticion: 'anual', mes: 12, dia_mes: 25, hora_inicio: '12:00', hora_fin: '13:00' }),
+    ],
+  });
+  assert.deepEqual(d.tareas.map((t) => t.titulo), ['diaria', 'semanal', 'mensual']);
 });
