@@ -119,7 +119,7 @@ function tarea(tipo: Tarea['tipo'], estado: Tarea['estado']): Tarea {
     emoji: '•', tipo, hora_inicio: '08:00', hora_fin: '09:00', orden: 0,
     es_fijo: false, origen: 'rutina', estado,
     completado_en: estado === 'hecha' ? '2026-09-02T12:00:00Z' : null,
-    nota: null, minutos_reales: null, termino_de_verdad: null, puntos: 0,
+    nota: null, minutos_reales: null, termino_de_verdad: null, puntos: 0, metodo_devocional: null,
   };
 }
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { foco, generarDia, porcentajeCumplido, resumenAvance } from '../src/lib/dia.ts';
+import { foco, generarDia, porcentajeCumplido, proximaOcupacion, resumenAvance } from '../src/lib/dia.ts';
 import type { Actividad, Ajustes, BloqueRutina, Tarea } from '../src/lib/tipos.ts';
 
 const ZONA = 'America/Guatemala';
@@ -105,7 +105,7 @@ function tarea(id: string, ini: string, fin: string, estado: Tarea['estado'] = '
     id, dia_id: 'd', actividad_id: null, titulo: id, emoji: '•', tipo: 'casa',
     hora_inicio: ini, hora_fin: fin, orden: 0, es_fijo: false, origen: 'rutina',
     estado, completado_en: estado === 'hecha' ? '2026-09-02T12:00:00Z' : null,
-    nota: null, minutos_reales: null, termino_de_verdad: null, puntos: 0,
+    nota: null, minutos_reales: null, termino_de_verdad: null, puntos: 0, metodo_devocional: null,
   };
 }
 
@@ -156,4 +156,36 @@ test('el porcentaje cuenta hechas sobre las que no se omitieron', () => {
 test('un día vacío no divide entre cero', () => {
   assert.equal(porcentajeCumplido([]), 0);
   assert.equal(porcentajeCumplido([tarea('a', '06:00', '07:00', 'omitida')]), 0);
+});
+
+// ------------------------------------------------------- próxima ocupación
+
+test('la próxima ocupación es el siguiente día que toca', () => {
+  // 2026-09-05 es sábado.
+  const r = proximaOcupacion('2026-09-05', [1, 2, 3, 4, 5], ZONA);
+  assert.equal(r?.fecha, '2026-09-07');
+  assert.equal(r?.nombre, 'lunes');
+  assert.equal(r?.enCuantos, 2);
+});
+
+test('desde un domingo, el lunes es mañana', () => {
+  const r = proximaOcupacion('2026-09-06', [1, 2, 3, 4, 5], ZONA);
+  assert.equal(r?.nombre, 'lunes');
+  assert.equal(r?.enCuantos, 1);
+});
+
+test('desde un lunes, la próxima es el martes, no hoy', () => {
+  const r = proximaOcupacion('2026-09-07', [1, 2, 3, 4, 5], ZONA);
+  assert.equal(r?.nombre, 'martes');
+  assert.equal(r?.enCuantos, 1);
+});
+
+test('con un solo día ocupado, da la vuelta a la semana', () => {
+  const r = proximaOcupacion('2026-09-02', [3], ZONA); // miércoles a miércoles
+  assert.equal(r?.enCuantos, 7);
+  assert.equal(r?.nombre, 'miércoles');
+});
+
+test('sin días ocupados no hay próxima', () => {
+  assert.equal(proximaOcupacion('2026-09-05', [], ZONA), null);
 });

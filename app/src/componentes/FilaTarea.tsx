@@ -1,5 +1,6 @@
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 
+import { metodo as buscarMetodo } from '@/datos/metodos';
 import { colorDeTipo, usarPaleta } from '@/lib/tema';
 import type { Tarea } from '@/lib/tipos';
 
@@ -67,6 +68,9 @@ export function FilaTarea({ tarea, esFoco, onMarcar, onOmitir, onAbrir }: Props)
           ) : (
             <Text style={[e.sub, { color: p.tintaTenue }]}>hasta las {tarea.hora_fin}</Text>
           )}
+          {buscarMetodo(tarea.metodo_devocional)
+            ? <Text style={e.nota}>{buscarMetodo(tarea.metodo_devocional)!.emoji}</Text>
+            : null}
           {tarea.nota ? <Text style={[e.nota, { color: p.alba }]}>📝</Text> : null}
           {tarea.puntos > 0 ? (
             <Text style={[e.chispas, { color: p.fuego }]}>+{tarea.puntos}</Text>

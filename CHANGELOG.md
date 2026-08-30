@@ -7,6 +7,40 @@ Lo más nuevo arriba.
 
 ---
 
+## El horario que «no cargaba», y el devocional propio · 2026-08-29
+
+**La pulga del horario.** Poner escuela de 08:00 a 15:00 y no verla parecía que
+la app no la había guardado. Lo comprobé y **los datos estaban bien**: cinco
+bloques de lunes a viernes, con sus horas. Lo que fallaba era que **no se veía**
+— hoy era sábado, y ni Hoy ni el editor de rutina decían por qué.
+
+Arreglado donde estaba el problema, que era enseñarlo:
+- **Hoy:** «Hoy no hay escuela. Tu horario está guardado y vuelve el lunes.»
+- **La rutina:** cada día lleva la cuenta de cuántas cosas tiene, así se ve de
+  un vistazo que L-V tienen más que S-D.
+- Un día del todo vacío dice qué días sí tienen cosas, con un atajo para saltar.
+
+También: el editor de rutina usaba la fecha del aparato en vez de la zona
+horaria de la persona al regenerar el día.
+
+**El devocional propio.** Ya no hay que usar el de la app: al abrir la tarea de
+fe se pregunta **cómo lo hiciste hoy** — el de GraceDay, leyendo la Biblia, con
+un libro, en familia, oyendo la radio, con otra app, en la iglesia o de otra
+manera. Todo cuenta igual para la racha. El texto de la app solo se impone si
+elegiste el suyo. La fila del día enseña con qué lo hiciste y si dejaste nota.
+
+*La foto del devocional* queda para cuando llegue la cámara (fase 11): necesita
+el mismo trabajo de permisos y almacenamiento, y tocar una lista es más rápido
+que fotografiar.
+
+Migración `0005_metodo_devocional.sql`.
+
+*Verificado:* la propuesta con las horas, que Hoy explica el sábado, que la
+rutina enseña las cuentas por día y que el lunes tiene Escuela 08:00 — 15:00;
+y las ocho maneras de hacer el devocional, con y sin el texto de la app.
+
+---
+
 ## Fase 4 — Fe: devocionales y versículo del día · 2026-08-29
 
 **El versículo del día** sale arriba en Hoy y se abre en una lámina que **es**

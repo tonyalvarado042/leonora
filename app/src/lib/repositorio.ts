@@ -15,6 +15,7 @@ import {
   cumplioHoy, rachaVacia,
   type Celebracion, type Logro, type Marcado, type Racha, type Via,
 } from './rachas';
+import type { MetodoDevocional } from '@/datos/metodos';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, EstadoTarea, Fecha, Persona, Tarea,
 } from './tipos';
@@ -48,6 +49,11 @@ export interface ResumenDia {
   tareas: TareaLigera[];
 }
 
+export interface DetalleGuardable {
+  nota: string;
+  metodo_devocional?: MetodoDevocional | null;
+}
+
 export interface DiaCompleto {
   dia: Dia;
   tareas: Tarea[];
@@ -79,7 +85,8 @@ export interface Repositorio {
   /** Una tarea que solo existe hoy y no toca la rutina. */
   anadirTareaHoy(fecha: Fecha, tarea: TareaSuelta): Promise<DiaCompleto>;
   borrarTarea(fecha: Fecha, tareaId: string): Promise<DiaCompleto>;
-  guardarNota(fecha: Fecha, tareaId: string, nota: string): Promise<DiaCompleto>;
+  /** La nota y, en las de fe, cómo se hizo el devocional. */
+  guardarDetalle(fecha: Fecha, tareaId: string, d: DetalleGuardable): Promise<DiaCompleto>;
   /** Resumen de los días ya vividos entre dos fechas, para el calendario.
    *  No genera los que faltan: el pasado no se inventa, y el futuro se genera
    *  cuando llegue. */
@@ -208,6 +215,7 @@ export class RepositorioLocal implements Repositorio {
         orden: 0, es_fijo: false, origen: 'manual' as const,
         estado: 'pendiente' as const, completado_en: null, nota: null,
         minutos_reales: null, termino_de_verdad: null, puntos: 0,
+        metodo_devocional: null,
       }].sort((x, y) => x.hora_inicio.localeCompare(y.hora_inicio))
         .map((x, i) => ({ ...x, orden: i }));
 
@@ -238,14 +246,18 @@ export class RepositorioLocal implements Repositorio {
       .sort((x, y) => x.fecha.localeCompare(y.fecha));
   }
 
-  guardarNota(fecha: Fecha, tareaId: string, nota: string) {
+  guardarDetalle(fecha: Fecha, tareaId: string, det: DetalleGuardable) {
     return this.escribir((a) => {
       const d = a.dias[fecha] ?? construirDia(a, fecha);
-      const limpia = nota.trim();
+      const limpia = det.nota.trim();
       const despues: DiaCompleto = {
         ...d,
-        tareas: d.tareas.map((t) =>
-          t.id === tareaId ? { ...t, nota: limpia === '' ? null : limpia } : t),
+        tareas: d.tareas.map((t) => t.id !== tareaId ? t : {
+          ...t,
+          nota: limpia === '' ? null : limpia,
+          metodo_devocional: det.metodo_devocional !== undefined
+            ? det.metodo_devocional : t.metodo_devocional,
+        }),
       };
       a.dias[fecha] = despues;
       return copia(despues);

@@ -8,7 +8,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { SelectorHora } from '@/componentes/SelectorHora';
 import { colorDeTipo, usarPaleta } from '@/lib/tema';
 import { repositorio } from '@/lib/repositorio';
-import { aHora, aMinutos, duracionMin } from '@/lib/fechas';
+import { aHora, aMinutos, diaSemana, duracionMin, fechaLocal } from '@/lib/fechas';
 import type { Actividad, BloqueRutina, Hora } from '@/lib/tipos';
 
 const DIAS = [
@@ -24,10 +24,8 @@ const DIAS = [
 export default function Rutina() {
   const p = usarPaleta();
   const router = useRouter();
-  const [dia, setDia] = useState(() => {
-    const hoy = new Date().getDay();
-    return DIAS.some((d) => d.n === hoy) ? hoy : 1;
-  });
+  const [dia, setDia] = useState(() => new Date().getDay());
+  const [zona, setZona] = useState('America/Guatemala');
   const [bloques, setBloques] = useState<BloqueRutina[]>([]);
   const [actividades, setActividades] = useState<Actividad[]>([]);
   // null = cerrado; una actividad = eligiendo su hora.
@@ -36,6 +34,8 @@ export default function Rutina() {
   const [inicio, setInicio] = useState<Hora>('08:00');
 
   const cargar = useCallback(async () => {
+    const persona = await repositorio.persona();
+    setZona(persona.zona_horaria);
     setBloques(await repositorio.rutina());
     setActividades(await repositorio.actividades());
   }, []);
@@ -45,6 +45,15 @@ export default function Rutina() {
     .filter((b) => b.activo && b.dia_semana === dia)
     .sort((a, b) => aMinutos(a.hora_inicio) - aMinutos(b.hora_inicio));
 
+  // Qué días sí tienen algo, para no dejar a nadie creyendo que la rutina no
+  // se guardó cuando lo que pasa es que hoy es sábado.
+  const conAlgo = DIAS.filter((d) => bloques.some((b) => b.activo && b.dia_semana === d.n));
+
+  const cuentaPorDia = new Map<number, number>();
+  for (const b of bloques) {
+    if (b.activo) cuentaPorDia.set(b.dia_semana, (cuentaPorDia.get(b.dia_semana) ?? 0) + 1);
+  }
+
   async function mover(b: BloqueRutina, minutos: number) {
     const largo = duracionMin(b.hora_inicio, b.hora_fin);
     const inicio = aHora(aMinutos(b.hora_inicio) + minutos);
@@ -52,13 +61,13 @@ export default function Rutina() {
     await repositorio.guardarBloque(actualizado);
     // El día de hoy es una copia de la rutina, así que hay que rehacerlo para
     // que el cambio se vea en la pantalla de Hoy.
-    await repositorio.regenerarDia(hoyLocal());
+    await repositorio.regenerarDia(fechaLocal(new Date(), zona));
     await cargar();
   }
 
   async function quitar(b: BloqueRutina) {
     await repositorio.borrarBloque(b.id);
-    await repositorio.regenerarDia(hoyLocal());
+    await repositorio.regenerarDia(fechaLocal(new Date(), zona));
     await cargar();
   }
 
@@ -86,7 +95,7 @@ export default function Rutina() {
       hora_fin: aHora(aMinutos(inicio) + act.duracion_min),
       activo: true,
     });
-    await repositorio.regenerarDia(hoyLocal());
+    await repositorio.regenerarDia(fechaLocal(new Date(), zona));
     await cargar();
   }
 
@@ -117,15 +126,43 @@ export default function Rutina() {
               ]}
             >
               <Text style={[e.diaTexto, { color: puesto ? '#FFF' : p.tintaSuave }]}>{d.corto}</Text>
+              {/* Cuántas cosas tiene cada día. Sin esto, mirar el sábado y no
+                  ver el colegio se lee como que la rutina no se guardó. */}
+              <Text style={[e.diaCuenta, { color: puesto ? 'rgba(255,255,255,0.75)' : p.tintaTenue }]}>
+                {cuentaPorDia.get(d.n) ?? 0}
+              </Text>
             </Pressable>
           );
         })}
       </View>
 
       {delDia.length === 0 && (
-        <Text style={[e.vacio, { color: p.tintaTenue }]}>
-          Nada puesto este día. Es un día libre.
-        </Text>
+        <View style={[e.vacioCaja, { backgroundColor: p.tarjeta, borderColor: p.linea }]}>
+          <Text style={[e.vacioTitulo, { color: p.tinta }]}>
+            El {DIAS.find((d) => d.n === dia)!.largo} lo tienes libre
+          </Text>
+          {conAlgo.length > 0 ? (
+            <>
+              <Text style={[e.vacioTexto, { color: p.tintaSuave }]}>
+                Tu rutina sí está guardada: hay cosas puestas en{' '}
+                {conAlgo.map((d) => d.plural).join(', ')}.
+              </Text>
+              <Pressable
+                role="button"
+                onPress={() => setDia(conAlgo[0].n)}
+                style={[e.irA, { borderColor: p.alba, backgroundColor: p.albaPiso }]}
+              >
+                <Text style={[e.irATexto, { color: p.alba }]}>
+                  Ver los {conAlgo[0].plural} →
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <Text style={[e.vacioTexto, { color: p.tintaSuave }]}>
+              Todavía no has puesto nada en ningún día. Empieza aquí abajo.
+            </Text>
+          )}
+        </View>
       )}
 
       {delDia.map((b) => {
@@ -257,21 +294,29 @@ export default function Rutina() {
   );
 }
 
-function hoyLocal(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
+
 
 const e = StyleSheet.create({
   cuerpo: { padding: 18, paddingBottom: 48, maxWidth: 620, width: '100%', alignSelf: 'center' },
   intro: { fontSize: 14, lineHeight: 20, marginBottom: 16 },
   dias: { flexDirection: 'row', gap: 6, marginBottom: 18 },
   diaBoton: {
-    flex: 1, height: 42, borderRadius: 11, borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center', justifyContent: 'center',
+    flex: 1, height: 50, borderRadius: 11, borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center', justifyContent: 'center', gap: 1,
   },
   diaTexto: { fontSize: 15, fontWeight: '700' },
-  vacio: { fontSize: 14, textAlign: 'center', paddingVertical: 28 },
+  diaCuenta: { fontSize: 10, fontVariant: ['tabular-nums'] },
+  vacioCaja: {
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: 18,
+    marginBottom: 10, gap: 8,
+  },
+  vacioTitulo: { fontSize: 16, fontWeight: '700' },
+  vacioTexto: { fontSize: 14, lineHeight: 20 },
+  irA: {
+    borderWidth: 1.5, borderRadius: 11, paddingVertical: 12,
+    alignItems: 'center', marginTop: 4,
+  },
+  irATexto: { fontSize: 14.5, fontWeight: '700' },
   bloque: {
     flexDirection: 'row', alignItems: 'center', gap: 7, padding: 12,
     borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, marginBottom: 8, overflow: 'hidden',

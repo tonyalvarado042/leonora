@@ -22,7 +22,8 @@ import {
   type Logro, type Marcado, type Racha, type Via,
 } from './rachas';
 import type {
-  DiaCompleto, Premio, Repositorio, ResumenDia, TareaLigera, TareaSuelta,
+  DetalleGuardable, DiaCompleto, Premio, Repositorio, ResumenDia,
+  TareaLigera, TareaSuelta,
 } from './repositorio';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, EstadoTarea, Fecha, Persona, Tarea,
@@ -155,11 +156,16 @@ export class RepositorioSupabase implements Repositorio {
     });
   }
 
-  async guardarNota(fecha: Fecha, tareaId: string, nota: string): Promise<DiaCompleto> {
-    const limpia = nota.trim();
-    const { error } = await this.sb.from('tareas_dia')
-      .update({ nota: limpia === '' ? null : limpia }).eq('id', tareaId);
-    if (error) throw new Error(`guardar la nota: ${error.message}`);
+  async guardarDetalle(
+    fecha: Fecha, tareaId: string, det: DetalleGuardable,
+  ): Promise<DiaCompleto> {
+    const limpia = det.nota.trim();
+    const { error } = await this.sb.from('tareas_dia').update({
+      nota: limpia === '' ? null : limpia,
+      ...(det.metodo_devocional !== undefined
+        ? { metodo_devocional: det.metodo_devocional } : {}),
+    }).eq('id', tareaId);
+    if (error) throw new Error(`guardar el detalle: ${error.message}`);
     return this.dia(fecha);
   }
 

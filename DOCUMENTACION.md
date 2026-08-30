@@ -150,6 +150,7 @@ Un plan por persona y fecha (`unique(persona_id, fecha)`).
 | `completado_en` | timestamptz | **`(estado='hecha') = (completado_en is not null)`** |
 | `nota` | text | Lo que la persona escribe en el detalle |
 | `minutos_reales` | smallint | Cuánto duró de verdad |
+| `metodo_devocional` | enum | Solo en fe: `app｜biblia｜libro｜familia｜radio｜otra_app｜iglesia｜otro` |
 | `termino_de_verdad` | boolean | Respuesta a «¿terminaste, o lo dejas?» |
 | `puntos` | smallint | Chispas que dio |
 
@@ -277,6 +278,9 @@ Estos módulos **no importan nada de React Native ni de Expo** a propósito.
 `diasEntre` · `sumarDias` · `mesDe`
 
 **`src/lib/dia.ts`** — la capa 1 → la capa 3.
+- `proximaOcupacion(fecha, dias, zona)` → cuándo vuelve el colegio. Un día sin
+  colegio y sin decir por qué se lee como si la app no hubiera guardado el
+  horario.
 - `generarDia(opciones)` → el plan de una fecha. Determinista.
 - `foco(tareas, hora)` → qué toca ahora, o lo siguiente si no hay nada en curso.
 - `porcentajeCumplido` / `resumenAvance` — las omitidas salen del total.
@@ -433,7 +437,18 @@ lo justo para dibujar sin cargar el día entero.
 - **El devocional** vive dentro de la tarea de tipo `fe`: al abrirla salen el
   pasaje, el texto y **la pregunta**, y el campo de nota pasa a llamarse «Tu
   respuesta». Lo que escribe se guarda en `tareas_dia.nota`.
+- **El devocional no es solo el que da la app.** Al abrir la tarea de fe se
+  pregunta **cómo lo hiciste hoy**: el de GraceDay, leyendo la Biblia, con un
+  libro, en familia, oyendo la radio, con otra app, en la iglesia o de otra
+  manera. Todo cuenta igual para la racha; lo que cambia es poder mirar atrás.
+  El texto de la app solo se impone si elegiste el suyo — con la Biblia o un
+  libro, solo pide tu nota.
+- La fila del día enseña con qué lo hiciste (📖, 👨‍👩‍👧…) y si dejaste nota (📝).
 - Una tarea que no es de fe no trae devocional.
+
+**Una foto del devocional** que leíste queda para cuando llegue la cámara
+(fase 11): necesita el mismo trabajo de permisos y almacenamiento, y elegir de
+una lista es más rápido que fotografiar.
 
 ### 5.7 Los formularios avisan, no se apagan
 Ningún botón se queda muerto sin decir por qué (R2). Al tocar «Siguiente» o
@@ -454,7 +469,16 @@ creyendo que falta algo.
 **La única excepción:** un botón puede apagarse *mientras trabaja*, y solo si
 lo dice («⏳ Leyendo tu horario…»).
 
-### 5.8 Los tres gestos de una tarea
+### 5.8 Un día vacío nunca se queda callado
+Poner el colegio de 08:00 a 15:00 un sábado y abrir la app parecía que no había
+guardado nada. Los datos estaban bien; lo que faltaba era decirlo:
+
+- **En Hoy:** «Hoy no hay escuela. Tu horario está guardado y vuelve el lunes.»
+- **En la rutina:** cada día lleva **la cuenta de cuántas cosas tiene**, así se
+  ve de un vistazo que L-V tienen más que S-D y que el colegio sigue ahí.
+- Un día del todo vacío dice qué días sí tienen cosas, con un atajo para saltar.
+
+### 5.9 Los tres gestos de una tarea
 - **El círculo** marca y desmarca.
 - **El cuerpo** abre el detalle (nota, minutos, chispas).
 - **Dejar apretado** la salta — y saltada se ve **distinta** de hecha:
@@ -549,5 +573,7 @@ Lo leído entra a `eventos` **sin confirmar**.
 | El ciclo, ni los tutores | Es información de salud suya |
 | Rachas persistidas, no consulta | Se leen en cada apertura y hay que saber cuándo se ganó cada insignia |
 | El texto bíblico, en tabla aparte por versión | Las traducciones modernas tienen derechos: añadir una licenciada debe ser meter filas |
+| Un día vacío explica por qué | Sin eso, un sábado sin colegio se lee como que la app perdió el horario |
+| El método del devocional se elige, no se fotografía | Tocar una lista es más rápido, y la foto necesita cámara y almacenamiento |
 | El versículo se elige por la fecha | No puede cambiar a media mañana ni al volver a abrir |
 | Lo puro separado de la plataforma | Zonas horarias y medianoche se prueban sin simulador |

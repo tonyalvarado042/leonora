@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import type { Devocional } from '@/datos/devocionales';
+import { METODOS, type MetodoDevocional } from '@/datos/metodos';
 import { duracionMin } from '@/lib/fechas';
 import { colorDeTipo, NOMBRE_TIPO, usarPaleta } from '@/lib/tema';
 import type { EstadoTarea, Tarea } from '@/lib/tipos';
@@ -11,7 +12,7 @@ interface Props {
   /** Solo llega en las tareas de tipo fe. */
   devocional?: Devocional | null;
   onCerrar: () => void;
-  onGuardar: (nota: string) => void;
+  onGuardar: (nota: string, metodo: MetodoDevocional | null) => void;
   onEstado: (estado: EstadoTarea) => void;
   onBorrar: () => void;
 }
@@ -24,9 +25,13 @@ interface Props {
 export function DetalleTarea({ tarea, devocional, onCerrar, onGuardar, onEstado, onBorrar }: Props) {
   const p = usarPaleta();
   const [nota, setNota] = useState('');
+  const [metodo, setMetodo] = useState<MetodoDevocional | null>(null);
 
   // Cada vez que se abre otra tarea hay que traer SU nota, no dejar la anterior.
-  useEffect(() => { setNota(tarea?.nota ?? ''); }, [tarea]);
+  useEffect(() => {
+    setNota(tarea?.nota ?? '');
+    setMetodo(tarea?.metodo_devocional ?? null);
+  }, [tarea]);
 
   if (!tarea) return null;
   const color = colorDeTipo(tarea.tipo, p);
@@ -60,7 +65,43 @@ export function DetalleTarea({ tarea, devocional, onCerrar, onGuardar, onEstado,
               </View>
             )}
 
-            {tarea.tipo === 'fe' && devocional && (
+            {tarea.tipo === 'fe' && (
+              <View style={e.metodos}>
+                <Text style={[e.etiqueta, { color: p.tintaSuave, marginTop: 18 }]}>
+                  ¿Cómo lo hiciste hoy?
+                </Text>
+                <Text style={[e.metodoAyuda, { color: p.tintaTenue }]}>
+                  Cuenta igual lo hagas como lo hagas. Esto es solo para poder
+                  mirar atrás y acordarte.
+                </Text>
+                <View style={e.metodoChips}>
+                  {METODOS.map((m) => {
+                    const puesto = metodo === m.id;
+                    return (
+                      <Pressable
+                        key={m.id}
+                        role="radio"
+                        aria-checked={puesto}
+                        aria-label={m.nombre}
+                        onPress={() => setMetodo(puesto ? null : m.id)}
+                        style={[
+                          e.metodoChip,
+                          puesto
+                            ? { backgroundColor: p.alba, borderColor: p.alba }
+                            : { backgroundColor: p.tarjeta, borderColor: p.linea },
+                        ]}
+                      >
+                        <Text style={[e.metodoTexto, { color: puesto ? '#FFF' : p.tintaSuave }]}>
+                          {m.emoji} {m.nombre}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {tarea.tipo === 'fe' && devocional && metodo === 'app' && (
               <View style={[e.devocional, { backgroundColor: p.albaPiso, borderColor: p.alba }]}>
                 <Text style={[e.devRotulo, { color: p.alba }]}>DEVOCIONAL DE HOY</Text>
                 <Text style={[e.devTitulo, { color: p.tinta }]}>{devocional.titulo}</Text>
@@ -74,14 +115,17 @@ export function DetalleTarea({ tarea, devocional, onCerrar, onGuardar, onEstado,
             )}
 
             <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
-              {tarea.tipo === 'fe' && devocional ? 'Tu respuesta' : 'Tu nota'}
+              {tarea.tipo === 'fe' && devocional && metodo === 'app'
+                ? 'Tu respuesta' : 'Tu nota'}
             </Text>
             <TextInput
               value={nota}
               onChangeText={setNota}
-              placeholder={tarea.tipo === 'fe' && devocional
-                ? 'Contesta la pregunta, o escribe lo que quieras…'
-                : 'Cómo te fue, qué aprendiste, qué te costó…'}
+              placeholder={tarea.tipo !== 'fe'
+                ? 'Cómo te fue, qué aprendiste, qué te costó…'
+                : metodo === 'app'
+                  ? 'Contesta la pregunta, o escribe lo que quieras…'
+                  : 'Qué leíste, con quién, qué te quedó…'}
               placeholderTextColor={p.tintaTenue}
               aria-label="Nota de la tarea"
               multiline
@@ -90,7 +134,7 @@ export function DetalleTarea({ tarea, devocional, onCerrar, onGuardar, onEstado,
 
             <Pressable
               role="button"
-              onPress={() => onGuardar(nota)}
+              onPress={() => onGuardar(nota, metodo)}
               style={[e.principal, { backgroundColor: p.alba }]}
             >
               <Text style={e.principalTexto}>Guardar</Text>
@@ -147,6 +191,14 @@ const e = StyleSheet.create({
     borderRadius: 12, padding: 13, marginTop: 14,
   },
   cifra: { fontSize: 14, fontWeight: '600' },
+  metodos: { gap: 0 },
+  metodoAyuda: { fontSize: 12.5, lineHeight: 17, marginBottom: 9, marginTop: -3 },
+  metodoChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  metodoChip: {
+    paddingVertical: 9, paddingHorizontal: 12, borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  metodoTexto: { fontSize: 13.5, fontWeight: '600' },
   devocional: { borderWidth: 1, borderRadius: 15, padding: 17, marginTop: 18 },
   devRotulo: { fontSize: 10, fontWeight: '700', letterSpacing: 1.1 },
   devTitulo: { fontSize: 18, fontWeight: '700', marginTop: 7 },

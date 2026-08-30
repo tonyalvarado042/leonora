@@ -100,6 +100,7 @@ function tarea(id: string, actividad_id: string | null, ini: string, fin: string
     hora_inicio: ini, hora_fin: fin, orden: 0, es_fijo: false, origen: 'rutina',
     estado: 'pendiente', completado_en: null, nota: null, minutos_reales: null,
     termino_de_verdad: null, puntos: 0, ...e,
+    metodo_devocional: e.metodo_devocional ?? null,
   };
 }
 

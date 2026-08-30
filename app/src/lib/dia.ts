@@ -5,7 +5,7 @@
  * simular relojes. Guardar el resultado es trabajo del repositorio.
  */
 
-import { aMinutos, diaSemana } from './fechas';
+import { aMinutos, diaSemana, sumarDias } from './fechas';
 import type {
   Actividad, Ajustes, BloqueRutina, Fecha, Hora, ModoRutina, Tarea,
 } from './tipos';
@@ -66,6 +66,7 @@ export function generarDia(o: OpcionesGenerar): DiaGenerado {
         minutos_reales: null,
         termino_de_verdad: null,
         puntos: 0,
+        metodo_devocional: null,
       }];
     })
     .sort(ordenarTareas)
@@ -88,6 +89,28 @@ function ordenarTareas(a: TareaNueva, b: TareaNueva): number {
   if (d !== 0) return d;
   if (a.es_fijo !== b.es_fijo) return a.es_fijo ? -1 : 1;
   return a.titulo.localeCompare(b.titulo, 'es');
+}
+
+const NOMBRE_DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+/**
+ * El próximo día con colegio o trabajo, a partir de mañana.
+ *
+ * Sirve para explicar por qué hoy está vacío. Un día sin escuela y sin decir
+ * por qué se lee como si la app no hubiera guardado el horario.
+ */
+export function proximaOcupacion(
+  fecha: Fecha, diasOcupados: number[], zonaHoraria: string,
+): { fecha: Fecha; nombre: string; enCuantos: number } | null {
+  if (diasOcupados.length === 0) return null;
+  for (let i = 1; i <= 7; i++) {
+    const f = sumarDias(fecha, i);
+    const dow = diaSemana(f, zonaHoraria);
+    if (diasOcupados.includes(dow)) {
+      return { fecha: f, nombre: NOMBRE_DIA[dow], enCuantos: i };
+    }
+  }
+  return null;
 }
 
 export interface Foco {

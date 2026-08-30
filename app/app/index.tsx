@@ -17,9 +17,10 @@ import { TarjetaVersiculo } from '@/componentes/TarjetaVersiculo';
 import { devocionalDelDia, versiculoDelDia } from '@/lib/fe';
 import { avisosDelDia } from '@/lib/avisos';
 import { prepararAvisos, reprogramar } from '@/lib/avisosTelefono';
-import { foco as calcularFoco, resumenAvance } from '@/lib/dia';
+import { foco as calcularFoco, proximaOcupacion, resumenAvance } from '@/lib/dia';
 import { aHora, aMinutos } from '@/lib/fechas';
-import { fechaLarga, fechaLocal, horaLocal } from '@/lib/fechas';
+import { diaSemana, fechaLarga, fechaLocal, horaLocal } from '@/lib/fechas';
+import { OCUPACIONES } from '@/lib/arranque';
 import { preguntarSiTermino, type Marcado, type Racha } from '@/lib/rachas';
 import { repositorio, type DiaCompleto } from '@/lib/repositorio';
 import { usarPaleta } from '@/lib/tema';
@@ -154,6 +155,18 @@ export default function Hoy() {
 
   const avance = resumenAvance(dia.tareas);
 
+  // Un día sin colegio y sin decir por qué se lee como si la app no hubiera
+  // guardado el horario. Es la confusión más fácil de tener y la más barata
+  // de evitar.
+  const hoyToca = ajustes.ocupacion !== 'ninguno'
+    && ajustes.dias_ocupados.includes(diaSemana(fecha, zona));
+  const vuelve = ajustes.ocupacion === 'ninguno' || hoyToca
+    ? null
+    : proximaOcupacion(fecha, ajustes.dias_ocupados, zona);
+  const comoSeLlama = ajustes.ocupacion_nombre.trim()
+    || OCUPACIONES.find((o) => o.id === ajustes.ocupacion)?.nombre
+    || 'el colegio';
+
   return (
     <SafeAreaView style={[e.pantalla, { backgroundColor: p.papel }]} edges={['top']}>
       <ScrollView contentContainerStyle={e.cuerpo}>
@@ -178,6 +191,19 @@ export default function Hoy() {
 
         <TarjetaAhora foco={foco} avisarAntes={avisarAntes} />
         <AnilloProgreso hechas={avance.hechas} total={avance.total} />
+
+        {vuelve && (
+          <View style={[e.libre, { backgroundColor: p.tarjeta2, borderColor: p.linea }]}>
+            <Text style={[e.libreTitulo, { color: p.tinta }]}>
+              Hoy no hay {comoSeLlama.toLowerCase()}
+            </Text>
+            <Text style={[e.libreTexto, { color: p.tintaSuave }]}>
+              Tu horario está guardado y vuelve el {vuelve.nombre}
+              {vuelve.enCuantos === 1 ? ', que es mañana' : ''}. Míralo entero en
+              «Editar mi rutina de la semana».
+            </Text>
+          </View>
+        )}
 
         {dia.tareas.length === 0 ? (
           <View style={[e.vacio, { backgroundColor: p.tarjeta, borderColor: p.linea }]}>
@@ -234,9 +260,11 @@ export default function Hoy() {
         tarea={dia.tareas.find((t) => t.id === abierta) ?? null}
         devocional={devocional}
         onCerrar={() => setAbierta(null)}
-        onGuardar={async (nota) => {
+        onGuardar={async (nota, metodo) => {
           if (!abierta) return;
-          setDia(await repositorio.guardarNota(fecha, abierta, nota));
+          setDia(await repositorio.guardarDetalle(fecha, abierta, {
+            nota, metodo_devocional: metodo,
+          }));
           setAbierta(null);
         }}
         onEstado={(estado) => {
@@ -385,6 +413,12 @@ const e = StyleSheet.create({
   },
   enlaceTexto: { fontSize: 15, fontWeight: '600' },
   pista: { fontSize: 12, textAlign: 'center', marginTop: 16 },
+  libre: {
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: 14,
+    padding: 15, marginBottom: 14, gap: 5,
+  },
+  libreTitulo: { fontSize: 15.5, fontWeight: '700' },
+  libreTexto: { fontSize: 13.5, lineHeight: 19 },
   anadir: {
     marginTop: 14, borderRadius: 12, paddingVertical: 14,
     alignItems: 'center', borderWidth: 1.5, borderStyle: 'dashed',

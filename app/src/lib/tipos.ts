@@ -102,6 +102,8 @@ export interface Tarea {
   minutos_reales: number | null;
   termino_de_verdad: boolean | null;
   puntos: number;
+  /** Solo en las de tipo fe: cómo se hizo el devocional hoy. */
+  metodo_devocional: import('@/datos/metodos').MetodoDevocional | null;
 }
 
 export interface Aviso {
