@@ -15,6 +15,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import 'react-native-url-polyfill/auto';
 
 import type { Propuesta } from './arranque';
+import { limpiarCodigo, pareceCorreo } from './invitaciones';
 import { generarDia, porcentajeCumplido } from './dia';
 import { duracionMin } from './fechas';
 import {
@@ -28,7 +29,8 @@ import type {
 } from './repositorio';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, Encargo, EstadoTarea, Evento, Fecha,
-  Grupo, MiembroGrupo, Persona, RolGrupo, Tarea, TipoGrupo,
+  Grupo, Invitacion as InvitacionGuardada, MiembroGrupo, Persona, RolGrupo,
+  Tarea, TipoGrupo,
 } from './tipos';
 
 const VIAS = ['devocional', 'dia', 'apertura', 'oracion'] as const;
@@ -468,10 +470,99 @@ export class RepositorioSupabase implements Repositorio {
 
   async anadirPersona(): Promise<Persona> {
     // En la nube cada quien entra con su propio correo: crearle la cuenta a
-    // otro desde aquí sería crearle una contraseña que no eligió.
+    // otro desde aquí sería crearle una contraseña que no eligió. Lo que se
+    // manda es la invitación con el código del grupo.
     throw new Error(
-      'En la nube cada persona entra con su correo. Invítala desde Familia y ' +
-      'le llegará la invitación.',
+      'En la nube cada persona entra con su correo. Mándale la invitación con ' +
+      'el código del grupo y entra desde su teléfono.',
+    );
+  }
+
+  /** El día de otra persona. Si no toca, la base de datos no devuelve nada y
+   *  se dice; no se inventa un día vacío que parecería el suyo. */
+  async horarioDe(personaId: string, fecha: Fecha): Promise<DiaCompleto> {
+    const { data: dia } = await this.sb
+      .from('dias').select('*').eq('persona_id', personaId).eq('fecha', fecha).maybeSingle();
+    if (!dia) throw new Error('Esa persona no comparte su calendario contigo.');
+
+    const tareas = pedir(
+      await this.sb.from('tareas_dia').select('*')
+        .eq('dia_id', dia.id).order('hora_inicio').order('orden'),
+      'leer su horario',
+    ) as Tarea[];
+    return { dia: dia as Dia, tareas, vias_contadas: (dia.vias_contadas ?? []) as Via[] };
+  }
+
+  /**
+   * Las invitaciones que **me** han mandado a mi correo, y las que yo mandé.
+   *
+   * La política de la migración 0009 es lo que hace que esto no filtre nada:
+   * se ve una invitación si va a tu correo o si la mandaste tú. Sin eso, para
+   * poder entrar con un código habría que dejar leer la lista de grupos, y eso
+   * publicaría el nombre de la casa de todo el mundo.
+   */
+  async invitaciones(): Promise<InvitacionGuardada[]> {
+    return pedir(
+      await this.sb.from('invitaciones').select('*').order('creada_en', { ascending: false }),
+      'leer las invitaciones',
+    );
+  }
+
+  async invitarPorCorreo(
+    grupoId: string, nombre: string, email: string, rol: RolGrupo,
+  ): Promise<InvitacionGuardada> {
+    const limpioNombre = nombre.trim();
+    const correo = email.trim().toLowerCase();
+    if (limpioNombre === '') throw new Error('Escribe cómo se llama.');
+    if (!pareceCorreo(correo)) {
+      throw new Error('Ese correo no se ve bien. Revisa que tenga @ y un punto.');
+    }
+    // El código lo pone la base de datos, para que sea único de verdad.
+    return pedir(
+      await this.sb.from('invitaciones').insert({
+        grupo_id: grupoId, email: correo, nombre: limpioNombre, rol,
+        creada_por: await this.miId(),
+      }).select().single(),
+      'crear la invitación',
+    );
+  }
+
+  async cancelarInvitacion(id: string): Promise<void> {
+    const { error } = await this.sb.from('invitaciones').delete().eq('id', id);
+    if (error) throw new Error(`cancelar la invitación: ${error.message}`);
+  }
+
+  async unirseConCodigo(codigo: string): Promise<Grupo> {
+    const limpio = limpiarCodigo(codigo);
+    if (limpio === '') throw new Error('Escribe el código que te mandaron.');
+
+    // Solo salen las invitaciones dirigidas a mi correo, así que un código
+    // acertado a ciegas no sirve de nada: hace falta ser la persona invitada.
+    const inv = pedir(
+      await this.sb.from('invitaciones').select('*')
+        .eq('codigo', limpio).is('aceptada_en', null).maybeSingle(),
+      'buscar la invitación',
+    ) as InvitacionGuardada | null;
+    if (!inv) {
+      throw new Error(
+        'Ese código no vale para tu correo. Entra con el correo al que te llegó ' +
+        'la invitación.',
+      );
+    }
+
+    const yo = await this.miId();
+    const { error } = await this.sb.from('miembros_grupo').upsert({
+      grupo_id: inv.grupo_id, persona_id: yo,
+      rol: inv.rol, ve_mi_calendario: true, estado: 'activo',
+    });
+    if (error) throw new Error(`entrar al grupo: ${error.message}`);
+
+    await this.sb.from('invitaciones')
+      .update({ aceptada_en: new Date().toISOString() }).eq('id', inv.id);
+
+    return pedir(
+      await this.sb.from('grupos').select('*').eq('id', inv.grupo_id).single(),
+      'leer el grupo',
     );
   }
 
@@ -496,6 +587,8 @@ export class RepositorioSupabase implements Repositorio {
     const limpio = nombre.trim();
     if (limpio === '') throw new Error('Ponle un nombre al grupo.');
     const yo = await this.miId();
+    // El código lo pone la base de datos por defecto, para que sea único de
+    // verdad y no dependa de que dos teléfonos no coincidan.
     const grupo = pedir(
       await this.sb.from('grupos')
         .insert({ nombre: limpio, tipo, emoji: EMOJI_GRUPO[tipo], creado_por: yo })

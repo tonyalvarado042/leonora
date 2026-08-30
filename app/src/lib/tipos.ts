@@ -34,6 +34,28 @@ export interface Grupo {
   creado_por: string;
 }
 
+/**
+ * Una invitación a un grupo, para alguien que **todavía no tiene la app**.
+ *
+ * El código es de una sola invitación y de un solo uso, no del grupo: un
+ * código de grupo que sirviera siempre acabaría dando vueltas por ahí, y
+ * quien lo encontrara un año después entraría igual.
+ */
+export interface Invitacion {
+  id: string;
+  grupo_id: string;
+  /** A dónde se manda. Es lo que de verdad cierra la puerta: en la nube solo
+   *  entra quien inicia sesión con este correo. */
+  email: string;
+  /** Como la llamó quien la invitó, para poder saludarla por su nombre. */
+  nombre: string;
+  rol: RolGrupo;
+  codigo: string;
+  creada_por: string;
+  creada_en: string;
+  aceptada_en: string | null;
+}
+
 export interface MiembroGrupo {
   grupo_id: string;
   persona_id: string;
@@ -98,6 +120,9 @@ export interface Evento {
 export interface Persona {
   id: string;
   nombre: string;
+  /** Solo si se le invitó por correo. Sin correo también se puede añadir a
+   *  alguien: entra ya en este teléfono y cambia de usuario desde arriba. */
+  email?: string | null;
   fecha_nacimiento?: string | null;
   avatar_tipo: 'emoji' | 'ilustracion' | 'foto';
   avatar_valor: string;

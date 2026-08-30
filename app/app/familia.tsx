@@ -1,20 +1,24 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View,
+  ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 import { Aviso } from '@/componentes/Aviso';
 import { Cabecera } from '@/componentes/Cabecera';
 import { CampoTexto } from '@/componentes/CampoTexto';
 import {
-  activos, EMOJI_TIPO_GRUPO, invitacionesPendientes, mandaEn, miRolEn, misGrupos,
-  NOMBRE_ROL, NOMBRE_TIPO_GRUPO, quienVeMiCalendario,
+  activos, EMOJI_TIPO_GRUPO, invitacionesPendientes, miRolEn, misGrupos,
+  NOMBRE_ROL, NOMBRE_TIPO_GRUPO, puedoAnadirA, puedoAnadirTutor, puedoVerElCalendarioDe,
+  quienVeMiCalendario,
 } from '@/lib/grupos';
+import { armarMensaje, comoCorreo, comoWhatsApp, type Mensaje } from '@/lib/invitaciones';
 import { repositorio } from '@/lib/repositorio';
 import { usarPaleta } from '@/lib/tema';
-import type { Grupo, MiembroGrupo, Persona, RolGrupo, TipoGrupo } from '@/lib/tipos';
+import type {
+  Grupo, Invitacion, MiembroGrupo, Persona, RolGrupo, TipoGrupo,
+} from '@/lib/tipos';
 
 const AVATARES = ['👧', '👦', '👩', '👨', '🧑', '👵', '👴', '🙂', '🦊', '🐼', '🌻', '⭐'];
 const TIPOS: TipoGrupo[] = ['familia', 'amigos', 'iglesia', 'otro'];
@@ -26,11 +30,25 @@ export default function Familia() {
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [miembros, setMiembros] = useState<MiembroGrupo[]>([]);
 
+  /** Las que se mandaron por correo y todavía no ha usado nadie. */
+  const [porCorreo, setPorCorreo] = useState<Invitacion[]>([]);
+  const router = useRouter();
+
   const [anadiendo, setAnadiendo] = useState<string | null>(null); // id del grupo
+  const [comoEntra, setComoEntra] = useState<'aqui' | 'correo'>('aqui');
   const [nombre, setNombre] = useState('');
+  const [correo, setCorreo] = useState('');
   const [rol, setRol] = useState<RolGrupo>('miembro');
   const [avatar, setAvatar] = useState('🙂');
   const [faltaPersona, setFaltaPersona] = useState<string | null>(null);
+
+  /** La invitación recién hecha, para poder mandarla ahí mismo. */
+  const [mandando, setMandando] = useState<Mensaje | null>(null);
+
+  const [entrando, setEntrando] = useState(false);
+  const [codigo, setCodigo] = useState('');
+  const [faltaCodigo, setFaltaCodigo] = useState<string | null>(null);
+  const [entro, setEntro] = useState<string | null>(null);
 
   const [creando, setCreando] = useState(false);
   const [nombreGrupo, setNombreGrupo] = useState('');
@@ -38,11 +56,11 @@ export default function Familia() {
   const [faltaGrupo, setFaltaGrupo] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
-    const [pe, ps, gs, ms] = await Promise.all([
+    const [pe, ps, gs, ms, inv] = await Promise.all([
       repositorio.persona(), repositorio.personas(),
-      repositorio.grupos(), repositorio.miembros(),
+      repositorio.grupos(), repositorio.miembros(), repositorio.invitaciones(),
     ]);
-    setYo(pe); setPersonas(ps); setGrupos(gs); setMiembros(ms);
+    setYo(pe); setPersonas(ps); setGrupos(gs); setMiembros(ms); setPorCorreo(inv);
   }, []);
 
   useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));
@@ -69,6 +87,8 @@ export default function Familia() {
   }
 
   const soyYo = yo;
+  const puedoPonerTutor = anadiendo !== null
+    && puedoAnadirTutor(grupos, miembros, anadiendo, yo.id);
   const nombreDe = (id: string) => personas.find((x) => x.id === id)?.nombre ?? 'Alguien';
   const personaDe = (id: string) => personas.find((x) => x.id === id);
 
@@ -78,15 +98,63 @@ export default function Familia() {
       setFaltaPersona('Escribe cómo se llama.');
       return;
     }
+    if (comoEntra === 'correo' && correo.trim() === '') {
+      setFaltaPersona('Escribe su correo, o elige «Entra en este teléfono».');
+      return;
+    }
+
     try {
-      await repositorio.anadirPersona(nombre, rol, avatar, anadiendo);
+      if (comoEntra === 'correo') {
+        const inv = await repositorio.invitarPorCorreo(anadiendo, nombre, correo, rol);
+        const grupo = grupos.find((g) => g.id === anadiendo);
+        await cargar();
+        setAnadiendo(null);
+        // La invitación ya existe; ahora hay que mandarla de verdad.
+        if (grupo && yo) setMandando(armarMensaje(inv, grupo, yo));
+      } else {
+        await repositorio.anadirPersona({
+          nombre, rol, avatar, grupoId: anadiendo,
+        });
+        await cargar();
+        setAnadiendo(null);
+      }
     } catch (err) {
       setFaltaPersona(err instanceof Error ? err.message : 'No se pudo añadir.');
       return;
     }
+    setNombre(''); setCorreo(''); setRol('miembro'); setAvatar('🙂');
+  }
+
+  /** Abre la app de correo o WhatsApp con la invitación ya escrita.
+   *  Si el teléfono no puede abrirla, se dice: un botón que no hace nada y no
+   *  lo cuenta es peor que no tener el botón. */
+  async function mandarPor(enlace: string, donde: string) {
+    try {
+      await Linking.openURL(enlace);
+    } catch {
+      setFaltaCodigo(`No se pudo abrir ${donde}. Copia el código y mándaselo tú.`);
+    }
+  }
+
+  async function entrarConCodigo() {
+    if (codigo.trim() === '') {
+      setFaltaCodigo('Escribe el código que te mandaron.');
+      return;
+    }
+    try {
+      const grupo = await repositorio.unirseConCodigo(codigo);
+      await cargar();
+      setEntrando(false);
+      setCodigo('');
+      setEntro(grupo.nombre);
+    } catch (err) {
+      setFaltaCodigo(err instanceof Error ? err.message : 'No se pudo entrar.');
+    }
+  }
+
+  async function cancelarInvitacion(id: string) {
+    await repositorio.cancelarInvitacion(id);
     await cargar();
-    setAnadiendo(null);
-    setNombre(''); setRol('miembro'); setAvatar('🙂');
   }
 
   async function crearGrupo() {
@@ -215,7 +283,10 @@ export default function Familia() {
         {mios.map((g) => {
           const suyos = activos(miembros, g.id);
           const miFila = suyos.find((m) => m.persona_id === soyYo.id);
-          const puedoInvitar = mandaEn(grupos, miembros, g.id, soyYo.id);
+          const puedoInvitar = puedoAnadirA(miembros, g.id, soyYo.id);
+          const esperando = porCorreo.filter(
+            (x) => x.grupo_id === g.id && x.aceptada_en === null,
+          );
 
           return (
             <View key={g.id} style={[e.grupo, { backgroundColor: p.tarjeta, borderColor: p.linea }]}>
@@ -229,19 +300,63 @@ export default function Familia() {
 
               {suyos.map((m) => {
                 const quien = personaDe(m.persona_id);
+                const veo = puedoVerElCalendarioDe(grupos, miembros, soyYo.id, m.persona_id);
                 return (
-                  <View key={m.persona_id} style={e.miembro}>
+                  <Pressable
+                    key={m.persona_id}
+                    role="button"
+                    aria-label={veo
+                      ? `Ver el día de ${nombreDe(m.persona_id)}`
+                      : `${nombreDe(m.persona_id)} no comparte su calendario`}
+                    disabled={!veo}
+                    onPress={() => router.push({
+                      pathname: '/horario', params: { persona: m.persona_id },
+                    })}
+                    style={e.miembro}
+                  >
                     <Text style={e.miembroAvatar}>{quien?.avatar_valor ?? '🙂'}</Text>
-                    <Text style={[e.miembroNombre, { color: p.tinta }]}>
-                      {nombreDe(m.persona_id)}
-                      {m.persona_id === soyYo.id ? ' (tú)' : ''}
-                    </Text>
-                    <Text style={[e.miembroRol, { color: p.tintaTenue }]}>
-                      {NOMBRE_ROL[m.rol]}
-                    </Text>
-                  </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[e.miembroNombre, { color: p.tinta }]}>
+                        {nombreDe(m.persona_id)}
+                        {m.persona_id === soyYo.id ? ' (tú)' : ''}
+                      </Text>
+                      <Text style={[e.miembroRol, { color: p.tintaTenue }]}>
+                        {NOMBRE_ROL[m.rol]}
+                        {veo ? ' · toca para ver su día' : ' · no comparte su calendario'}
+                      </Text>
+                    </View>
+                    {veo && <Text style={[e.flecha, { color: p.tintaTenue }]}>›</Text>}
+                  </Pressable>
                 );
               })}
+
+              {esperando.map((x) => (
+                <View key={x.id} style={e.miembro}>
+                  <Text style={e.miembroAvatar}>✉️</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[e.miembroNombre, { color: p.tintaSuave }]}>{x.nombre}</Text>
+                    <Text style={[e.miembroRol, { color: p.tintaTenue }]}>
+                      Invitada a {x.email} · código {x.codigo}
+                    </Text>
+                  </View>
+                  <Pressable
+                    role="button"
+                    aria-label={`Volver a mandar la invitación de ${x.nombre}`}
+                    onPress={() => setMandando(armarMensaje(x, g, soyYo))}
+                    style={[e.chico, { borderColor: p.linea }]}
+                  >
+                    <Text style={[e.chicoTexto, { color: p.alba }]}>Mandar</Text>
+                  </Pressable>
+                  <Pressable
+                    role="button"
+                    aria-label={`Cancelar la invitación de ${x.nombre}`}
+                    onPress={() => cancelarInvitacion(x.id)}
+                    style={[e.chico, { borderColor: p.linea }]}
+                  >
+                    <Text style={[e.chicoTexto, { color: p.tintaTenue }]}>Quitar</Text>
+                  </Pressable>
+                </View>
+              ))}
 
               {miFila && (
                 <Pressable
@@ -262,7 +377,8 @@ export default function Familia() {
                     role="button"
                     onPress={() => {
                       setFaltaPersona(null);
-                      setRol(g.tipo === 'familia' ? 'miembro' : 'miembro');
+                      setComoEntra('aqui');
+                      setRol('miembro');
                       setAnadiendo(g.id);
                     }}
                     style={[e.secundario, { borderColor: p.alba }]}
@@ -292,6 +408,25 @@ export default function Familia() {
           <Text style={[e.anadirTexto, { color: p.alba }]}>+ Crear un grupo</Text>
         </Pressable>
 
+        <Pressable
+          role="button"
+          onPress={() => { setFaltaCodigo(null); setEntro(null); setEntrando(true); }}
+          style={[e.anadir, { borderColor: p.linea, backgroundColor: p.tarjeta }]}
+        >
+          <Text style={[e.anadirTexto, { color: p.tintaSuave }]}>
+            Entrar con un código
+          </Text>
+        </Pressable>
+
+        {entro && (
+          <View style={[e.aviso, { backgroundColor: p.verdePiso, borderColor: p.verde }]}>
+            <Text style={[e.avisoTitulo, { color: p.verde }]}>Ya estás en «{entro}»</Text>
+            <Text style={[e.avisoTexto, { color: p.tintaSuave }]}>
+              Ahí abajo tienes a su gente y sus horarios.
+            </Text>
+          </View>
+        )}
+
         <Text style={[e.pista, { color: p.tintaTenue }]}>
           Un grupo sirve para compartir el calendario y mandarse recados. La
           familia viene puesta; los demás los creas tú.
@@ -309,22 +444,71 @@ export default function Familia() {
           <ScrollView style={[e.hoja, { backgroundColor: p.papel }]}>
             <Text style={[e.hojaTitulo, { color: p.tinta }]}>Añadir a alguien</Text>
             <Text style={[e.hojaAyuda, { color: p.tintaSuave }]}>
-              Entra en «{grupos.find((g) => g.id === anadiendo)?.nombre}» y podrá
-              usar la app en este teléfono con su propio horario.
+              Entra en «{grupos.find((g) => g.id === anadiendo)?.nombre}».
             </Text>
 
             <CampoTexto
               etiqueta="¿Cómo se llama?"
               obligatorio
               ayuda="Como le llames tú: Mamá, Papá, Emma…"
-              error={faltaPersona}
+              error={faltaPersona && nombre.trim() === '' ? faltaPersona : null}
               value={nombre}
               onChangeText={(t) => { setNombre(t); setFaltaPersona(null); }}
               placeholder="Escribe aquí"
             />
 
-            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>Su dibujo</Text>
+            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>¿Cómo entra?</Text>
             <View style={e.opciones}>
+              {([
+                ['aqui', '📱 Entra en este teléfono'],
+                ['correo', '✉️ Le mando una invitación'],
+              ] as const).map(([id, texto]) => (
+                <Pressable
+                  key={id}
+                  role="radio"
+                  aria-checked={comoEntra === id}
+                  onPress={() => { setComoEntra(id); setFaltaPersona(null); }}
+                  style={[
+                    e.opcion,
+                    {
+                      borderColor: comoEntra === id ? p.alba : p.linea,
+                      backgroundColor: comoEntra === id ? p.albaPiso : p.tarjeta,
+                    },
+                  ]}
+                >
+                  <Text style={[e.opcionTexto, { color: comoEntra === id ? p.alba : p.tinta }]}>
+                    {texto}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <Text style={[e.ayuda, { color: p.tintaTenue }]}>
+              {comoEntra === 'aqui'
+                ? 'Aparece ya arriba, y se cambia de persona tocando el dibujo. Es lo que sirve para un teléfono de casa.'
+                : 'Le llega un correo con un código. Entra desde su propio teléfono, con su cuenta.'}
+            </Text>
+
+            {comoEntra === 'correo' && (
+              <>
+                <View style={{ height: 16 }} />
+                <CampoTexto
+                  etiqueta="Su correo"
+                  obligatorio
+                  ayuda="Ahí le llega la invitación con el código."
+                  error={faltaPersona && nombre.trim() !== '' ? faltaPersona : null}
+                  value={correo}
+                  onChangeText={(t) => { setCorreo(t); setFaltaPersona(null); }}
+                  placeholder="nombre@correo.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </>
+            )}
+
+            {comoEntra === 'aqui' && (
+              <Text style={[e.etiqueta, { color: p.tintaSuave }]}>Su dibujo</Text>
+            )}
+            <View style={[e.opciones, comoEntra !== 'aqui' && e.escondido]}>
               {AVATARES.map((a) => (
                 <Pressable
                   key={a}
@@ -352,7 +536,17 @@ export default function Familia() {
                   key={r}
                   role="radio"
                   aria-checked={rol === r}
-                  onPress={() => setRol(r)}
+                  onPress={() => {
+                    // El botón no se apaga: se pulsa y dice por qué no (R2).
+                    if (r === 'tutor' && !puedoPonerTutor) {
+                      setFaltaPersona(
+                        'Solo quien creó el grupo, o un papá o mamá, puede añadir a otro papá o mamá.',
+                      );
+                      return;
+                    }
+                    setFaltaPersona(null);
+                    setRol(r);
+                  }}
                   style={[
                     e.opcion,
                     {
@@ -393,6 +587,115 @@ export default function Familia() {
             </View>
             <View style={{ height: 30 }} />
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* -------------------------------------------- mandar la invitación */}
+      <Modal
+        visible={mandando !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setMandando(null)}
+      >
+        <View style={e.fondo}>
+          <ScrollView style={[e.hoja, { backgroundColor: p.papel }]}>
+            <Text style={[e.hojaTitulo, { color: p.tinta }]}>Mándale la invitación</Text>
+            <Text style={[e.hojaAyuda, { color: p.tintaSuave }]}>
+              Ya está apuntada. Ahora hay que hacérsela llegar: se abre tu correo
+              o tu WhatsApp con el mensaje escrito.
+            </Text>
+
+            <View style={[e.codigoCaja, { backgroundColor: p.albaPiso, borderColor: p.alba }]}>
+              <Text style={[e.codigoRotulo, { color: p.alba }]}>SU CÓDIGO</Text>
+              <Text selectable style={[e.codigoTexto, { color: p.tinta }]}>
+                {mandando?.codigo}
+              </Text>
+              <Text style={[e.codigoPara, { color: p.tintaSuave }]}>
+                Para {mandando?.para}
+              </Text>
+            </View>
+
+            <View style={e.botones}>
+              <Pressable
+                role="button"
+                onPress={() => mandando && mandarPor(comoCorreo(mandando), 'el correo')}
+                style={[e.principal, { backgroundColor: p.alba }]}
+              >
+                <Text style={e.principalTexto}>✉️  Por correo</Text>
+              </Pressable>
+              <Pressable
+                role="button"
+                onPress={() => mandando && mandarPor(comoWhatsApp(mandando), 'WhatsApp')}
+                style={[e.principal, { backgroundColor: p.verde }]}
+              >
+                <Text style={e.principalTexto}>💬  Por WhatsApp</Text>
+              </Pressable>
+            </View>
+
+            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>O cópialo tú</Text>
+            <Text selectable style={[e.mensaje, { color: p.tintaSuave, backgroundColor: p.tarjeta2 }]}>
+              {mandando?.cuerpo}
+            </Text>
+
+            <Aviso texto={faltaCodigo} />
+
+            <Pressable
+              role="button"
+              onPress={() => { setMandando(null); setFaltaCodigo(null); }}
+              style={[e.secundarioSolo, { borderColor: p.linea }]}
+            >
+              <Text style={[e.secundarioTexto, { color: p.tintaSuave }]}>Listo</Text>
+            </Pressable>
+            <View style={{ height: 30 }} />
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* ------------------------------------------- entrar con un código */}
+      <Modal
+        visible={entrando}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEntrando(false)}
+      >
+        <View style={e.fondo}>
+          <View style={[e.hoja, { backgroundColor: p.papel }]}>
+            <Text style={[e.hojaTitulo, { color: p.tinta }]}>Entrar con un código</Text>
+            <Text style={[e.hojaAyuda, { color: p.tintaSuave }]}>
+              Si te invitaron a un grupo, te llegó un código a tu correo. Escríbelo
+              aquí y entras.
+            </Text>
+
+            <CampoTexto
+              etiqueta="El código"
+              obligatorio
+              ayuda="Así: CASA-4F2A. Da igual mayúsculas o minúsculas."
+              error={faltaCodigo}
+              value={codigo}
+              onChangeText={(t) => { setCodigo(t); setFaltaCodigo(null); }}
+              placeholder="CASA-4F2A"
+              autoCapitalize="characters"
+            />
+
+            <Aviso texto={faltaCodigo} />
+
+            <View style={e.hojaBotones}>
+              <Pressable
+                role="button"
+                onPress={() => setEntrando(false)}
+                style={[e.secundario, { borderColor: p.linea }]}
+              >
+                <Text style={[e.secundarioTexto, { color: p.tintaSuave }]}>Cancelar</Text>
+              </Pressable>
+              <Pressable
+                role="button"
+                onPress={entrarConCodigo}
+                style={[e.principal, { backgroundColor: p.alba }]}
+              >
+                <Text style={e.principalTexto}>Entrar</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
       </Modal>
 
@@ -529,4 +832,24 @@ const e = StyleSheet.create({
   },
   avatarTexto: { fontSize: 22 },
   ayuda: { fontSize: 12.5, lineHeight: 17, marginTop: 8 },
+  escondido: { display: 'none' },
+  flecha: { fontSize: 20 },
+  chico: {
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: 9,
+    paddingHorizontal: 10, paddingVertical: 7,
+  },
+  chicoTexto: { fontSize: 12.5, fontWeight: '600' },
+  codigoCaja: {
+    borderWidth: 1.5, borderRadius: 15, padding: 18, alignItems: 'center', gap: 5,
+  },
+  codigoRotulo: { fontSize: 11.5, fontWeight: '800', letterSpacing: 0.7 },
+  codigoTexto: { fontSize: 28, fontWeight: '800', letterSpacing: 2 },
+  codigoPara: { fontSize: 13 },
+  mensaje: {
+    fontSize: 12.5, lineHeight: 18, padding: 13, borderRadius: 12, marginTop: 4,
+  },
+  secundarioSolo: {
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: 13,
+    paddingVertical: 15, alignItems: 'center', marginTop: 18,
+  },
 });

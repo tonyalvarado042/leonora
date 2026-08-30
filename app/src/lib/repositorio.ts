@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Propuesta } from './arranque';
 import { generarDia, porcentajeCumplido } from './dia';
 import { faltanEnElDia, tareaDeEncargo } from './encargos';
+import { limpiarCodigo, nuevoCodigo, pareceCorreo } from './invitaciones';
 import { duracionMin } from './fechas';
 import {
   avanzar, celebracionPor, chispas, CHISPAS_BASE, CHISPAS_DIA_PERFECTO,
@@ -18,10 +19,11 @@ import {
   type Celebracion, type Logro, type Marcado, type Racha, type Via,
 } from './rachas';
 import type { MetodoDevocional } from '@/datos/metodos';
+import { puedoAnadirA, puedoAnadirTutor, puedoVerElCalendarioDe } from './grupos';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, Encargo, EstadoTarea, Evento, Fecha,
-  Grupo, MiembroGrupo, Persona, RolGrupo, Tarea, TareaNueva, TipoGrupo,
-  TipoRepeticion,
+  Grupo, Invitacion as InvitacionGuardada, MiembroGrupo, Persona, RolGrupo,
+  Tarea, TareaNueva, TipoGrupo, TipoRepeticion,
 } from './tipos';
 import {
   actividadesIniciales, ajustesIniciales, familiaInicial, FAMILIA_LOCAL,
@@ -84,6 +86,17 @@ export interface Premio {
   celebracion: Celebracion | null;
 }
 
+/** Lo que hace falta para añadir a alguien. */
+export interface PersonaNueva {
+  nombre: string;
+  rol: RolGrupo;
+  avatar?: string;
+  /** Sin decir cuál, la familia. */
+  grupoId?: string;
+  /** Con correo queda invitada; sin correo entra ya en este teléfono. */
+  email?: string | null;
+}
+
 /** Lo que hace falta para mandar un encargo. El resto lo pone el repositorio. */
 export interface EncargoNuevo {
   para_persona_id: string;
@@ -102,10 +115,18 @@ export interface Repositorio {
   personas(): Promise<Persona[]>;
   /** Cambia de persona. Todo lo demás —el día, las rachas— cambia con ella. */
   cambiarPersona(id: string): Promise<Persona>;
-  /** Añade a alguien y lo mete en un grupo. Sin decir cuál, en la familia. */
-  anadirPersona(
-    nombre: string, rol: RolGrupo, avatar?: string, grupoId?: string,
-  ): Promise<Persona>;
+  /**
+   * Añade a alguien y lo mete en un grupo. Sin decir cuál, en la familia.
+   *
+   * **Sin correo entra ya** y puede cambiar de usuario desde arriba: es lo que
+   * sirve para un teléfono de casa. **Con correo queda invitada**, y entra
+   * cuando acepte desde el suyo.
+   */
+  anadirPersona(datos: PersonaNueva): Promise<Persona>;
+  /** El día de otra persona, si su calendario se puede ver. */
+  horarioDe(personaId: string, fecha: Fecha): Promise<DiaCompleto>;
+  /** Mete a quien está usando la app en el grupo de ese código. */
+  unirseConCodigo(codigo: string): Promise<Grupo>;
   borrarPersona(id: string): Promise<void>;
 
   grupos(): Promise<Grupo[]>;
@@ -126,6 +147,13 @@ export interface Repositorio {
   verEncargo(id: string): Promise<void>;
   responderEncargo(id: string, texto: string): Promise<Encargo>;
   archivarEncargo(id: string): Promise<void>;
+
+  /** Las invitaciones por correo que aún dan vueltas. */
+  invitaciones(): Promise<InvitacionGuardada[]>;
+  invitarPorCorreo(
+    grupoId: string, nombre: string, email: string, rol: RolGrupo,
+  ): Promise<InvitacionGuardada>;
+  cancelarInvitacion(id: string): Promise<void>;
 
   eventos(): Promise<Evento[]>;
   guardarEvento(e: Evento): Promise<Evento>;
@@ -190,6 +218,7 @@ interface Almacen {
   por_persona: Record<string, DatosPersona>;
   grupos: Grupo[];
   miembros: MiembroGrupo[];
+  invitaciones: InvitacionGuardada[];
   encargos: Encargo[];
   eventos: Evento[];
 }
@@ -234,6 +263,7 @@ function almacenInicial(): Almacen {
     por_persona: { [PERSONA_LOCAL]: datosIniciales(PERSONA_LOCAL) },
     grupos: [familiaInicial],
     miembros: [miembroInicial],
+    invitaciones: [],
     encargos: [],
     eventos: [],
   };
@@ -259,6 +289,7 @@ function desdeV1(v: AlmacenV1): Almacen {
     },
     grupos: [{ ...familiaInicial, creado_por: persona.id }],
     miembros: [{ ...miembroInicial, persona_id: persona.id }],
+    invitaciones: [],
     encargos: [],
     eventos: [],
   };
@@ -314,6 +345,7 @@ export class RepositorioLocal implements Repositorio {
     return this.mios(a).rutina.map((b) => ({ ...b }));
   }
   async grupos() { return (await this.cargar()).grupos.map((g) => ({ ...g })); }
+  async invitaciones() { return (await this.cargar()).invitaciones.map((i) => ({ ...i })); }
   async miembros() { return (await this.cargar()).miembros.map((m) => ({ ...m })); }
   async encargos() { return (await this.cargar()).encargos.map((e) => ({ ...e })); }
   async eventos() { return (await this.cargar()).eventos.map((e) => ({ ...e })); }
@@ -337,34 +369,139 @@ export class RepositorioLocal implements Repositorio {
     });
   }
 
-  anadirPersona(nombre: string, rol: RolGrupo, avatar = '🙂', grupoId?: string) {
+  anadirPersona(datos: PersonaNueva) {
     return this.escribir((a) => {
-      const limpio = nombre.trim();
+      const limpio = datos.nombre.trim();
       if (limpio === '') throw new Error('Escribe el nombre de la persona.');
+
+      const correo = datos.email?.trim() || null;
+      if (correo !== null && !pareceCorreo(correo)) {
+        throw new Error('Ese correo no se ve bien. Revisa que tenga @ y un punto.');
+      }
 
       // Entra ya en un grupo: añadir a mamá y que no aparezca en la familia
       // sería pedir dos pasos para una sola cosa.
       const familia = a.grupos.find((g) => g.tipo === 'familia') ?? familiaInicial;
       if (!a.grupos.some((g) => g.id === familia.id)) a.grupos = [...a.grupos, familia];
-      const grupo = grupoId ? a.grupos.find((g) => g.id === grupoId) : familia;
+      const grupo = datos.grupoId ? a.grupos.find((g) => g.id === datos.grupoId) : familia;
       if (!grupo) throw new Error('Ese grupo ya no existe.');
+
+      if (correo !== null && a.personas.some((x) => x.email === correo)) {
+        throw new Error('Ya hay alguien con ese correo.');
+      }
 
       const persona: Persona = {
         id: `p-${Date.now()}`,
         nombre: limpio,
+        email: correo,
         avatar_tipo: 'emoji',
-        avatar_valor: avatar,
+        avatar_valor: datos.avatar ?? '🙂',
         zona_horaria: this.yo(a).zona_horaria,
       };
       a.personas = [...a.personas, persona];
       a.por_persona[persona.id] = datosIniciales(persona.id);
       a.miembros = [...a.miembros, {
-        grupo_id: grupo.id, persona_id: persona.id, rol,
+        grupo_id: grupo.id, persona_id: persona.id, rol: datos.rol,
         // En casa se comparte de entrada; fuera de casa lo enciende cada quien.
         ve_mi_calendario: grupo.tipo === 'familia',
-        estado: 'activo',
+        // Con correo queda esperando a que acepte desde su teléfono; sin
+        // correo entra ya, que es para lo que sirve un teléfono de casa.
+        estado: correo === null ? 'activo' : 'invitado',
       }];
       return { ...persona };
+    });
+  }
+
+  async horarioDe(personaId: string, fecha: Fecha): Promise<DiaCompleto> {
+    // La comprobación se hace aquí y no en la pantalla: una pantalla se puede
+    // llamar desde otro sitio, el repositorio no.
+    const a = await this.cargar();
+    if (!puedoVerElCalendarioDe(a.grupos, a.miembros, a.persona_activa, personaId)) {
+      throw new Error('Esa persona no comparte su calendario contigo.');
+    }
+    const suyos = a.por_persona[personaId];
+    const quien = a.personas.find((x) => x.id === personaId);
+    if (!suyos || !quien) throw new Error('Esa persona ya no está.');
+    // Se mira sin escribir: armar el día de otro le cambiaría lo guardado.
+    return copia(suyos.dias[fecha] ?? sinGuardar(a, quien, suyos, fecha));
+  }
+
+  unirseConCodigo(codigo: string) {
+    return this.escribir((a) => {
+      const limpio = limpiarCodigo(codigo);
+      if (limpio === '') throw new Error('Escribe el código que te mandaron.');
+
+      const inv = a.invitaciones.find((x) => x.codigo === limpio);
+      if (!inv) throw new Error('Ese código no lleva a ningún grupo. Revísalo.');
+      // De un solo uso: si valiera siempre, quien lo encontrara dentro de un
+      // año entraría igual.
+      if (inv.aceptada_en !== null) throw new Error('Esa invitación ya se usó.');
+
+      const grupo = a.grupos.find((g) => g.id === inv.grupo_id);
+      if (!grupo) throw new Error('Ese grupo ya no existe.');
+
+      const yo = a.persona_activa;
+      const mio = a.miembros.find((m) => m.grupo_id === grupo.id && m.persona_id === yo);
+      if (mio && mio.estado === 'activo') throw new Error('Ya estás en ese grupo.');
+
+      a.miembros = [
+        ...a.miembros.filter((m) => !(m.grupo_id === grupo.id && m.persona_id === yo)),
+        {
+          grupo_id: grupo.id, persona_id: yo, rol: inv.rol,
+          ve_mi_calendario: grupo.tipo === 'familia',
+          estado: 'activo',
+        },
+      ];
+      a.invitaciones = a.invitaciones.map((x) =>
+        x.id === inv.id ? { ...x, aceptada_en: new Date().toISOString() } : x);
+      return { ...grupo };
+    });
+  }
+
+  /** Crea la invitación que se manda por correo. La persona **no entra
+   *  todavía**: entra cuando acepte desde su teléfono. */
+  invitarPorCorreo(grupoId: string, nombre: string, email: string, rol: RolGrupo) {
+    return this.escribir((a) => {
+      const limpioNombre = nombre.trim();
+      const correo = email.trim().toLowerCase();
+      if (limpioNombre === '') throw new Error('Escribe cómo se llama.');
+      if (!pareceCorreo(correo)) {
+        throw new Error('Ese correo no se ve bien. Revisa que tenga @ y un punto.');
+      }
+      const grupo = a.grupos.find((g) => g.id === grupoId);
+      if (!grupo) throw new Error('Ese grupo ya no existe.');
+      if (!puedoAnadirA(a.miembros, grupoId, a.persona_activa)) {
+        throw new Error('Tienes que estar en el grupo para invitar a alguien.');
+      }
+      if (rol === 'tutor' && !puedoAnadirTutor(a.grupos, a.miembros, grupoId, a.persona_activa)) {
+        throw new Error(
+          'Solo quien creó el grupo o un papá o mamá puede invitar a otro papá o mamá.',
+        );
+      }
+      const yaInvitada = a.invitaciones.some(
+        (x) => x.grupo_id === grupoId && x.email === correo && x.aceptada_en === null,
+      );
+      if (yaInvitada) throw new Error('Ya hay una invitación para ese correo sin usar.');
+
+      const invitacion: InvitacionGuardada = {
+        id: `inv-${Date.now()}`,
+        grupo_id: grupoId,
+        email: correo,
+        nombre: limpioNombre,
+        rol,
+        codigo: codigoLibre(a, grupo.tipo),
+        creada_por: a.persona_activa,
+        creada_en: new Date().toISOString(),
+        aceptada_en: null,
+      };
+      a.invitaciones = [...a.invitaciones, invitacion];
+      return { ...invitacion };
+    });
+  }
+
+  cancelarInvitacion(id: string) {
+    return this.escribir<void>((a) => {
+      a.invitaciones = a.invitaciones.filter((x) => x.id !== id);
     });
   }
 
@@ -930,6 +1067,42 @@ function copia(d: DiaCompleto): DiaCompleto {
     dia: { ...d.dia },
     tareas: d.tareas.map((t) => ({ ...t })),
     vias_contadas: [...d.vias_contadas],
+  };
+}
+
+/** Un código que no esté ya usado. Con 31^4 posibilidades el choque es raro,
+ *  pero «raro» y «nunca» no son lo mismo cuando dos códigos iguales meterían a
+ *  alguien en la casa equivocada. */
+function codigoLibre(a: Almacen, tipo: TipoGrupo): string {
+  for (let i = 0; i < 50; i++) {
+    const c = nuevoCodigo(tipo);
+    if (!a.invitaciones.some((x) => x.codigo === c)) return c;
+  }
+  return `${nuevoCodigo(tipo)}${Date.now() % 97}`;
+}
+
+/** El día de una fecha **sin guardarlo**. Mirar el horario de otra persona no
+ *  puede escribirle nada: se le quedaría un día armado que ella no abrió. */
+function sinGuardar(
+  a: Almacen, persona: Persona, suyos: DatosPersona, fecha: Fecha,
+): DiaCompleto {
+  const generado = generarDia({
+    fecha,
+    zonaHoraria: persona.zona_horaria,
+    ajustes: suyos.ajustes,
+    actividades: suyos.actividades,
+    rutina: suyos.rutina,
+    eventos: a.eventos,
+    encargos: a.encargos,
+  });
+  const diaId = `dia-${fecha}`;
+  return {
+    dia: {
+      id: diaId, persona_id: persona.id, fecha, tipo: generado.tipo,
+      modo_usado: generado.modo_usado, nota_ia: null, porcentaje_cumplido: 0,
+    },
+    tareas: generado.tareas.map((t, i) => ({ ...t, id: `${diaId}-${i}`, dia_id: diaId })),
+    vias_contadas: [],
   };
 }
 

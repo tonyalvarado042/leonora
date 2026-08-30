@@ -35,7 +35,7 @@ toca la rutina, y regenerar el día con los mismos datos da siempre lo mismo.
 
 ## 2. Las tablas
 
-18 tablas creadas. Las de fases posteriores están en la sección 7.
+19 tablas creadas. Las de fases posteriores están en la sección 7.
 
 ### 2.1 `personas` — quién usa la app
 Una fila por persona. La clave es la misma que la de `auth.users`: una cuenta,
@@ -269,7 +269,33 @@ administración (invitar, renombrar), no de tutela.
 
 ---
 
-### 2.16 `encargos` — lo que papá o mamá manda
+### 2.16 `invitaciones` — para quien todavía no tiene la app
+
+| Campo | Tipo | Qué es |
+|---|---|---|
+| `id` | uuid | |
+| `grupo_id` | uuid → grupos | A qué grupo |
+| `email` | texto en minúsculas | A dónde va. **Es lo que de verdad cierra la puerta** |
+| `nombre` | texto 1-60 | Como la llamó quien la invitó, para saludarla por su nombre |
+| `rol` | `tutor` · `miembro` | Con qué entra |
+| `codigo` | `CASA-4F2A`, único | Lo que se escribe a mano si no se puede tocar el enlace |
+| `creada_por` | uuid → personas | |
+| `creada_en` | timestamptz | |
+| `aceptada_en` | timestamptz | **De un solo uso** |
+
+**El código no es lo que protege el grupo: el correo sí.** Una invitación solo
+se ve desde la cuenta a la que va dirigida, así que acertar un código a ciegas
+no sirve de nada.
+
+Lo intenté al revés primero —un código por grupo— y para poder leer el grupo
+antes de entrar hacía falta una política que dejaba listar **todos** los
+grupos: el nombre de la casa de cualquier familia, a cualquiera con la clave
+anónima. Un código de grupo además vale para siempre, así que quien lo
+encontrara dentro de un año entraría igual.
+
+---
+
+### 2.17 `encargos` — lo que papá o mamá manda
 
 | Campo | Tipo | Qué es |
 |---|---|---|
@@ -296,7 +322,7 @@ tarea aquí se vea allá, y que quien la mandó se entere de que ya está.
 
 ---
 
-### 2.17 `eventos` — la capa 2, la que faltaba desde la Fase 1
+### 2.18 `eventos` — la capa 2, la que faltaba desde la Fase 1
 
 | Campo | Tipo | Qué es |
 |---|---|---|
@@ -322,7 +348,7 @@ horario; y la confianza solo la trae lo leído de una foto.
 
 ---
 
-### 2.18 Cómo se relacionan
+### 2.19 Cómo se relacionan
 
 ```
 auth.users
@@ -341,6 +367,7 @@ personas ──1:1──► ajustes
     ├──1:N──► logros_ganados ──N:1──► logros
     │
     ├──N:M──► grupos  (por miembros_grupo, con rol y ve_mi_calendario)
+    │              └──1:N──► invitaciones (por correo, de un solo uso)
     ├──1:N──► encargos (de / para) ───┐
     └──1:N──► eventos                 │
                                       ▼
@@ -355,7 +382,7 @@ null`), porque el historial no se borra.
 
 ## 3. Seguridad
 
-RLS activo en las 18 tablas. Las reglas:
+RLS activo en las 19 tablas. Las reglas:
 
 1. **Cada quien ve lo suyo y nada más.** `persona_id = auth.uid()`.
 2. `tareas_dia` se filtra por su `dias` padre.
@@ -370,6 +397,14 @@ RLS activo en las 18 tablas. Las reglas:
    (`soy_tutor_de`). Lo ven las dos partes y nadie más.
 7. Un evento de grupo lo ve el grupo; uno de persona, quien puede ver su
    calendario.
+8. **Cualquier miembro puede meter a alguien** en su grupo, pero **como tutor
+   solo quien administra**. Un tutor ve el calendario de todos los hijos de la
+   casa y les puede mandar tareas: si cualquiera pudiera fabricar uno,
+   cualquiera podría darle esa vista a quien quisiera. La misma comprobación
+   está en el `insert` y en el `update`, para que nadie se ascienda solo.
+9. **Una invitación solo se ve desde el correo al que va**, o desde quien la
+   mandó. No hay forma de listar invitaciones ajenas ni de ir probando
+   códigos.
 
 ### 3.1 Quién ve el calendario de quién
 
@@ -476,8 +511,25 @@ Estos módulos **no importan nada de React Native ni de Expo** a propósito.
 - `aQuienPuedoMandar` — solo un tutor, solo en la familia, solo a quien no es
   tutor. Una amiga no le pone tareas a otra, y un hijo no le manda deberes a
   su papá.
-- `misGrupos` · `invitacionesPendientes` · `activos` · `miRolEn` · `mandaEn` ·
-  `conQuienComparto`
+- `puedoAnadirA` — **cualquier miembro puede**. Una familia no se arma
+  pidiéndole permiso a un administrador.
+- `puedoAnadirTutor` — eso sí lo reserva quien administra.
+- `misGrupos` · `invitacionesPendientes` · `invitados` · `activos` ·
+  `miRolEn` · `mandaEn` · `conQuienComparto`
+
+**`src/lib/invitaciones.ts`** — invitar a quien todavía no tiene la app.
+- `nuevoCodigo(tipo)` — `CASA-4F2A`. **Sin letras ni números que se confundan
+  al copiarlos a mano**: fuera 0/O y 1/I/L.
+- `limpiarCodigo` · `esCodigoValido` — da igual cómo lo escriba: con espacios,
+  en minúsculas o sin guion.
+- `pareceCorreo` — a propósito **no** valida a fondo: las reglas de verdad de
+  un correo son más raras de lo que parece y una validación estricta acaba
+  rechazando direcciones que existen. Se comprueba lo que un dedo se equivoca
+  de verdad.
+- `armarMensaje(invitacion, grupo, dequien)` — un solo texto para el correo,
+  para WhatsApp y para copiarlo a mano: tres textos distintos se irían
+  separando con cada cambio.
+- `comoCorreo` · `comoWhatsApp` — los enlaces `mailto:` y `wa.me`, escapados.
 
 **`src/lib/encargos.ts`** — los recados y la campanita.
 - `sinLeer(encargos, personaId)` — el número rojo cuenta **lo no abierto, no
@@ -514,10 +566,14 @@ Una interfaz `Repositorio`, dos implementaciones intercambiables:
 `aplicarArranque` · `empezarDeNuevo`
 
 **Las personas:** `persona` (quien está usando la app) · `guardarPersona` ·
-`personas` · `cambiarPersona` · `anadirPersona` · `borrarPersona`
+`personas` · `cambiarPersona` · `anadirPersona` · `borrarPersona` ·
+`horarioDe` (el día de otra persona, **solo de mirar**)
 
 **Los grupos:** `grupos` · `miembros` · `crearGrupo` · `guardarGrupo` ·
 `invitarAGrupo` · `responderInvitacion` · `verMiCalendario` · `salirDelGrupo`
+
+**Las invitaciones:** `invitaciones` · `invitarPorCorreo` ·
+`cancelarInvitacion` · `unirseConCodigo`
 
 **Los recados:** `encargos` · `mandarEncargo` · `verEncargo` ·
 `responderEncargo` · `archivarEncargo`
@@ -550,7 +606,8 @@ se pueda leer de ahí lo decide la base de datos, no la app.
 | `arranque` | Cinco preguntas → escaneo opcional → **preview editable** → guardar |
 | `index` (Hoy) | Lo de ahora arriba, la lista, marcar, añadir algo suelto, la campanita y quién eres |
 | `campanita` | Los recados: los que me mandan y los que mando, con respuesta |
-| `familia` | Quién usa la app, los grupos, quién ve mi calendario |
+| `familia` | Quién usa la app, los grupos, quién ve mi calendario, invitar y entrar con un código |
+| `horario` | El día de otra persona del grupo, solo de mirar |
 | `eventos` | Feriados, cumpleaños, exámenes y citas |
 | `calendario` | Semana y mes, hacia atrás y adelante, historial de cumplimiento |
 | `rutina` | Editar la semana: mover, quitar, añadir |
@@ -728,7 +785,40 @@ repiten de otra manera.
 - La pantalla de Familia dice **por su nombre** quién ve tu calendario. Que
   papá y mamá te vean está bien; que no te lo digan, no.
 
-### 5.12 Los recados
+### 5.12 Añadir gente: dos maneras
+
+**Cualquier miembro puede añadir a alguien.** Una familia no se arma
+pidiéndole permiso a un administrador: si la hija quiere meter a su hermana,
+la mete. Lo único reservado es **añadir a otro papá o mamá**, y cuando no se
+puede la app lo dice en vez de esconder la opción (R2).
+
+| | Solo con su nombre | Con su correo |
+|---|---|---|
+| Cuándo entra | **Ya**, en este teléfono | Cuando acepte, desde el suyo |
+| Para qué sirve | El teléfono de casa: mamá toca su nombre arriba y ya está usando la app | Alguien que todavía no tiene la app |
+| Qué recibe | Nada, ya está dentro | Un correo con un código |
+| Qué ve al entrar | Su propio día, con la rutina de fábrica | El grupo y los horarios de quien los comparta |
+
+La invitación se manda desde el teléfono de quien invita: se abre su correo o
+su WhatsApp con el mensaje escrito. El mismo texto sirve para los dos y para
+copiarlo a mano — tres textos distintos se irían separando con cada cambio.
+
+**El código es de una invitación y de un solo uso**, no del grupo. Uno de
+grupo que sirviera siempre acabaría dando vueltas por ahí, y quien lo
+encontrara un año después entraría igual.
+
+### 5.13 Los horarios del grupo
+
+Tocar a alguien en Familia abre su día. Es **solo de mirar**: no hay casillas
+que marcar. El día de alguien lo marca quien lo vive; un papá que pudiera
+tachar las tareas de su hija desde su teléfono estaría llevándole la agenda,
+no acompañándola.
+
+Mirar el día de otra persona **no se lo guarda**. Si lo escribiera, se le
+quedaría un día armado que ella no abrió, congelado con la rutina de ese
+momento.
+
+### 5.14 Los recados
 
 - Solo un tutor manda recados, y solo a los suyos.
 - Tres tipos: una **tarea** entra en el horario de ese día; un
@@ -744,7 +834,7 @@ repiten de otra manera.
 > que le mete tareas a una niña sin que ella las vea llegar no es una agenda,
 > es un vigilante.
 
-### 5.13 Las fechas importantes
+### 5.15 Las fechas importantes
 
 - **Un evento no borra la rutina, la tapa.** Un feriado libra el día de
   colegio pero deja el devocional y la cena, porque el colegio se cancela y la
@@ -771,9 +861,9 @@ repiten de otra manera.
 | Cobro | Compras dentro de la app (fase 10) | |
 | IA | Claude — cuando entre | Hoy el arranque va con reglas |
 
-**Verificación:** 217 pruebas (`npm test`) — la lógica pura y el repositorio
+**Verificación:** 243 pruebas (`npm test`) — la lógica pura y el repositorio
 entero, con un AsyncStorage en memoria que lo sustituye fuera del teléfono—,
-TypeScript estricto, y **once pruebas de extremo a extremo** sobre el bundle
+TypeScript estricto, y **doce pruebas de extremo a extremo** sobre el bundle
 web real, con navegador.
 
 ---
@@ -858,3 +948,9 @@ Lo leído entra a `eventos` **sin confirmar**.
 | Un feriado no rehace los días ya vividos | Rehacerlos borraría lo que la persona ya marcó |
 | Las ayudas de las políticas viven en `claude_graceday` | Todo lo que está en `public` sale publicado como REST, y quién ve el calendario de una niña no se decide desde internet |
 | El almacén local se migró a una clave nueva | `graceday.v1` se deja intacto: si la conversión fallara, lo de antes sigue ahí |
+| El código es de una invitación, no del grupo | Uno de grupo vale para siempre: quien lo encontrara dentro de un año entraría igual |
+| Lo que cierra la puerta es el correo, no el código | Un código por grupo obligaba a dejar leer la lista de grupos para poder entrar, y eso publica el nombre de la casa de cualquier familia |
+| Cualquier miembro añade; solo quien administra añade tutores | Un tutor ve el calendario de todos los hijos: fabricar uno no puede estar al alcance de cualquiera |
+| El horario de otra persona es solo de mirar | Tachar las tareas de tu hija desde tu teléfono es llevarle la agenda, no acompañarla |
+| Mirar el día de otro no se lo guarda | Se le quedaría un día armado que no abrió, congelado con la rutina de ese momento |
+| `pareceCorreo` no valida a fondo | Las reglas de verdad de un correo son más raras de lo que parece; una validación estricta rechaza direcciones que existen |

@@ -7,6 +7,57 @@ Lo más nuevo arriba.
 
 ---
 
+## Invitar a la familia: por su nombre, o por correo · 2026-08-30
+
+Añadir gente tenía dos huecos.
+
+**Solo podía hacerlo quien administraba el grupo.** Una familia no se arma
+pidiéndole permiso a un administrador: si la hija quiere meter a su hermana, la
+mete. Ahora puede cualquier miembro. Lo único reservado es **añadir a otro papá
+o mamá**: un tutor ve el calendario de todos los hijos de la casa y les puede
+mandar tareas, así que fabricar uno no puede estar al alcance de cualquiera. Y
+cuando no se puede, el botón se pulsa y lo dice, no se apaga (R2).
+
+**No había manera de invitar a alguien que todavía no tiene la app.** Ahora hay
+dos maneras de añadir a alguien, y la diferencia importa:
+
+- **Solo con su nombre.** Entra ya, en este teléfono. Es lo que sirve para la
+  casa: mamá toca su nombre arriba y ya está usando la app. Sin correo, sin
+  cuenta, sin esperar a nada.
+- **Con su correo.** Le llega una invitación con un código. Se abre tu correo o
+  tu WhatsApp con el mensaje ya escrito. Entra desde su propio teléfono, y
+  entonces ve el grupo y los horarios de quien los comparta.
+
+**Los horarios del grupo.** Tocar a alguien en Familia abre su día. Es **solo
+de mirar**: no hay casillas que marcar. El día de alguien lo marca quien lo
+vive; un papá que pudiera tachar las tareas de su hija desde su teléfono
+estaría llevándole la agenda, no acompañándola. Y mirarlo no se lo guarda: si
+lo escribiera, se le quedaría un día armado que ella no abrió.
+
+**Un rodeo que valió la pena.** Lo hice primero con un código por grupo, y para
+poder leer el grupo antes de entrar hacía falta una política que dejaba listar
+**todos** los grupos: el nombre de la casa de cualquier familia, a cualquiera
+con la clave anónima. Además un código de grupo vale para siempre, así que
+quien lo encontrara dentro de un año entraría igual.
+
+Lo rehíce con invitaciones: **una invitación, un correo, un solo uso**. Lo que
+cierra la puerta es el correo —una invitación solo se ve desde la cuenta a la
+que va dirigida—, así que acertar un código a ciegas no sirve de nada. El
+código es solo lo que se escribe a mano cuando el enlace no se puede tocar, y
+va sin letras que se confundan al copiarlo: fuera 0/O y 1/I/L.
+
+Migración `0009_invitaciones.sql`. **El asesor de seguridad sigue en cero
+avisos.**
+
+*Verificado:* 243 pruebas (`npm test`), y en el navegador de punta a punta:
+añadir a mamá solo con su nombre y cambiar a ella; invitar a la abuela por
+correo y ver salir su código; que un correo mal escrito y un código vacío
+avisen; que un código inventado no abra nada; abrir el día de otra persona y
+comprobar que no trae casillas; y que un código de verdad **mete de verdad** en
+el grupo, y no vale dos veces.
+
+---
+
 ## Fase 5 · La familia, la campanita y las fechas importantes · 2026-08-30
 
 La capa 2 del diseño —la que faltaba desde la Fase 1— ya existe, y con ella la

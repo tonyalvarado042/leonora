@@ -3,7 +3,7 @@ import { beforeEach, test } from 'node:test';
 
 import { limpiar, sembrar } from './almacen-falso.mjs';
 import { RepositorioLocal } from '../src/lib/repositorio.ts';
-import { puedoVerElCalendarioDe } from '../src/lib/grupos.ts';
+import { mandaEn, puedoVerElCalendarioDe } from '../src/lib/grupos.ts';
 import { sinLeer } from '../src/lib/encargos.ts';
 import type { Evento } from '../src/lib/tipos.ts';
 
@@ -29,7 +29,7 @@ test('una cuenta nueva trae una persona y su familia', async () => {
 
 test('añadir a mamá la mete en la familia y le da su propia rutina', async () => {
   const r = nuevo();
-  const mama = await r.anadirPersona('Mamá', 'tutor', '👩');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor', avatar: '👩' });
   assert.equal(mama.nombre, 'Mamá');
 
   const miembros = await r.miembros();
@@ -45,14 +45,14 @@ test('añadir a mamá la mete en la familia y le da su propia rutina', async () 
 
 test('un nombre en blanco no crea una persona sin nombre: avisa', async () => {
   const r = nuevo();
-  await assert.rejects(() => r.anadirPersona('   ', 'tutor'), /nombre/i);
+  await assert.rejects(() => r.anadirPersona({ nombre: '   ', rol: 'tutor' }), /nombre/i);
   assert.equal((await r.personas()).length, 1);
 });
 
 test('cambiar de persona cambia el día, las rachas y las chispas', async () => {
   const r = nuevo();
   const [yo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
 
   const mio = await r.dia(HOY);
   await r.marcarTarea(HOY, mio.tareas[0].id, 'hecha');
@@ -80,7 +80,7 @@ test('no se puede quitar a la única persona de la app', async () => {
 
 test('al quitar a alguien, quien la estaba usando pasa a otra', async () => {
   const r = nuevo();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
   await r.cambiarPersona(mama.id);
   await r.borrarPersona(mama.id);
   assert.equal((await r.personas()).length, 1);
@@ -90,7 +90,7 @@ test('al quitar a alguien, quien la estaba usando pasa a otra', async () => {
 test('guardar el nombre cambia solo a quien está usando la app', async () => {
   const r = nuevo();
   const [yo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
   await r.guardarPersona({ nombre: 'Leonora' });
 
   const personas = await r.personas();
@@ -137,7 +137,7 @@ test('un grupo sin nombre no se crea a medias: avisa', async () => {
 test('una invitación se queda esperando hasta que la contestan', async () => {
   const r = nuevo();
   const g = await r.crearGrupo('Las amigas', 'amigos');
-  const emma = await r.anadirPersona('Emma', 'miembro', '🙋');
+  const emma = await r.anadirPersona({ nombre: 'Emma', rol: 'miembro', avatar: '🙋' });
   await r.invitarAGrupo(g.id, emma.id, 'miembro');
 
   assert.equal(
@@ -156,7 +156,7 @@ test('una invitación se queda esperando hasta que la contestan', async () => {
 test('no se invita dos veces a la misma persona', async () => {
   const r = nuevo();
   const g = await r.crearGrupo('Las amigas', 'amigos');
-  const emma = await r.anadirPersona('Emma', 'miembro', '🙋');
+  const emma = await r.anadirPersona({ nombre: 'Emma', rol: 'miembro', avatar: '🙋' });
   await r.invitarAGrupo(g.id, emma.id, 'miembro');
   await assert.rejects(() => r.invitarAGrupo(g.id, emma.id, 'miembro'), /ya está/i);
 });
@@ -166,7 +166,7 @@ test('enseñar mi calendario se enciende y se apaga cuando yo quiera', async () 
   const [yo] = await r.personas();
   const g = await r.crearGrupo('Las amigas', 'amigos');
   // Emma es amiga, no familia: entra solo al grupo de las amigas.
-  const emma = await r.anadirPersona('Emma', 'miembro', '🙋', g.id);
+  const emma = await r.anadirPersona({ nombre: 'Emma', rol: 'miembro', avatar: '🙋', grupoId: g.id });
 
   const grupos = await r.grupos();
   // Fuera de casa nadie enseña nada hasta que lo enciende.
@@ -184,7 +184,7 @@ test('enseñar mi calendario se enciende y se apaga cuando yo quiera', async () 
 test('en casa se comparte de entrada, y papá sigue viendo aunque ella lo apague', async () => {
   const r = nuevo();
   const [leo] = await r.personas();
-  const papa = await r.anadirPersona('Papá', 'tutor');
+  const papa = await r.anadirPersona({ nombre: 'Papá', rol: 'tutor' });
   const g = (await r.grupos()).find((x) => x.tipo === 'familia')!;
 
   // De fábrica, en casa todos se ven: es lo que pidió el papá de esta app.
@@ -214,7 +214,7 @@ test('salir de un grupo lo saca de mis grupos', async () => {
 test('un encargo de mamá llega a la campanita y al día de la hija', async () => {
   const r = nuevo();
   const [leo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
 
   await r.cambiarPersona(mama.id);
   const enc = await r.mandarEncargo({
@@ -235,7 +235,7 @@ test('un encargo de mamá llega a la campanita y al día de la hija', async () =
 test('un encargo que llega con el día ya armado entra igual, y no dos veces', async () => {
   const r = nuevo();
   const [leo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
 
   // La hija abre su día ANTES de que llegue el recado.
   await r.dia(HOY);
@@ -256,7 +256,7 @@ test('un encargo que llega con el día ya armado entra igual, y no dos veces', a
 test('un recordatorio se lee en la campanita pero no ocupa hora en el día', async () => {
   const r = nuevo();
   const [leo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
   await r.cambiarPersona(mama.id);
   const enc = await r.mandarEncargo({
     para_persona_id: leo.id, titulo: 'Acuérdate del abrigo', nota: null,
@@ -271,7 +271,7 @@ test('un recordatorio se lee en la campanita pero no ocupa hora en el día', asy
 test('marcar la tarea aquí se ve allá: quien la mandó ve que ya está', async () => {
   const r = nuevo();
   const [leo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
   await r.cambiarPersona(mama.id);
   const enc = await r.mandarEncargo({
     para_persona_id: leo.id, titulo: 'Sacar la basura', nota: null,
@@ -290,7 +290,7 @@ test('marcar la tarea aquí se ve allá: quien la mandó ve que ya está', async
 test('la campanita se calla cuando se abre el recado, no cuando se hace', async () => {
   const r = nuevo();
   const [leo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
   await r.cambiarPersona(mama.id);
   const enc = await r.mandarEncargo({
     para_persona_id: leo.id, titulo: 'Sacar la basura', nota: null,
@@ -305,7 +305,7 @@ test('la campanita se calla cuando se abre el recado, no cuando se hace', async 
 test('la respuesta de la hija queda guardada para que su mamá la vea', async () => {
   const r = nuevo();
   const [leo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
   await r.cambiarPersona(mama.id);
   const enc = await r.mandarEncargo({
     para_persona_id: leo.id, titulo: '¿Cómo te fue?', nota: null,
@@ -324,7 +324,7 @@ test('la respuesta de la hija queda guardada para que su mamá la vea', async ()
 test('una respuesta en blanco no se manda: avisa', async () => {
   const r = nuevo();
   const [leo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
   await r.cambiarPersona(mama.id);
   const enc = await r.mandarEncargo({
     para_persona_id: leo.id, titulo: 'Algo', nota: null,
@@ -349,7 +349,7 @@ test('un encargo sin título no se manda, y sin destinatario tampoco', async () 
 test('archivar un recado se lleva su tarea del día', async () => {
   const r = nuevo();
   const [leo] = await r.personas();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
   await r.cambiarPersona(mama.id);
   const enc = await r.mandarEncargo({
     para_persona_id: leo.id, titulo: 'Sacar la basura', nota: null,
@@ -423,7 +423,7 @@ test('borrar un feriado devuelve el colegio al día', async () => {
 
 test('lo guardado sobrevive a cerrar y abrir la app', async () => {
   const r = nuevo();
-  const mama = await r.anadirPersona('Mamá', 'tutor');
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
   await r.guardarPersona({ nombre: 'Leonora' });
 
   const otro = nuevo(); // como si se hubiera cerrado y abierto
@@ -467,4 +467,155 @@ test('empezar de nuevo borra también lo de la versión vieja', async () => {
   assert.equal((await r.persona()).nombre, 'Vieja');
   await r.empezarDeNuevo();
   assert.equal((await r.persona()).nombre, '');
+});
+
+// ------------------------------------------------- invitar y ver horarios
+
+test('cualquier miembro puede añadir a alguien, no solo quien administra', async () => {
+  const r = nuevo();
+  const [leo] = await r.personas();
+  // Papá crea la casa y es tutor; Leonora es solo miembro.
+  const papa = await r.anadirPersona({ nombre: 'Papá', rol: 'tutor' });
+  const g = (await r.grupos()).find((x) => x.tipo === 'familia')!;
+  assert.equal(mandaEn(await r.grupos(), await r.miembros(), g.id, leo.id), true);
+
+  // Aun siendo miembro de una casa que no creó, puede meter a su hermana.
+  await r.cambiarPersona(papa.id);
+  await r.anadirPersona({ nombre: 'Sofía', rol: 'miembro' });
+  assert.equal((await r.personas()).length, 3);
+});
+
+test('alguien añadido solo con su nombre entra ya, y se puede cambiar a ella', async () => {
+  const r = nuevo();
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
+  const suya = (await r.miembros()).find((m) => m.persona_id === mama.id);
+  assert.equal(suya?.estado, 'activo');
+  assert.equal((await r.cambiarPersona(mama.id)).nombre, 'Mamá');
+});
+
+test('una invitación por correo NO mete a nadie: espera a que la acepte', async () => {
+  const r = nuevo();
+  const g = (await r.grupos()).find((x) => x.tipo === 'familia')!;
+  const inv = await r.invitarPorCorreo(g.id, 'Mamá', ' MAMA@Correo.com ', 'tutor');
+
+  assert.equal(inv.email, 'mama@correo.com', 'el correo se guarda en minúsculas');
+  assert.equal(inv.rol, 'tutor');
+  assert.equal(inv.aceptada_en, null);
+  assert.match(inv.codigo, /^CASA-[A-Z0-9]{4}$/);
+  // No se creó ninguna persona ni ningún miembro: todavía no ha entrado.
+  assert.equal((await r.personas()).length, 1);
+  assert.equal((await r.miembros()).length, 1);
+});
+
+test('un correo mal escrito no se guarda: avisa', async () => {
+  const r = nuevo();
+  const g = (await r.grupos()).find((x) => x.tipo === 'familia')!;
+  await assert.rejects(() => r.invitarPorCorreo(g.id, 'Mamá', 'mama', 'miembro'), /correo/i);
+  await assert.rejects(() => r.invitarPorCorreo(g.id, '  ', 'm@c.com', 'miembro'), /llama/i);
+  assert.deepEqual(await r.invitaciones(), []);
+});
+
+test('no se invita dos veces al mismo correo sin usar', async () => {
+  const r = nuevo();
+  const g = (await r.grupos()).find((x) => x.tipo === 'familia')!;
+  await r.invitarPorCorreo(g.id, 'Mamá', 'mama@correo.com', 'miembro');
+  await assert.rejects(
+    () => r.invitarPorCorreo(g.id, 'Mamá', 'mama@correo.com', 'miembro'),
+    /sin usar/i,
+  );
+});
+
+test('un miembro que no administra no puede invitar a un tutor', async () => {
+  const r = nuevo();
+  const g = await r.crearGrupo('Las amigas', 'amigos');
+  const emma = await r.anadirPersona({ nombre: 'Emma', rol: 'miembro', grupoId: g.id });
+  // Emma está dentro pero no creó el grupo ni es tutora.
+  await r.cambiarPersona(emma.id);
+  await assert.rejects(
+    () => r.invitarPorCorreo(g.id, 'Alguien', 'x@c.com', 'tutor'),
+    /papá o mamá/i,
+  );
+  // Como miembro sí puede.
+  const inv = await r.invitarPorCorreo(g.id, 'Sofía', 'sofia@c.com', 'miembro');
+  assert.equal(inv.rol, 'miembro');
+});
+
+test('el código mete a quien lo escriba, con el rol que decía la invitación', async () => {
+  const r = nuevo();
+  const g = await r.crearGrupo('Las amigas', 'amigos');
+  const inv = await r.invitarPorCorreo(g.id, 'Emma', 'emma@correo.com', 'miembro');
+
+  const emma = await r.anadirPersona({ nombre: 'Emma', rol: 'miembro' });
+  await r.cambiarPersona(emma.id);
+  const entro = await r.unirseConCodigo(inv.codigo.toLowerCase());
+
+  assert.equal(entro.id, g.id);
+  const suya = (await r.miembros()).find(
+    (m) => m.grupo_id === g.id && m.persona_id === emma.id,
+  );
+  assert.equal(suya?.estado, 'activo');
+  // Y la invitación queda marcada como usada.
+  assert.ok((await r.invitaciones()).find((x) => x.id === inv.id)?.aceptada_en);
+});
+
+test('el código es de un solo uso', async () => {
+  const r = nuevo();
+  const g = await r.crearGrupo('Las amigas', 'amigos');
+  const inv = await r.invitarPorCorreo(g.id, 'Emma', 'emma@correo.com', 'miembro');
+
+  const emma = await r.anadirPersona({ nombre: 'Emma', rol: 'miembro' });
+  await r.cambiarPersona(emma.id);
+  await r.unirseConCodigo(inv.codigo);
+
+  const sofia = await r.anadirPersona({ nombre: 'Sofía', rol: 'miembro' });
+  await r.cambiarPersona(sofia.id);
+  await assert.rejects(() => r.unirseConCodigo(inv.codigo), /ya se usó/i);
+});
+
+test('un código inventado no abre nada, y uno vacío tampoco', async () => {
+  const r = nuevo();
+  await assert.rejects(() => r.unirseConCodigo('CASA-ZZZZ'), /no lleva/i);
+  await assert.rejects(() => r.unirseConCodigo('   '), /Escribe el código/i);
+});
+
+test('cancelar una invitación la borra', async () => {
+  const r = nuevo();
+  const g = (await r.grupos()).find((x) => x.tipo === 'familia')!;
+  const inv = await r.invitarPorCorreo(g.id, 'Mamá', 'mama@correo.com', 'miembro');
+  await r.cancelarInvitacion(inv.id);
+  assert.deepEqual(await r.invitaciones(), []);
+  await assert.rejects(() => r.unirseConCodigo(inv.codigo), /no lleva/i);
+});
+
+test('se puede mirar el día de quien comparte su calendario', async () => {
+  const r = nuevo();
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
+  const suyo = await r.horarioDe(mama.id, HOY);
+  assert.equal(suyo.dia.persona_id, mama.id);
+  assert.ok(suyo.tareas.length > 0);
+});
+
+test('mirar el día de otra persona no le escribe nada', async () => {
+  const r = nuevo();
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
+
+  await r.horarioDe(mama.id, HOY);
+  await r.horarioDe(mama.id, HOY);
+
+  // Su día sigue sin existir: se guarda cuando ella lo abre, no cuando la
+  // miran. Si mirarlo lo escribiera, se le quedaría un día armado que ella no
+  // pidió, congelado con la rutina de ese momento.
+  await r.cambiarPersona(mama.id);
+  assert.deepEqual(await r.resumenDias(HOY, HOY), []);
+
+  // Y cuando lo abre ella, sí queda guardado.
+  await r.dia(HOY);
+  assert.equal((await r.resumenDias(HOY, HOY)).length, 1);
+});
+
+test('no se puede mirar el día de quien no comparte', async () => {
+  const r = nuevo();
+  const g = await r.crearGrupo('Las amigas', 'amigos');
+  const emma = await r.anadirPersona({ nombre: 'Emma', rol: 'miembro', grupoId: g.id });
+  await assert.rejects(() => r.horarioDe(emma.id, HOY), /no comparte/i);
 });

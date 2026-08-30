@@ -34,6 +34,7 @@ años y hecha para vendérsela a familias enteras.
 | 3 | Bienvenida y arranque | ✅ |
 | 4 | Fe: devocionales y versículo del día | ✅ |
 | 5 | La familia, la campanita y las fechas importantes | ✅ |
+| 5b | Invitar por correo y ver los horarios del grupo | ✅ |
 | 6-11 | Oraciones, el Muro, ciclo, amigas, cobro, foto | pendientes |
 
 Detalle de cada fase, y lo guardado para después (deporte + espíritu,
@@ -52,14 +53,15 @@ DISENO.md · LANZAMIENTO.md
 docs/dia-de-leonora.html     ← el diseño visual
 
 supabase/migrations/         ← 0001 fase 1 · 0002 fase 2 · 0003 seguridad · 0004 fase 4
-                               0005 método · 0006 repeticiones · 0007 fase 5 · 0008 esquema propio
+                               0005 método · 0006 repeticiones · 0007 fase 5
+                               0008 esquema propio · 0009 invitaciones
 app/
   app/                       ← las pantallas (expo-router)
   src/lib/                   ← la lógica; lo puro va aparte de la plataforma
   src/componentes/
-  __tests__/                 ← 217 pruebas: la lógica pura y el repositorio entero
+  __tests__/                 ← 243 pruebas: la lógica pura y el repositorio entero
   arrancar.mjs               ← el recorrido de bienvenida, para las demás pruebas
-  prueba-*.mjs               ← once pruebas de extremo a extremo sobre el bundle real
+  prueba-*.mjs               ← doce pruebas de extremo a extremo sobre el bundle real
 ```
 
 ## Arrancar
@@ -75,7 +77,7 @@ npm run web        # o en el navegador
 
 ```bash
 cd app
-npm test           # 217 pruebas: la lógica pura y el repositorio
+npm test           # 243 pruebas: la lógica pura y el repositorio
 npm run typecheck  # TypeScript estricto
 
 npx expo export --platform web --output-dir dist
@@ -91,6 +93,7 @@ node prueba-fase4.mjs        # el versículo del día y el devocional
 node prueba-metodo.mjs       # el devocional hecho a tu manera
 node prueba-repeticion.mjs   # tareas que se repiten, como en un calendario
 node prueba-fase5.mjs        # la familia, la campanita y las fechas importantes
+node prueba-invitar.mjs      # añadir por nombre o por correo, y los horarios del grupo
 ```
 
 O todas de una:
@@ -101,7 +104,7 @@ for f in prueba-*.mjs; do echo "--- $f"; node $f; done
 
 ## La base de datos
 
-Proyecto propio de Supabase, aparte de cualquier otro. Ocho migraciones
+Proyecto propio de Supabase, aparte de cualquier otro. Nueve migraciones
 aplicadas y verificadas contra la base real: los disparadores de alta, las
 restricciones del esquema y que el aislamiento por fila **de verdad aísla** —
 una persona no ve ni puede tocar nada de otra, y sin sesión no se ve nada.

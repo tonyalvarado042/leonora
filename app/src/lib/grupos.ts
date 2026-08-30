@@ -77,6 +77,31 @@ export function mandaEn(
 }
 
 /**
+ * ¿Puedo meter a alguien en este grupo?
+ *
+ * **Cualquier miembro puede.** Una familia no se arma pidiéndole permiso a un
+ * administrador: si Leonora quiere meter a su hermana, la mete.
+ */
+export function puedoAnadirA(miembros: MiembroGrupo[], grupoId: string, personaId: string): boolean {
+  return miRolEn(miembros, grupoId, personaId) !== null;
+}
+
+/**
+ * ¿Puedo meterlo **como tutor**?
+ *
+ * Eso sí lo reserva quien administra. Un tutor ve el calendario de todos los
+ * hijos de la casa y les puede mandar tareas: si cualquiera pudiera fabricar
+ * uno, cualquiera podría darle esa vista a quien quisiera. Quien no pueda,
+ * mete a la persona como miembro y **la app se lo dice**, en vez de esconder
+ * la opción sin explicar por qué.
+ */
+export function puedoAnadirTutor(
+  grupos: Grupo[], miembros: MiembroGrupo[], grupoId: string, personaId: string,
+): boolean {
+  return mandaEn(grupos, miembros, grupoId, personaId);
+}
+
+/**
  * ¿Puedo ver el calendario de esta persona?
  *
  * Dos reglas, y la diferencia entre ellas es deliberada:
@@ -155,4 +180,9 @@ export function conQuienComparto(
   return personas
     .filter((p) => ids.has(p.id))
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+/** Los que entraron por correo y todavía no han aceptado. */
+export function invitados(miembros: MiembroGrupo[], grupoId: string): MiembroGrupo[] {
+  return miembros.filter((m) => m.grupo_id === grupoId && m.estado === 'invitado');
 }
