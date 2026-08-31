@@ -7,6 +7,59 @@ Lo más nuevo arriba.
 
 ---
 
+## Recados: siempre hay botón, y no solo manda papá · 2026-08-31
+
+Abrías «Recados» y **no había ninguna manera de mandar uno**. El botón solo
+salía si eras tutor, así que a una niña le aparecía la pantalla vacía sin más
+explicación. Un botón que no está y no dice por qué es el mismo fallo que un
+botón apagado (R2).
+
+Lo arreglé por los dos lados:
+
+- **El botón está siempre.** Si todavía no tienes a nadie en tus grupos, se
+  pulsa y lo dice, con dónde arreglarlo.
+- **La línea correcta no era «quién puede escribir»** sino **«quién puede
+  meterle algo en el horario a otro»**. Un mensaje o un recordatorio se lo
+  manda cualquiera a cualquiera de sus grupos: una hija a su mamá, una hermana
+  a otra. Se lee, se contesta, y no toca el día de nadie. **Una tarea** sí
+  entra en el horario de quien la recibe, así que sigue siendo cosa de un papá
+  o una mamá — y cuando eliges «Tarea» para alguien a quien no toca, la app lo
+  dice y te deja mandarle un mensaje.
+
+Migración `0010_escribir_a_los_tuyos.sql`, porque la política de la base de
+datos pedía lo mismo.
+
+**Un fallo que salió de rebote.** Al fijar el reloj en las pruebas apareció que
+los identificadores se sacaban de `Date.now()` a secas: dos personas añadidas
+en el mismo milisegundo salían con **el mismo id**. Con un reloj parado deja de
+ser raro y pasa siempre. Ahora llevan un contador.
+
+*Verificado:* 248 pruebas, y trece de navegador.
+
+---
+
+## Las pruebas de navegador ya no dependen del día · 2026-08-31
+
+Tres pruebas pasaban el domingo y fallaban el lunes. No era casualidad: el día
+de la semana cambia el horario, y las que hablan del colegio comprobaban lo
+contrario de lo que tocaba. **Una prueba que depende del día en que se corre no
+protege nada.**
+
+Ahora todas fijan la fecha antes de abrir la app —un miércoles con colegio, y
+la del colegio en fin de semana, un sábado— con `install` + `resume`, para que
+la fecha sea la que queremos y las animaciones sigan corriendo. Congelar el
+reloj del todo dejaba las animaciones a medias y Playwright se quedaba
+esperando a que un elemento estuviera quieto.
+
+Y salió otra cosa: al marcar el colegio antes de su hora, la app pregunta
+«¿Terminaste, o lo dejas para después?» y esa pregunta tapa la pantalla. No es
+un fallo —es lo que decide el premio—, pero las pruebas que marcan tareas
+tienen que contestarla.
+
+*Verificado:* las trece pasan, y pasan cualquier día.
+
+---
+
 ## Invitar a la familia: por su nombre, o por correo · 2026-08-30
 
 Añadir gente tenía dos huecos.

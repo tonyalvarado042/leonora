@@ -54,14 +54,14 @@ docs/dia-de-leonora.html     ← el diseño visual
 
 supabase/migrations/         ← 0001 fase 1 · 0002 fase 2 · 0003 seguridad · 0004 fase 4
                                0005 método · 0006 repeticiones · 0007 fase 5
-                               0008 esquema propio · 0009 invitaciones
+                               0008 esquema propio · 0009 invitaciones · 0010 escribir a los tuyos
 app/
   app/                       ← las pantallas (expo-router)
   src/lib/                   ← la lógica; lo puro va aparte de la plataforma
   src/componentes/
-  __tests__/                 ← 243 pruebas: la lógica pura y el repositorio entero
-  arrancar.mjs               ← el recorrido de bienvenida, para las demás pruebas
-  prueba-*.mjs               ← doce pruebas de extremo a extremo sobre el bundle real
+  __tests__/                 ← 248 pruebas: la lógica pura y el repositorio entero
+  arrancar.mjs               ← el recorrido de bienvenida y la fecha fija, para las demás pruebas
+  prueba-*.mjs               ← trece pruebas de extremo a extremo sobre el bundle real
 ```
 
 ## Arrancar
@@ -77,7 +77,7 @@ npm run web        # o en el navegador
 
 ```bash
 cd app
-npm test           # 243 pruebas: la lógica pura y el repositorio
+npm test           # 248 pruebas: la lógica pura y el repositorio
 npm run typecheck  # TypeScript estricto
 
 npx expo export --platform web --output-dir dist
@@ -94,6 +94,7 @@ node prueba-metodo.mjs       # el devocional hecho a tu manera
 node prueba-repeticion.mjs   # tareas que se repiten, como en un calendario
 node prueba-fase5.mjs        # la familia, la campanita y las fechas importantes
 node prueba-invitar.mjs      # añadir por nombre o por correo, y los horarios del grupo
+node prueba-recados.mjs      # quién puede mandar qué a quién
 ```
 
 O todas de una:
@@ -104,7 +105,7 @@ for f in prueba-*.mjs; do echo "--- $f"; node $f; done
 
 ## La base de datos
 
-Proyecto propio de Supabase, aparte de cualquier otro. Nueve migraciones
+Proyecto propio de Supabase, aparte de cualquier otro. Diez migraciones
 aplicadas y verificadas contra la base real: los disparadores de alta, las
 restricciones del esquema y que el aislamiento por fila **de verdad aísla** —
 una persona no ve ni puede tocar nada de otra, y sin sesión no se ve nada.

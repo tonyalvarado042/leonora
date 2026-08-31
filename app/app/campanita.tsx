@@ -12,7 +12,7 @@ import { SelectorHora } from '@/componentes/SelectorHora';
 import {
   comoSeLee, EMOJI_TIPO_ENCARGO, NOMBRE_TIPO_ENCARGO, paraMi, queMande, sinLeer,
 } from '@/lib/encargos';
-import { aQuienPuedoMandar } from '@/lib/grupos';
+import { aQuienPuedoMandar, conQuienComparto } from '@/lib/grupos';
 import { fechaLarga, fechaLocal } from '@/lib/fechas';
 import { repositorio } from '@/lib/repositorio';
 import { usarPaleta } from '@/lib/tema';
@@ -63,7 +63,13 @@ export default function Campanita() {
     [personas],
   );
 
-  const puedoMandarA = useMemo(
+  /** A quien le puedo escribir: cualquiera de mis grupos. */
+  const puedoEscribirA = useMemo(
+    () => (yo ? conQuienComparto(grupos, miembros, personas, yo.id) : []),
+    [grupos, miembros, personas, yo],
+  );
+  /** A quien le puedo poner una tarea en su horario: solo si soy su tutor. */
+  const puedoMandarTareaA = useMemo(
     () => (yo ? aQuienPuedoMandar(grupos, miembros, personas, yo.id) : []),
     [grupos, miembros, personas, yo],
   );
@@ -149,19 +155,28 @@ export default function Campanita() {
           ))}
         </View>
 
-        {puedoMandarA.length > 0 && (
-          <Pressable
-            role="button"
-            onPress={() => {
-              setFaltaMandar(null);
-              setAQuien(puedoMandarA.length === 1 ? puedoMandarA[0].id : null);
-              setMandando(true);
-            }}
-            style={[e.mandar, { borderColor: p.alba, backgroundColor: p.albaPiso }]}
-          >
-            <Text style={[e.mandarTexto, { color: p.alba }]}>+ Mandar un recado</Text>
-          </Pressable>
-        )}
+        {/* Siempre está. Si no hay a quién, se pulsa y lo dice (R2). */}
+        <Pressable
+          role="button"
+          onPress={() => {
+            setFaltaMandar(null);
+            if (puedoEscribirA.length === 0) {
+              setFaltaMandar(
+                'Todavía no tienes a nadie en tus grupos. Añade a tu familia desde ' +
+                '«Mi familia y mis grupos».',
+              );
+              return;
+            }
+            setAQuien(puedoEscribirA.length === 1 ? puedoEscribirA[0].id : null);
+            setTipo(puedoMandarTareaA.length > 0 ? 'tarea' : 'consejo');
+            setMandando(true);
+          }}
+          style={[e.mandar, { borderColor: p.alba, backgroundColor: p.albaPiso }]}
+        >
+          <Text style={[e.mandarTexto, { color: p.alba }]}>+ Mandar un recado</Text>
+        </Pressable>
+
+        {!mandando && <Aviso texto={faltaMandar} />}
 
         {lista.length === 0 ? (
           <View style={[e.vacio, { backgroundColor: p.tarjeta, borderColor: p.linea }]}>
@@ -171,9 +186,7 @@ export default function Campanita() {
             <Text style={[e.vacioTexto, { color: p.tintaSuave }]}>
               {pestana === 'recibidos'
                 ? 'Aquí llega lo que te manden de tu familia: una tarea, un recordatorio o un mensaje.'
-                : puedoMandarA.length === 0
-                  ? 'Solo un papá o una mamá puede mandar recados. Si eres tú, cámbialo en Familia.'
-                  : 'Manda el primero con el botón de arriba.'}
+                : 'Manda el primero con el botón de arriba. Un mensaje o un recordatorio se lo puedes mandar a cualquiera de tus grupos.'}
             </Text>
           </View>
         ) : (
@@ -301,12 +314,23 @@ export default function Campanita() {
               ¿A quién? <Text style={{ color: p.tintaTenue }}>obligatorio</Text>
             </Text>
             <View style={e.opciones}>
-              {puedoMandarA.map((x) => (
+              {puedoEscribirA.map((x) => (
                 <Pressable
                   key={x.id}
                   role="radio"
                   aria-checked={aQuien === x.id}
-                  onPress={() => { setAQuien(x.id); setFaltaMandar(null); }}
+                  onPress={() => {
+                    setAQuien(x.id);
+                    if (tipo === 'tarea' && !puedoMandarTareaA.some((q) => q.id === x.id)) {
+                      setTipo('consejo');
+                      setFaltaMandar(
+                        `A ${x.nombre} le puedes escribir, pero ponerle una tarea en su ` +
+                        'horario solo lo hace un papá o una mamá.',
+                      );
+                      return;
+                    }
+                    setFaltaMandar(null);
+                  }}
                   style={[
                     e.opcion,
                     {
@@ -329,7 +353,19 @@ export default function Campanita() {
                   key={t}
                   role="radio"
                   aria-checked={tipo === t}
-                  onPress={() => setTipo(t)}
+                  onPress={() => {
+                    // El botón no se apaga: se pulsa y dice por qué no (R2).
+                    if (t === 'tarea' && aQuien !== null
+                        && !puedoMandarTareaA.some((x) => x.id === aQuien)) {
+                      setFaltaMandar(
+                        'Solo un papá o una mamá puede ponerle una tarea en el horario. ' +
+                        'Mándale un mensaje o un recordatorio.',
+                      );
+                      return;
+                    }
+                    setFaltaMandar(null);
+                    setTipo(t);
+                  }}
                   style={[
                     e.opcion,
                     {

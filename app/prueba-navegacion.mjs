@@ -2,9 +2,12 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
+import { contestarSiPregunta, fijarElDia } from './arrancar.mjs';
+
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const c = await b.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'America/Guatemala' });
+await fijarElDia(c);
 const p = await c.newPage();
 const fallos = [];
 p.on('pageerror', (e) => fallos.push('PAGE ' + e.message));
@@ -22,8 +25,10 @@ await p.getByText('Me gusta, empezar').click(); await p.waitForTimeout(1700);
 
 // Marcar un par, para que el calendario tenga qué enseñar.
 const cas = p.getByRole('checkbox');
-await cas.nth(0).click(); await p.waitForTimeout(300);
+await cas.nth(0).click(); await p.waitForTimeout(400);
+await contestarSiPregunta(p);
 await cas.nth(1).click(); await p.waitForTimeout(500);
+await contestarSiPregunta(p);
 
 // --- 1. Volver atrás desde cada pantalla ---
 const pantallas = [

@@ -2,9 +2,12 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
+import { contestarSiPregunta, fijarElDia } from './arrancar.mjs';
+
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const c = await b.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'America/Guatemala' });
+await fijarElDia(c);
 const p = await c.newPage();
 const fallos = [];
 p.on('pageerror', (e) => fallos.push('PAGE ' + e.message));
@@ -81,6 +84,7 @@ await p.waitForTimeout(1800);
 // botón y se queda el gesto.
 await p.getByRole('button', { name: /Devocional, / }).first().click({ delay: 1000 });
 await p.waitForTimeout(700);
+await contestarSiPregunta(p);
 let hoy = await p.locator('body').innerText();
 assert.ok(hoy.includes('SALTADA'), 'saltarse una tarea no se ve distinto de hacerla');
 assert.equal(await p.getByRole('checkbox').first().getAttribute('aria-checked'), 'false');

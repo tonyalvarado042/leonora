@@ -2,9 +2,12 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
+import { fijarElDia } from './arrancar.mjs';
+
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const c = await b.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'America/Guatemala' });
+await fijarElDia(c);
 const p = await c.newPage();
 const fallos = [];
 p.on('pageerror', (e) => fallos.push('PAGE ' + e.message));

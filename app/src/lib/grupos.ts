@@ -146,10 +146,14 @@ export function quienVeMiCalendario(
 }
 
 /**
- * A quién le puedo mandar un encargo.
+ * A quién le puedo poner una **tarea**, de las que entran en su horario.
  *
  * Solo un tutor, solo en la familia y solo a quien no es tutor. Una amiga no
  * le pone tareas a otra, y un hijo no le manda deberes a su papá.
+ *
+ * Escribirle un mensaje o recordarle algo es otra cosa y lo puede hacer
+ * cualquiera: para eso está `conQuienComparto`. Meterle algo en el horario a
+ * otra persona sí tiene que estar reservado.
  */
 export function aQuienPuedoMandar(
   grupos: Grupo[], miembros: MiembroGrupo[], personas: Persona[], yo: string,

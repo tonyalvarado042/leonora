@@ -619,3 +619,64 @@ test('no se puede mirar el día de quien no comparte', async () => {
   const emma = await r.anadirPersona({ nombre: 'Emma', rol: 'miembro', grupoId: g.id });
   await assert.rejects(() => r.horarioDe(emma.id, HOY), /no comparte/i);
 });
+
+// ------------------------------------------------ quién manda qué a quién
+
+test('una hija le puede escribir a su mamá, aunque no sea tutora', async () => {
+  const r = nuevo();
+  const [leo] = await r.personas();
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
+
+  const enc = await r.mandarEncargo({
+    para_persona_id: mama.id, titulo: '¿Me llevas al cole?', nota: null,
+    fecha: HOY, hora_sugerida: null, tipo: 'consejo',
+  });
+  assert.equal(enc.de_persona_id, leo.id);
+  assert.equal(enc.para_persona_id, mama.id);
+});
+
+test('pero no le puede meter una tarea en el horario', async () => {
+  const r = nuevo();
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
+  await assert.rejects(() => r.mandarEncargo({
+    para_persona_id: mama.id, titulo: 'Lavar los platos', nota: null,
+    fecha: HOY, hora_sugerida: null, tipo: 'tarea',
+  }), /papá o una mamá/i);
+});
+
+test('un recordatorio entre hermanas sí, una tarea no', async () => {
+  const r = nuevo();
+  const sofia = await r.anadirPersona({ nombre: 'Sofía', rol: 'miembro' });
+  await r.mandarEncargo({
+    para_persona_id: sofia.id, titulo: 'Acuérdate del abrigo', nota: null,
+    fecha: HOY, hora_sugerida: null, tipo: 'recordatorio',
+  });
+  await assert.rejects(() => r.mandarEncargo({
+    para_persona_id: sofia.id, titulo: 'Ordenar el cuarto', nota: null,
+    fecha: HOY, hora_sugerida: null, tipo: 'tarea',
+  }), /papá o una mamá/i);
+});
+
+test('mamá sí le pone tareas a su hija', async () => {
+  const r = nuevo();
+  const [leo] = await r.personas();
+  const mama = await r.anadirPersona({ nombre: 'Mamá', rol: 'tutor' });
+  await r.cambiarPersona(mama.id);
+  const enc = await r.mandarEncargo({
+    para_persona_id: leo.id, titulo: 'Sacar la basura', nota: null,
+    fecha: HOY, hora_sugerida: '17:30', tipo: 'tarea',
+  });
+  assert.equal(enc.tipo, 'tarea');
+});
+
+test('no se le escribe a quien no comparte ningún grupo contigo', async () => {
+  const r = nuevo();
+  const g = await r.crearGrupo('Las amigas', 'amigos');
+  const emma = await r.anadirPersona({ nombre: 'Emma', rol: 'miembro', grupoId: g.id });
+  // Leonora sale del grupo: ya no comparten nada.
+  await r.salirDelGrupo(g.id);
+  await assert.rejects(() => r.mandarEncargo({
+    para_persona_id: emma.id, titulo: 'Hola', nota: null,
+    fecha: HOY, hora_sugerida: null, tipo: 'consejo',
+  }), /no está en ninguno de tus grupos/i);
+});

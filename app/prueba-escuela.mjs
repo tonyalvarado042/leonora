@@ -5,9 +5,13 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
+import { fijarElDia } from './arrancar.mjs';
+
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const c = await b.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'America/Guatemala' });
+// La prueba va justo de eso: un sábado sin escuela, que parecía un fallo.
+await fijarElDia(c, new Date('2026-09-05T15:00:00Z'));
 const p = await c.newPage();
 const fallos = [];
 p.on('pageerror', (e) => fallos.push('PAGE ' + e.message));

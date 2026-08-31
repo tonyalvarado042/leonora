@@ -19,7 +19,10 @@ import {
   type Celebracion, type Logro, type Marcado, type Racha, type Via,
 } from './rachas';
 import type { MetodoDevocional } from '@/datos/metodos';
-import { puedoAnadirA, puedoAnadirTutor, puedoVerElCalendarioDe } from './grupos';
+import {
+  aQuienPuedoMandar, conQuienComparto, puedoAnadirA, puedoAnadirTutor,
+  puedoVerElCalendarioDe,
+} from './grupos';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, Encargo, EstadoTarea, Evento, Fecha,
   Grupo, Invitacion as InvitacionGuardada, MiembroGrupo, Persona, RolGrupo,
@@ -193,6 +196,20 @@ export interface Repositorio {
   aplicarArranque(p: Propuesta, nombre: string, fecha: Fecha): Promise<void>;
   /** Deja la cuenta como recién instalada. Vuelve a salir la bienvenida. */
   empezarDeNuevo(): Promise<void>;
+}
+
+/**
+ * Un identificador que no se repite.
+ *
+ * Antes era `Date.now()` a secas, y dos cosas creadas en el mismo milisegundo
+ * salían con el mismo id: añadir dos personas seguidas, o dos recados de un
+ * tirón. Con un reloj parado —una prueba, un teléfono lento— deja de ser raro
+ * y pasa siempre. El contador lo arregla sin depender del reloj.
+ */
+let contador = 0;
+function nuevoId(prefijo: string): string {
+  contador += 1;
+  return `${prefijo}-${Date.now().toString(36)}-${contador.toString(36)}`;
 }
 
 const CLAVE = 'graceday.v2';
@@ -391,7 +408,7 @@ export class RepositorioLocal implements Repositorio {
       }
 
       const persona: Persona = {
-        id: `p-${Date.now()}`,
+        id: nuevoId('p'),
         nombre: limpio,
         email: correo,
         avatar_tipo: 'emoji',
@@ -484,7 +501,7 @@ export class RepositorioLocal implements Repositorio {
       if (yaInvitada) throw new Error('Ya hay una invitación para ese correo sin usar.');
 
       const invitacion: InvitacionGuardada = {
-        id: `inv-${Date.now()}`,
+        id: nuevoId('inv'),
         grupo_id: grupoId,
         email: correo,
         nombre: limpioNombre,
@@ -556,7 +573,7 @@ export class RepositorioLocal implements Repositorio {
       const mios = this.mios(a);
       const d = mios.dias[fecha] ?? construirDia(a, this.yo(a), mios, fecha);
       const tareas = [...d.tareas, {
-        id: `${d.dia.id}-suelta-${Date.now()}`,
+        id: `${d.dia.id}-${nuevoId('suelta')}`,
         dia_id: d.dia.id,
         actividad_id: null,
         encargo_id: null,
@@ -618,7 +635,7 @@ export class RepositorioLocal implements Repositorio {
   anadirRepetida(fecha: Fecha, t: TareaSuelta, cada: ReglaNueva) {
     return this.escribir((a) => {
       const mios = this.mios(a);
-      const marca = Date.now();
+      const marca = nuevoId('r');
       const actividad: Actividad = {
         id: `act-${marca}`,
         persona_id: a.persona_activa,
@@ -847,7 +864,7 @@ export class RepositorioLocal implements Repositorio {
       const limpio = nombre.trim();
       if (limpio === '') throw new Error('Ponle un nombre al grupo.');
       const grupo: Grupo = {
-        id: `g-${Date.now()}`, nombre: limpio, tipo,
+        id: nuevoId('g'), nombre: limpio, tipo,
         emoji: EMOJI_GRUPO[tipo], creado_por: a.persona_activa,
       };
       a.grupos = [...a.grupos, grupo];
@@ -917,8 +934,24 @@ export class RepositorioLocal implements Repositorio {
       if (!a.personas.some((p) => p.id === n.para_persona_id)) {
         throw new Error('Elige a quién se lo mandas.');
       }
+      // Escribirle a alguien de tus grupos lo puede hacer cualquiera; **meterle
+      // una tarea en el horario, no**. La comprobación va aquí y no solo en la
+      // pantalla: una pantalla se puede llamar desde otro sitio.
+      const conocidos = conQuienComparto(a.grupos, a.miembros, a.personas, a.persona_activa);
+      if (!conocidos.some((x) => x.id === n.para_persona_id)) {
+        throw new Error('Esa persona no está en ninguno de tus grupos.');
+      }
+      if (n.tipo === 'tarea') {
+        const mios = aQuienPuedoMandar(a.grupos, a.miembros, a.personas, a.persona_activa);
+        if (!mios.some((x) => x.id === n.para_persona_id)) {
+          throw new Error(
+            'Solo un papá o una mamá puede ponerle una tarea a alguien. Mándale un ' +
+            'mensaje o un recordatorio.',
+          );
+        }
+      }
       const encargo: Encargo = {
-        id: `enc-${Date.now()}`,
+        id: nuevoId('enc'),
         de_persona_id: a.persona_activa,
         para_persona_id: n.para_persona_id,
         titulo,
@@ -1078,7 +1111,7 @@ function codigoLibre(a: Almacen, tipo: TipoGrupo): string {
     const c = nuevoCodigo(tipo);
     if (!a.invitaciones.some((x) => x.codigo === c)) return c;
   }
-  return `${nuevoCodigo(tipo)}${Date.now() % 97}`;
+  return `${nuevoCodigo(tipo)}${(contador += 1) % 97}`;
 }
 
 /** El día de una fecha **sin guardarlo**. Mirar el horario de otra persona no

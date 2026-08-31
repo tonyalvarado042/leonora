@@ -820,7 +820,6 @@ momento.
 
 ### 5.14 Los recados
 
-- Solo un tutor manda recados, y solo a los suyos.
 - Tres tipos: una **tarea** entra en el horario de ese día; un
   **recordatorio** solo avisa; un **mensaje** se lee y se contesta.
 - **El número rojo cuenta lo no abierto, no lo no hecho.** Un recado leído
@@ -828,6 +827,18 @@ momento.
 - Un recado que llega con el día ya armado **entra igual**, y no dos veces.
 - **Marcar la tarea aquí se ve allá:** quien la mandó ve que ya está.
 - Quien lo recibe puede contestar, y quien lo mandó ve la respuesta.
+
+**Quién manda qué a quién.** La línea no es «quién puede escribir» sino
+**«quién puede meterle algo en el horario a otro»**:
+
+| | Mensaje · Recordatorio | Tarea |
+|---|---|---|
+| Quién lo manda | Cualquiera de tus grupos | Solo un papá o una mamá |
+| Qué hace | Se lee y se contesta | **Entra en el horario de ese día** |
+
+Una hija le puede escribir a su mamá; ponerle una tarea en su día, no. Y el
+botón de mandar **está siempre**: si todavía no tienes a nadie en tus grupos,
+se pulsa y lo dice.
 
 > Un encargo no es una orden que se cuela en el horario sin avisar. Llega a la
 > campanita, se ve quién lo mandó, y el que lo recibe puede contestar. Una app
@@ -861,10 +872,11 @@ momento.
 | Cobro | Compras dentro de la app (fase 10) | |
 | IA | Claude — cuando entre | Hoy el arranque va con reglas |
 
-**Verificación:** 243 pruebas (`npm test`) — la lógica pura y el repositorio
+**Verificación:** 248 pruebas (`npm test`) — la lógica pura y el repositorio
 entero, con un AsyncStorage en memoria que lo sustituye fuera del teléfono—,
-TypeScript estricto, y **doce pruebas de extremo a extremo** sobre el bundle
-web real, con navegador.
+TypeScript estricto, y **trece pruebas de extremo a extremo** sobre el bundle
+web real, con navegador. Todas **fijan la fecha** antes de abrir la app: una
+prueba que depende del día en que se corre no protege nada.
 
 ---
 
@@ -954,3 +966,6 @@ Lo leído entra a `eventos` **sin confirmar**.
 | El horario de otra persona es solo de mirar | Tachar las tareas de tu hija desde tu teléfono es llevarle la agenda, no acompañarla |
 | Mirar el día de otro no se lo guarda | Se le quedaría un día armado que no abrió, congelado con la rutina de ese momento |
 | `pareceCorreo` no valida a fondo | Las reglas de verdad de un correo son más raras de lo que parece; una validación estricta rechaza direcciones que existen |
+| Cualquiera escribe; solo un tutor pone tareas | La línea no es quién puede hablar, es quién puede meterle algo en el horario a otro |
+| Los ids llevan un contador, no solo la hora | Dos cosas creadas en el mismo milisegundo salían con el mismo id |
+| Las pruebas de navegador fijan la fecha | Pasaban el domingo y fallaban el lunes: el día de la semana cambia el horario |
