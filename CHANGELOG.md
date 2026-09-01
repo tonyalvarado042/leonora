@@ -43,11 +43,26 @@ para que la clave de la respuesta no dependa del prefijo.
 limpio, y el **asesor de seguridad de Supabase sin un solo aviso de GraceDay**
 —los cuatro que salen son de antes y son a propósito.
 
-**Queda una cosa por decidir, y es tuya:** el CRM tiene un disparador
-(`cta_validar_alta`) que **rechaza cualquier alta** cuyo correo no esté en su
-lista de invitaciones. Esa lista está vacía, así que hoy **solo
-`aalvarado@gmail.com` puede crear una cuenta en ese proyecto** — ni Leonora, ni
-su mamá, ni una familia que compre la app. Está explicado en `LANZAMIENTO.md`.
+**Y el alta quedó arreglada, en dos pasos y en este orden** (migraciones 0013 y
+0014, que tocan el CRM, no GraceDay):
+
+1. `cta_alta_usuario` le daba rol `lectura` —que lee **todo** el CRM: 872
+   contactos, pagos, correos, documentos— a cualquiera que se registrara sin
+   invitación. Lo único que lo tapaba era que nadie pudiera registrarse. Ahora
+   sin invitación **no crea fila**.
+2. `cta_validar_alta` rechazaba **cada** alta del proyecto que no estuviera en
+   su lista de invitaciones, y esa lista está vacía: solo el dueño podía
+   registrarse. Ahora solo valida las altas del CRM.
+
+Al revés habría sido un agujero: los metadatos del alta los manda el teléfono,
+así que cualquiera podría decir que viene de GraceDay. En este orden el CRM
+queda **más cerrado que antes** — su acceso ya no depende de que nadie pueda
+registrarse.
+
+**Comprobado contra la base real:** un alta de GraceDay entra y sale con su
+persona, sus ajustes, sus cuatro rachas y su familia, y con cero filas en el
+CRM; un alta sin marca y sin invitación sigue rechazada; el CRM intacto (1.377
+contactos, 872, 17, 5, 2). Las cuentas de prueba se borraron.
 
 ## La hora se escribe, y la pregunta se lee como se habla · 2026-08-31
 

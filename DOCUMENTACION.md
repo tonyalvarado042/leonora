@@ -468,6 +468,24 @@ Quien ya tenía cuenta en el proyecto y un día abre GraceDay no pasa por ahí:
 **entra, no se registra**. Esa fila la crea la app al entrar —la política de
 `personas` deja que cada quien cree la suya—, no el disparador.
 
+El proyecto se comparte en los dos sentidos, así que el CRM también tuvo que
+mirar sus propios disparadores (migraciones 0013 y 0014), **en ese orden**:
+
+1. `cta_alta_usuario` le daba rol `lectura` —que lee todo el CRM— a cualquiera
+   que se registrara sin invitación. Ahora sin invitación no crea fila.
+2. `cta_validar_alta` rechazaba **cada** alta del proyecto que no estuviera en
+   su lista. Ahora solo valida las del CRM.
+
+Al revés habría sido un agujero: los metadatos del alta los manda el teléfono,
+no el servidor, así que `app: 'graceday'` **no es una credencial** — lo único
+que consigue es saltarse una validación que no es suya. Con la 0013 puesta
+primero, quien mienta ahí sale con una cuenta de GraceDay y **cero** acceso al
+CRM, que es exactamente lo que tiene que pasar.
+
+Efecto secundario a favor: un alta de GraceDay ya no queda confirmada sola —lo
+hacía `cta_validar_alta`—, así que Supabase manda su correo de confirmación,
+que es lo que corresponde a una app que se vende a familias.
+
 ### 3.1 Quién ve el calendario de quién
 
 La misma regla vive en dos sitios, a propósito: en `src/lib/grupos.ts` para

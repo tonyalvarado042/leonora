@@ -3,43 +3,34 @@
 Lo que hace falta de verdad para que la app esté en el iPhone y en Android,
 con números y tiempos. Nada de esto se puede saltar.
 
-## Lo primero: hoy nadie puede crear una cuenta
+## El alta, en un proyecto compartido
 
-GraceDay comparte el proyecto de Supabase con el CRM de Tony. Ese CRM tiene un
-disparador propio, `cta_validar_alta`, que corre **antes de cada alta de todo el
-proyecto** y rechaza el correo que no esté en su lista de invitaciones:
+GraceDay comparte proyecto de Supabase con el CRM de Tony, y `auth.users` es de
+los dos. Eso se arregló en dos pasos, **y el orden era lo importante**:
 
-> «CRM Tony Alvarado: ese correo no esta autorizado. Pedile al administrador que
-> te agregue.»
+1. **`cta_alta_usuario` (migración 0013).** A quien pasara el filtro sin
+   invitación le creaba igual una fila en `cta_usuarios` con rol `lectura`, y
+   ese rol **lee todo el CRM**. Ahora sin invitación no crea fila.
+2. **`cta_validar_alta` (migración 0014).** Rechazaba **cada** alta del
+   proyecto cuyo correo no estuviera en su lista —vacía—, así que solo el dueño
+   podía registrarse. Ahora solo valida las altas del CRM.
 
-La lista está vacía, así que **hoy solo `aalvarado@gmail.com` puede registrarse
-ahí**. Ni Leonora, ni su mamá, ni una familia que compre la app.
+Haciéndolo al revés cualquiera podría registrarse diciendo que viene de
+GraceDay y salir leyendo los 872 contactos. En este orden, el CRM queda **más
+cerrado que antes**: su control de acceso ya no depende de que nadie pueda
+registrarse, sino de tener fila y rol en `cta_usuarios`, que es lo que mira
+`cta_es`.
 
-No se tocó, porque es la puerta de otra aplicación y esa decisión no es de la
-app: es tuya. Hay dos maneras de resolverlo, y **el orden importa**.
+**Comprobado contra la base real:** un alta de GraceDay entra y sale con su
+persona, sus ajustes, sus cuatro rachas y su familia, y con **cero** filas en el
+CRM; un alta sin marca y sin invitación **sigue rechazada**. Las cuentas de
+prueba se borraron.
 
-**A) Dejar entrar a los de GraceDay, cerrando antes el reparto de permisos.**
-Son dos cambios, y hacerlos al revés abre el CRM de par en par:
-
-1. **Primero** `cta_alta_usuario`. Hoy, a quien pasa el filtro y no tiene
-   invitación le crea una fila en `cta_usuarios` con rol `lectura`, y ese rol
-   **lee todo el CRM**: contactos, oportunidades, pagos, correos, documentos.
-   Tiene que dejar de crear fila cuando no hay invitación.
-2. **Después** `cta_validar_alta`, para que solo valide las altas del CRM y deje
-   pasar las de GraceDay.
-
-   Con ese orden, el control de acceso del CRM pasa a ser lo que ya es de
-   verdad —tener fila y rol en `cta_usuarios`— y deja de depender de que nadie
-   pueda registrarse. Si se hiciera al revés, cualquiera podría registrarse
-   diciendo que viene de GraceDay —los metadatos del alta los manda el
-   teléfono, no el servidor— y saldría con permiso de lectura sobre los 872
-   contactos.
-
-**B) GraceDay se registra en su propio proyecto de Supabase** y deja este solo
-para el CRM. Es lo que había antes; el proyecto viejo sigue vacío y en pie.
-
-Mientras no se elija, la app funciona **guardando en el teléfono**, que es como
-está funcionando ahora. Lo que no se puede todavía es tener cuenta en la nube.
+**Lo que falta para tener cuenta en la nube:** la pantalla de entrar y crear
+cuenta, que debe registrar con `options: { data: { app: 'graceday', nombre } }`.
+Al no pasar ya por la puerta del CRM, el correo **no se confirma solo**:
+Supabase manda su correo de confirmación, así que la pantalla tiene que decir
+«te mandamos un correo» en vez de quedarse callada.
 
 ## Antes de nada: probar sin publicar
 
