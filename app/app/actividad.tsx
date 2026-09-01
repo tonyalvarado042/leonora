@@ -72,7 +72,7 @@ export default function EditarActividad() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: p.papel }} edges={['top']}>
-      <Cabecera titulo="Una cosa tuya" />
+      <Cabecera titulo="Una cosa tuya" conMenu={false} />
       <ScrollView style={{ backgroundColor: p.papel }} contentContainerStyle={e.cuerpo}>
       <CampoTexto
         etiqueta="¿Cómo se llama?"

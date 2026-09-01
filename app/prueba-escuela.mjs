@@ -5,7 +5,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { fijarElDia } from './arrancar.mjs';
+import { fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -43,8 +43,7 @@ await p.screenshot({ path: 'capturas/escuela-hoy.png', fullPage: true });
 console.log('✓ Hoy explica: «Hoy no hay escuela · tu horario está guardado y vuelve el lunes»');
 
 // --- Y la rutina, en un día vacío, tampoco deja creer que se perdió ---
-await p.getByText('Editar mi rutina de la semana →').click();
-await p.waitForTimeout(1300);
+await irA(p, 'Mi rutina');
 // Cada día enseña cuántas cosas tiene: así se ve que L-V tienen más que S-D
 // y que el colegio no se perdió.
 const cuentas = [];

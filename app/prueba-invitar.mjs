@@ -2,7 +2,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { arrancar, fijarElDia } from './arrancar.mjs';
+import { arrancar, fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -21,8 +21,7 @@ const volver = async () => {
 };
 
 await arrancar(p, { url: URL });
-await p.getByText('Mi familia y mis grupos').click();
-await p.waitForTimeout(1200);
+await irA(p, 'Mi familia y mis grupos');
 
 // ------------------------------------------ 1. cualquiera puede añadir
 assert.ok((await texto()).includes('+ Añadir a alguien'),

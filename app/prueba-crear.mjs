@@ -4,7 +4,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { arrancar, fijarElDia } from './arrancar.mjs';
+import { arrancar, fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -35,8 +35,7 @@ assert.ok(await p.getByText('Llamar a la abuela').count(), 'la tarea suelta no s
 console.log('✓ y sobrevive a recargar');
 
 // --- 2. Crear una actividad nueva y meterla en la rutina ---
-await p.getByText('Editar mi rutina de la semana →').click();
-await p.waitForTimeout(1200);
+await irA(p, 'Mi rutina');
 const bloquesAntes = await p.getByRole('button', { name: /^Retrasar / }).count();
 
 await p.getByText('+ Añadir algo a este día').click();

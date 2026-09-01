@@ -428,7 +428,7 @@ export default function Familia() {
         )}
 
         <Text style={[e.pista, { color: p.tintaTenue }]}>
-          Un grupo sirve para compartir el calendario y mandarse recados. La
+          Un grupo sirve para compartir el calendario y mandarse mensajes. La
           familia viene puesta; los demás los creas tú.
         </Text>
       </ScrollView>
@@ -563,7 +563,7 @@ export default function Familia() {
             </View>
             <Text style={[e.ayuda, { color: p.tintaTenue }]}>
               {rol === 'tutor'
-                ? 'Un papá o una mamá ve el calendario de los hijos y les puede mandar recados.'
+                ? 'Un papá o una mamá ve el calendario de los hijos y les puede poner tareas.'
                 : 'Un miembro ve lo suyo, y comparte lo que quiera compartir.'}
             </Text>
 

@@ -26,7 +26,7 @@ const QUE_HACE: Record<TipoEncargo, string> = {
   consejo: 'Un mensaje para leer. Puede contestarte.',
 };
 
-export default function Campanita() {
+export default function Mensajes() {
   const p = usarPaleta();
   const [yo, setYo] = useState<Persona | null>(null);
   const [personas, setPersonas] = useState<Persona[]>([]);
@@ -135,7 +135,7 @@ export default function Campanita() {
 
   return (
     <SafeAreaView style={[e.pantalla, { backgroundColor: p.papel }]} edges={['top']}>
-      <Cabecera titulo="Recados" />
+      <Cabecera titulo="Mensajes" />
 
       <ScrollView contentContainerStyle={e.cuerpo}>
         <View style={[e.pestanas, { backgroundColor: p.tarjeta2, borderColor: p.linea }]}>
@@ -173,7 +173,7 @@ export default function Campanita() {
           }}
           style={[e.mandar, { borderColor: p.alba, backgroundColor: p.albaPiso }]}
         >
-          <Text style={[e.mandarTexto, { color: p.alba }]}>+ Mandar un recado</Text>
+          <Text style={[e.mandarTexto, { color: p.alba }]}>+ Mandar un mensaje</Text>
         </Pressable>
 
         {!mandando && <Aviso texto={faltaMandar} />}
@@ -181,11 +181,11 @@ export default function Campanita() {
         {lista.length === 0 ? (
           <View style={[e.vacio, { backgroundColor: p.tarjeta, borderColor: p.linea }]}>
             <Text style={[e.vacioTitulo, { color: p.tinta }]}>
-              {pestana === 'recibidos' ? 'No tienes recados' : 'No has mandado nada'}
+              {pestana === 'recibidos' ? 'No tienes mensajes' : 'No has mandado nada'}
             </Text>
             <Text style={[e.vacioTexto, { color: p.tintaSuave }]}>
               {pestana === 'recibidos'
-                ? 'Aquí llega lo que te manden de tu familia: una tarea, un recordatorio o un mensaje.'
+                ? 'Aquí llega lo que te manden de tu familia y de tus grupos: un mensaje, un recordatorio o una tarea.'
                 : 'Manda el primero con el botón de arriba. Un mensaje o un recordatorio se lo puedes mandar a cualquiera de tus grupos.'}
             </Text>
           </View>
@@ -196,7 +196,7 @@ export default function Campanita() {
               role="button"
               aria-label={
                 pestana === 'recibidos'
-                  ? `${en.titulo}. Recado de ${nombreDe(en.de_persona_id)}` +
+                  ? `${en.titulo}. Mensaje de ${nombreDe(en.de_persona_id)}` +
                     (en.visto_en === null ? '. Sin abrir' : '')
                   : `${en.titulo}. Recado para ${nombreDe(en.para_persona_id)}`
               }
@@ -308,7 +308,7 @@ export default function Campanita() {
       >
         <View style={e.fondo}>
           <ScrollView style={[e.hoja, { backgroundColor: p.papel }]}>
-            <Text style={[e.hojaTitulo, { color: p.tinta }]}>Mandar un recado</Text>
+            <Text style={[e.hojaTitulo, { color: p.tinta }]}>Mandar un mensaje</Text>
 
             <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
               ¿A quién? <Text style={{ color: p.tintaTenue }}>obligatorio</Text>

@@ -2,7 +2,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { arrancar, fijarElDia } from './arrancar.mjs';
+import { arrancar, fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -21,13 +21,13 @@ const volver = async () => {
 await arrancar(p, { url: URL });
 
 // ------------------------------- 1. el botón está, aunque no haya a quién
-await p.getByRole('button', { name: /^Recados\./ }).click();
+await p.getByRole('button', { name: /^Mensajes\./ }).click();
 await p.waitForTimeout(1200);
-assert.ok((await texto()).includes('+ Mandar un recado'),
+assert.ok((await texto()).includes('+ Mandar un mensaje'),
   'el botón de mandar tiene que estar siempre');
 
 // R2: sin nadie en los grupos, se pulsa y lo dice
-await p.getByText('+ Mandar un recado').click();
+await p.getByText('+ Mandar un mensaje').click();
 await p.waitForTimeout(700);
 assert.ok((await texto()).includes('Todavía no tienes a nadie en tus grupos'),
   'sin nadie a quien mandar debería avisar, no esconder el botón (R2)');
@@ -36,8 +36,7 @@ console.log('✓ R2: el botón está siempre, y sin nadie a quien mandar lo dice
 
 // ------------------------------- 2. con familia, se elige a quién
 await volver();
-await p.getByText('Mi familia y mis grupos').click();
-await p.waitForTimeout(1200);
+await irA(p, 'Mi familia y mis grupos');
 await p.getByText('+ Añadir a alguien').click();
 await p.waitForTimeout(800);
 await p.getByLabel('¿Cómo se llama?').fill('Mamá');
@@ -51,9 +50,9 @@ await p.getByText('Añadir', { exact: true }).click();
 await p.waitForTimeout(1400);
 await volver();
 
-await p.getByRole('button', { name: /^Recados\./ }).click();
+await p.getByRole('button', { name: /^Mensajes\./ }).click();
 await p.waitForTimeout(1200);
-await p.getByText('+ Mandar un recado').click();
+await p.getByText('+ Mandar un mensaje').click();
 await p.waitForTimeout(800);
 let t = await texto();
 assert.ok(t.includes('¿A quién?'), 'no se puede escoger a quién');
@@ -89,9 +88,9 @@ await p.getByRole('button', { name: /Tocar para cambiar de persona/ }).click();
 await p.waitForTimeout(700);
 await p.getByRole('radio', { name: /Mamá/ }).click();
 await p.waitForTimeout(1600);
-await p.getByRole('button', { name: /^Recados\./ }).click();
+await p.getByRole('button', { name: /^Mensajes\./ }).click();
 await p.waitForTimeout(1200);
-await p.getByText('+ Mandar un recado').click();
+await p.getByText('+ Mandar un mensaje').click();
 await p.waitForTimeout(800);
 await p.getByRole('radio', { name: /Leonora/ }).click();
 await p.waitForTimeout(400);

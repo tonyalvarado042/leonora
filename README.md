@@ -61,7 +61,7 @@ app/
   src/componentes/
   __tests__/                 ← 248 pruebas: la lógica pura y el repositorio entero
   arrancar.mjs               ← el recorrido de bienvenida y la fecha fija, para las demás pruebas
-  prueba-*.mjs               ← trece pruebas de extremo a extremo sobre el bundle real
+  prueba-*.mjs               ← catorce pruebas de extremo a extremo sobre el bundle real
 ```
 
 ## Arrancar
@@ -94,7 +94,8 @@ node prueba-metodo.mjs       # el devocional hecho a tu manera
 node prueba-repeticion.mjs   # tareas que se repiten, como en un calendario
 node prueba-fase5.mjs        # la familia, la campanita y las fechas importantes
 node prueba-invitar.mjs      # añadir por nombre o por correo, y los horarios del grupo
-node prueba-recados.mjs      # quién puede mandar qué a quién
+node prueba-mensajes.mjs     # quién puede mandar qué a quién
+node prueba-menu.mjs         # el menú de las tres rayas
 ```
 
 O todas de una:

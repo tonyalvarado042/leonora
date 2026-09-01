@@ -2,7 +2,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { contestarSiPregunta, fijarElDia } from './arrancar.mjs';
+import { contestarSiPregunta, fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -104,8 +104,7 @@ await tiro('6-nota');
 console.log('✓ 6. tocar una tarea abre su detalle y guarda la nota');
 
 // 7. Calendario
-await p.getByText(/Ver mi semana y mi mes/).click();
-await p.waitForTimeout(1400);
+await irA(p, 'Mi semana y mi mes');
 const cal = await p.locator('body').innerText();
 assert.ok(cal.includes('Semana') && cal.includes('Mes'), 'faltan las vistas');
 assert.match(cal, /(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre) de \d{4}/);

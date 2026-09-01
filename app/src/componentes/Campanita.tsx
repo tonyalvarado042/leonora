@@ -7,21 +7,24 @@ import { usarPaleta } from '@/lib/tema';
  * La campanita, con su número rojo.
  *
  * El número cuenta lo que **no se ha abierto**, no lo que no se ha hecho: un
- * recado ya leído sigue en la lista pero deja de gritar. Si no hay nada nuevo,
- * la campana sigue ahí —apagarla escondería los recados de ayer.
+ * mensaje ya leído sigue en la lista pero deja de gritar. Si no hay nada nuevo,
+ * la campana sigue ahí —apagarla escondería los mensajes de ayer.
+ *
+ * No entra al menú a propósito: es de las pocas cosas que tienen que verse sin
+ * abrir nada.
  */
 export function Campanita({ sinLeer }: { sinLeer: number }) {
   const p = usarPaleta();
   const router = useRouter();
   const etiqueta = sinLeer === 0
-    ? 'Recados. No tienes ninguno sin abrir'
-    : `Recados. Tienes ${sinLeer} sin abrir`;
+    ? 'Mensajes. No tienes ninguno sin abrir'
+    : `Mensajes. Tienes ${sinLeer} sin abrir`;
 
   return (
     <Pressable
       role="button"
       aria-label={etiqueta}
-      onPress={() => router.push('/campanita')}
+      onPress={() => router.push('/mensajes')}
       style={({ pressed }) => [
         e.boton,
         {

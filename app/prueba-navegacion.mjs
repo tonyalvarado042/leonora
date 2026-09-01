@@ -2,7 +2,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { contestarSiPregunta, fijarElDia } from './arrancar.mjs';
+import { contestarSiPregunta, fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -32,14 +32,17 @@ await contestarSiPregunta(p);
 
 // --- 1. Volver atrás desde cada pantalla ---
 const pantallas = [
-  ['📅  Ver mi semana y mi mes →', 'Tu calendario'],
-  ['Editar mi rutina de la semana →', 'Tu rutina'],
+  ['Mi semana y mi mes', 'Tu calendario'],
+  ['Mi rutina', 'Tu rutina'],
+  ['Fechas importantes', 'Fechas importantes'],
+  ['Mi familia y mis grupos', 'Mi familia y mis grupos'],
+  ['Mensajes', 'Mensajes'],
+  ['Ajustes', 'Ajustes'],
 ];
 for (const [enlace, titulo] of pantallas) {
-  await p.getByText(enlace).click();
-  await p.waitForTimeout(1100);
+  await irA(p, enlace);
   assert.ok(await p.getByText(titulo).count(), `no abrió ${titulo}`);
-  const volver = p.getByRole('button', { name: 'Volver' });
+  const volver = p.getByRole('button', { name: 'Volver', exact: true });
   assert.ok(await volver.count(), `${titulo} no tiene botón de volver`);
   await volver.click();
   await p.waitForTimeout(1100);
@@ -47,8 +50,7 @@ for (const [enlace, titulo] of pantallas) {
   console.log(`✓ ${titulo}: se abre y se vuelve`);
 }
 
-await p.getByLabel('Ajustes').click();
-await p.waitForTimeout(1100);
+await irA(p, 'Ajustes');
 assert.ok(await p.getByRole('button', { name: 'Volver' }).count(), 'Ajustes no tiene volver');
 await p.getByRole('button', { name: 'Volver' }).click();
 await p.waitForTimeout(1000);
@@ -62,8 +64,7 @@ await p.waitForTimeout(1000);
 console.log('✓ Tus rachas: se abre y se vuelve');
 
 // Y desde el editor de actividades, que está dos niveles adentro
-await p.getByText('Editar mi rutina de la semana →').click();
-await p.waitForTimeout(1100);
+await irA(p, 'Mi rutina');
 await p.getByText('+ Añadir algo a este día').click();
 await p.waitForTimeout(600);
 await p.getByLabel('Crear una cosa nueva').click();
@@ -78,8 +79,7 @@ await p.getByRole('button', { name: 'Volver' }).click();
 await p.waitForTimeout(1000);
 
 // --- 2. La vista previa del calendario ---
-await p.getByText(/Ver mi semana y mi mes/).click();
-await p.waitForTimeout(1400);
+await irA(p, 'Mi semana y mi mes');
 
 const barras = await p.locator('div').evaluateAll((ns) =>
   ns.filter((n) => {

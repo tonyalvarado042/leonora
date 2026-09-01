@@ -6,6 +6,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { AnilloProgreso } from '@/componentes/AnilloProgreso';
 import { Aviso } from '@/componentes/Aviso';
 import { Campanita } from '@/componentes/Campanita';
+import { BotonMenu, MenuLateral } from '@/componentes/MenuLateral';
 import { CampoTexto } from '@/componentes/CampoTexto';
 import { DetalleTarea } from '@/componentes/DetalleTarea';
 import { useCelebrar } from '@/componentes/Celebracion';
@@ -41,6 +42,7 @@ export default function Hoy() {
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [cambiando, setCambiando] = useState(false);
+  const [menu, setMenu] = useState(false);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [preguntando, setPreguntando] = useState<string | null>(null);
   const [suelta, setSuelta] = useState<{ titulo: string; hora: string } | null>(null);
@@ -196,6 +198,7 @@ export default function Hoy() {
     <SafeAreaView style={[e.pantalla, { backgroundColor: p.papel }]} edges={['top']}>
       <ScrollView contentContainerStyle={e.cuerpo}>
         <View style={e.barra}>
+          <BotonMenu onPress={() => setMenu(true)} />
           <Pressable
             role="button"
             aria-label={`${persona.nombre || 'Sin nombre'}. Tocar para cambiar de persona`}
@@ -205,17 +208,12 @@ export default function Hoy() {
             <Text style={e.avatarTexto}>{persona.avatar_valor}</Text>
           </Pressable>
           <View style={{ flex: 1 }}>
-            <Text style={[e.saludo, { color: p.tinta }]}>{saludo(hora)}, {persona.nombre}</Text>
+            <Text numberOfLines={1} style={[e.saludo, { color: p.tinta }]}>
+              {saludo(hora)}, {persona.nombre}
+            </Text>
             <Text style={[e.fecha, { color: p.tintaTenue }]}>{fechaLarga(fecha, zona)}</Text>
           </View>
           <Campanita sinLeer={nuevos} />
-          <Enlace
-            href="/ajustes"
-            etiqueta="Ajustes"
-            estilo={[e.boton, { backgroundColor: p.tarjeta, borderColor: p.linea }]}
-          >
-            <Text style={e.botonTexto}>⚙️</Text>
-          </Enlace>
         </View>
 
         {!ajustes.arranque_hecho && (
@@ -310,37 +308,39 @@ export default function Hoy() {
           <Text style={[e.anadirTexto, { color: p.alba }]}>+ Añadir una tarea</Text>
         </Pressable>
 
-        <Enlace href="/rachas" estilo={[e.enlace, { borderColor: p.linea, marginTop: 12 }]}>
+        {/* La racha se queda fuera del menú: no es un sitio al que ir, es el
+            premio, y escondido detrás de un botón deja de hacer que vuelvas. */}
+        <Enlace href="/rachas" estilo={[e.enlace, { borderColor: p.fuego, marginTop: 12 }]}>
           <Text style={[e.enlaceTexto, { color: p.fuego }]}>
             {rachaFuerte(rachas)} · {chispas} chispas →
           </Text>
         </Enlace>
 
-        <Enlace href="/calendario" estilo={[e.enlace, { borderColor: p.linea }]}>
-          <Text style={[e.enlaceTexto, { color: p.dia }]}>📅  Ver mi semana y mi mes →</Text>
-        </Enlace>
-
-        <Enlace href="/eventos" estilo={[e.enlace, { borderColor: p.linea }]}>
-          <Text style={[e.enlaceTexto, { color: p.tarde }]}>
-            {queVienen.length === 0
-              ? '🎂  Fechas importantes →'
-              : `${EMOJI_TIPO_EVENTO[queVienen[0].evento.tipo]}  ${queVienen[0].evento.titulo}, ${enPalabras(queVienen[0].enCuantos)} →`}
-          </Text>
-        </Enlace>
-
-        <Enlace href="/familia" estilo={[e.enlace, { borderColor: p.linea }]}>
-          <Text style={[e.enlaceTexto, { color: p.verde }]}>🏠  Mi familia y mis grupos →</Text>
-        </Enlace>
-
-        <Enlace href="/rutina" estilo={[e.enlace, { borderColor: p.linea }]}>
-          <Text style={[e.enlaceTexto, { color: p.alba }]}>Editar mi rutina de la semana →</Text>
-        </Enlace>
+        {/* Lo que viene tampoco: avisar de un cumpleaños dentro de un menú es
+            no avisar. Solo sale cuando hay algo. */}
+        {queVienen.length > 0 && (
+          <Enlace href="/eventos" estilo={[e.enlace, { borderColor: p.linea }]}>
+            <Text style={[e.enlaceTexto, { color: p.tarde }]}>
+              {EMOJI_TIPO_EVENTO[queVienen[0].evento.tipo]}  {queVienen[0].evento.titulo},{' '}
+              {enPalabras(queVienen[0].enCuantos)} →
+            </Text>
+          </Enlace>
+        )}
 
         <Text style={[e.pista, { color: p.tintaTenue }]}>
           Toca el círculo para marcar, la tarea para ver el detalle, y mantén
-          pulsado si te la saltaste.
+          pulsado si te la saltaste. Lo demás está en el menú ☰.
         </Text>
       </ScrollView>
+
+      <MenuLateral
+        visible={menu}
+        onCerrar={() => setMenu(false)}
+        aqui="/"
+        persona={persona}
+        sinLeer={nuevos}
+        onCambiarPersona={() => setCambiando(true)}
+      />
 
       <Modal
         visible={cambiando}

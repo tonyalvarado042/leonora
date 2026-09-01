@@ -59,3 +59,17 @@ export async function contestarSiPregunta(p, respuesta = 'Lo terminé') {
     await p.waitForTimeout(900);
   }
 }
+
+/**
+ * Ir a otra pantalla por el menú.
+ *
+ * Desde que la navegación vive en el menú de las tres rayas, las pruebas ya no
+ * pueden tocar un enlace al final de Hoy: no está. Esto abre el menú y toca lo
+ * que se le diga, que es lo que hace una persona.
+ */
+export async function irA(p, nombre) {
+  await p.getByRole('button', { name: 'Abrir el menú' }).first().click();
+  await p.waitForTimeout(650);
+  await p.getByRole('link', { name: nombre, exact: true }).click();
+  await p.waitForTimeout(1400);
+}

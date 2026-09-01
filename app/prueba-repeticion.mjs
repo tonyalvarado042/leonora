@@ -2,7 +2,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { fijarElDia } from './arrancar.mjs';
+import { fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -62,8 +62,7 @@ assert.ok((await p.locator('body').innerText()).includes('Clase de piano'));
 console.log('✓ aparece hoy');
 
 // Y está en la rutina, todos los días
-await p.getByText('Editar mi rutina de la semana →').click();
-await p.waitForTimeout(1300);
+await irA(p, 'Mi rutina');
 for (const d of ['lunes', 'miércoles', 'domingo']) {
   await p.getByRole('tab', { name: d }).click();
   await p.waitForTimeout(450);
@@ -86,8 +85,7 @@ assert.ok((await p.locator('body').innerText()).includes('Pagar la mensualidad')
 console.log('✓ una que se repite cada mes también entra');
 
 // La rutina avisa de las que no son semanales
-await p.getByText('Editar mi rutina de la semana →').click();
-await p.waitForTimeout(1300);
+await irA(p, 'Mi rutina');
 assert.ok((await p.locator('body').innerText()).includes('de otra manera'),
   'la rutina no menciona las repeticiones que no son semanales');
 console.log('✓ la rutina avisa de las que se repiten de otra manera');

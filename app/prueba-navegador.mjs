@@ -6,7 +6,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { arrancar, fijarElDia } from './arrancar.mjs';
+import { arrancar, fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -49,8 +49,7 @@ await p.waitForTimeout(1400);
 assert.match(await avance(), /^1\//, 'lo marcado tiene que sobrevivir a recargar');
 console.log('✓ lo marcado sobrevive a recargar');
 
-await p.getByText('Editar mi rutina de la semana →').click();
-await p.waitForTimeout(1200);
+await irA(p, 'Mi rutina');
 assert.ok(await p.getByText('Esto es tu semana normal', { exact: false }).count(), 'no se abrió Rutina');
 console.log('✓ se navega a Rutina');
 

@@ -5,7 +5,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { fijarElDia } from './arrancar.mjs';
+import { fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -107,8 +107,7 @@ assert.ok(await p.getByRole('checkbox').count() >= 5);
 console.log('✓ al volver a abrir va directo a su día');
 
 // 10. Y se puede empezar de nuevo, que es como se vuelve a probar todo
-await p.getByLabel('Ajustes').click();
-await p.waitForTimeout(1300);
+await irA(p, 'Ajustes');
 await p.getByRole('button', { name: 'Empezar de nuevo' }).click();
 await p.waitForTimeout(400);
 assert.ok(await p.getByText(/¿Seguro\? Se borra todo/).count(), 'no pide confirmación');

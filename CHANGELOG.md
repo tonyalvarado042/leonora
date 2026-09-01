@@ -7,6 +7,43 @@ Lo más nuevo arriba.
 
 ---
 
+## El menú de las tres rayas, y «Recados» pasa a ser «Mensajes» · 2026-08-31
+
+**El menú.** La navegación estaba apilada al final de Hoy: cinco filas que
+había que buscar debajo de todas las tareas, y cuantas más cosas tenía el día,
+más lejos quedaban. Ahora hay un **☰ arriba a la izquierda**, en todas las
+pantallas, con los nueve sitios a un toque y una marca en el que estás.
+
+**Dos cosas se quedan fuera del menú a propósito.** La racha con las chispas
+—no es un sitio al que ir, es el premio, y escondida detrás de un botón deja de
+hacer que vuelvas— y la campanita, que tiene que verse sin abrir nada. Lo que
+viene (un cumpleaños, un examen) también se queda fuera, y solo aparece cuando
+hay algo: avisar de un cumpleaños dentro de un menú es no avisar.
+
+El menú se apaga en una pantalla: **el editor de actividades**. Salirse a media
+edición pierde lo escrito.
+
+**«Recados» ahora es «Mensajes».** «Recado» es buena palabra pero cambia de
+país —en unos sitios es un mandado, en otros un mensaje— y esto se vende a
+familias de varios países. «Chat» no, todavía: lo que hay es *alguien te manda
+algo y tú contestas una vez*, y un chat promete ida y vuelta. Eso llega en la
+Fase 9, y entonces cabe dentro de esta misma pantalla.
+
+Por dentro la tabla **sigue llamándose `encargos`** a propósito: la Fase 9 tiene
+planeada una tabla `mensajes` para el chat de verdad, y darle ese nombre ahora
+sería chocar conmigo mismo dentro de dos fases.
+
+**Un fallo que salió al probarlo.** El velo oscuro del menú tapaba la pantalla
+entera, incluido lo que hay debajo del cajón, así que un toque en el centro
+caía sobre el cajón en vez de cerrar. Ahora el velo va **al lado**.
+
+*Verificado:* 248 pruebas y **catorce** de navegador, incluida una nueva que
+comprueba que Hoy ya no lleva la pila, que el menú trae los nueve sitios y
+marca dónde estás, que salta de una pantalla a otra, que se cierra tocando
+fuera, y que volver a Hoy no deja pantallas apiladas detrás.
+
+---
+
 ## Recados: siempre hay botón, y no solo manda papá · 2026-08-31
 
 Abrías «Recados» y **no había ninguna manera de mandar uno**. El botón solo

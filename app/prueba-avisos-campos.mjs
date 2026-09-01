@@ -5,7 +5,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { fijarElDia } from './arrancar.mjs';
+import { fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -77,7 +77,7 @@ console.log('✓ añadir algo sin escribir nada avisa');
 await p.getByText('Cancelar').click(); await p.waitForTimeout(500);
 
 // --- Crear una actividad sin nombre ---
-await p.getByText('Editar mi rutina de la semana →').click(); await p.waitForTimeout(1100);
+await irA(p, 'Mi rutina');
 await p.getByText('+ Añadir algo a este día').click(); await p.waitForTimeout(600);
 await p.getByLabel('Crear una cosa nueva').click(); await p.waitForTimeout(1200);
 await p.getByText('Crear', { exact: true }).click();

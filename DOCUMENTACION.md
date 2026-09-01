@@ -605,7 +605,7 @@ se pueda leer de ahí lo decide la base de datos, no la app.
 | `bienvenida` | Lo primero al instalar: qué es la app y un video |
 | `arranque` | Cinco preguntas → escaneo opcional → **preview editable** → guardar |
 | `index` (Hoy) | Lo de ahora arriba, la lista, marcar, añadir algo suelto, la campanita y quién eres |
-| `campanita` | Los recados: los que me mandan y los que mando, con respuesta |
+| `mensajes` | Los que me mandan y los que mando, con respuesta |
 | `familia` | Quién usa la app, los grupos, quién ve mi calendario, invitar y entrar con un código |
 | `horario` | El día de otra persona del grupo, solo de mirar |
 | `eventos` | Feriados, cumpleaños, exámenes y citas |
@@ -620,7 +620,24 @@ se pueda leer de ahí lo decide la base de datos, no la app.
 **Componentes:** `Cabecera` · `CampoTexto` · `Aviso` · `Repeticion` ·
 `TarjetaVersiculo` · `FilaTarea` · `DetalleTarea` · `TarjetaAhora` ·
 `AnilloProgreso` · `Celebracion` · `SelectorHora` · `PreguntaTerminaste` ·
-`Enlace` · `Campanita`
+`Enlace` · `Campanita` · `MenuLateral` (+ `BotonMenu`)
+
+### 4.5 Cómo se navega
+
+El **menú de las tres rayas** vive en `Cabecera`, así que está en todas las
+pantallas menos en el editor de actividades —salirse a media edición pierde lo
+escrito. Trae nueve sitios y marca en cuál estás con `aria-current`.
+
+**Lo que NO entra al menú, a propósito:**
+
+| | Por qué |
+|---|---|
+| La racha y las chispas | No es un sitio al que ir, es el premio. Escondida detrás de un botón deja de hacer que vuelvas |
+| La campanita | Un número rojo dentro de un menú no avisa de nada |
+| Lo que viene (un cumple, un examen) | Igual: solo sale cuando hay algo |
+
+El velo oscuro va **al lado del cajón, no debajo**: si lo tapara entero, un
+toque en el centro caería sobre el cajón en vez de cerrar.
 
 > **`CampoTexto` y `Aviso` existen para cumplir R2** (`REGLAS.md`): ningún
 > campo se queda callado. `CampoTexto` trae etiqueta, ayuda, marca de
@@ -874,7 +891,7 @@ se pulsa y lo dice.
 
 **Verificación:** 248 pruebas (`npm test`) — la lógica pura y el repositorio
 entero, con un AsyncStorage en memoria que lo sustituye fuera del teléfono—,
-TypeScript estricto, y **trece pruebas de extremo a extremo** sobre el bundle
+TypeScript estricto, y **catorce pruebas de extremo a extremo** sobre el bundle
 web real, con navegador. Todas **fijan la fecha** antes de abrir la app: una
 prueba que depende del día en que se corre no protege nada.
 
@@ -969,3 +986,7 @@ Lo leído entra a `eventos` **sin confirmar**.
 | Cualquiera escribe; solo un tutor pone tareas | La línea no es quién puede hablar, es quién puede meterle algo en el horario a otro |
 | Los ids llevan un contador, no solo la hora | Dos cosas creadas en el mismo milisegundo salían con el mismo id |
 | Las pruebas de navegador fijan la fecha | Pasaban el domingo y fallaban el lunes: el día de la semana cambia el horario |
+| La navegación en un menú, no apilada bajo el día | Había que bajar hasta abajo, y cuantas más tareas tenía el día, más lejos quedaba |
+| La racha y la campanita **fuera** del menú | No son sitios a los que ir; un premio escondido deja de premiar |
+| La pantalla se llama «Mensajes», no «Recados» ni «Chat» | «Recado» cambia de país; «chat» promete una conversación que aún no existe |
+| Por dentro sigue siendo `encargos` | La Fase 9 necesita `mensajes` para el chat de verdad |

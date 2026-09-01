@@ -2,7 +2,7 @@
 import { chromium } from 'playwright-core';
 import assert from 'node:assert/strict';
 
-import { fijarElDia } from './arrancar.mjs';
+import { fijarElDia, irA } from './arrancar.mjs';
 
 const URL = 'http://localhost:8123';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -25,7 +25,7 @@ await p.getByText('Armar mi semana').click(); await p.waitForTimeout(900);
 await p.getByText('Me gusta, empezar').click(); await p.waitForTimeout(1800);
 
 // ------------------------------------------------------ 1. la campanita
-const campana = p.getByRole('button', { name: /^Recados\./ });
+const campana = p.getByRole('button', { name: /^Mensajes\./ });
 assert.ok(await campana.count(), 'no sale la campanita en Hoy');
 assert.match(await campana.getAttribute('aria-label'), /No tienes ninguno sin abrir/,
   'la campanita no dice que está vacía');
@@ -33,8 +33,7 @@ await p.screenshot({ path: 'capturas/fase5-hoy.png', fullPage: true });
 console.log('✓ la campanita sale en Hoy y dice que no hay nada sin abrir');
 
 // ------------------------------------------------------- 2. añadir a mamá
-await p.getByText('Mi familia y mis grupos').click();
-await p.waitForTimeout(1200);
+await irA(p, 'Mi familia y mis grupos');
 let t = await texto();
 assert.ok(t.includes('QUIÉN ESTÁ USANDO LA APP'), 'no sale el selector de persona');
 assert.ok(t.includes('Leonora'), 'no sale la persona actual');
@@ -72,11 +71,11 @@ await p.waitForTimeout(600);
 assert.ok((await texto()).includes('Mamá'), 'Hoy no saluda a la persona nueva');
 console.log('✓ cambiar de persona cambia toda la app');
 
-await p.getByRole('button', { name: /^Recados\./ }).click();
+await p.getByRole('button', { name: /^Mensajes\./ }).click();
 await p.waitForTimeout(1200);
-assert.ok((await texto()).includes('+ Mandar un recado'),
-  'una tutora debería poder mandar recados');
-await p.getByText('+ Mandar un recado').click(); await p.waitForTimeout(800);
+assert.ok((await texto()).includes('+ Mandar un mensaje'),
+  'una tutora debería poder mandar mensajes');
+await p.getByText('+ Mandar un mensaje').click(); await p.waitForTimeout(800);
 
 // R2: mandar sin título avisa
 await p.getByText('Mandar', { exact: true }).click(); await p.waitForTimeout(600);
@@ -102,7 +101,7 @@ await p.waitForTimeout(700);
 await p.getByRole('radio', { name: /Leonora/ }).click();
 await p.waitForTimeout(1600);
 
-const campana2 = p.getByRole('button', { name: /^Recados\./ });
+const campana2 = p.getByRole('button', { name: /^Mensajes\./ });
 assert.match(await campana2.getAttribute('aria-label'), /1 sin abrir/,
   'la campanita no cuenta el recado nuevo');
 t = await texto();
@@ -112,7 +111,7 @@ console.log('✓ el recado le llega a Leonora: número rojo en la campana y tare
 
 await campana2.click(); await p.waitForTimeout(1200);
 assert.ok((await texto()).includes('Mamá te mandó una tarea'), 'no dice quién lo mandó');
-await p.getByRole('button', { name: /Sacar la basura\. Recado de Mamá/ }).click();
+await p.getByRole('button', { name: /Sacar la basura\. Mensaje de Mamá/ }).click();
 await p.waitForTimeout(900);
 await p.getByText('Contestar', { exact: true }).click(); await p.waitForTimeout(600);
 assert.ok((await texto()).includes('Escribe qué le quieres contestar'),
@@ -126,7 +125,7 @@ await p.screenshot({ path: 'capturas/fase5-contestado.png', fullPage: true });
 
 await volver();
 await p.waitForTimeout(700);
-assert.match(await p.getByRole('button', { name: /^Recados\./ }).getAttribute('aria-label'),
+assert.match(await p.getByRole('button', { name: /^Mensajes\./ }).getAttribute('aria-label'),
   /No tienes ninguno sin abrir/, 'la campana sigue gritando después de abrirlo');
 console.log('✓ Leonora abre el recado, contesta, y la campana se calla');
 
@@ -137,7 +136,7 @@ await p.getByRole('button', { name: /Tocar para cambiar de persona/ }).click();
 await p.waitForTimeout(700);
 await p.getByRole('radio', { name: /Mamá/ }).click();
 await p.waitForTimeout(1600);
-await p.getByRole('button', { name: /^Recados\./ }).click();
+await p.getByRole('button', { name: /^Mensajes\./ }).click();
 await p.waitForTimeout(1200);
 await p.getByRole('tab', { name: 'Que mandé' }).click();
 await p.waitForTimeout(600);
@@ -157,8 +156,7 @@ await p.waitForTimeout(1600);
 const antes = await texto();
 const habiaColegio = antes.includes('Colegio');
 
-await p.getByText('Fechas importantes').click();
-await p.waitForTimeout(1200);
+await irA(p, 'Fechas importantes');
 assert.ok((await texto()).includes('No hay nada apuntado'), 'la lista debería empezar vacía');
 
 await p.getByText('+ Añadir una fecha').click(); await p.waitForTimeout(800);
@@ -190,8 +188,7 @@ await p.screenshot({ path: 'capturas/fase5-feriado.png', fullPage: true });
 console.log('✓ el feriado quita el colegio y deja el devocional y la cena');
 
 // -------------------------------------------- 7. y se ve en el calendario
-await p.getByText('Ver mi semana y mi mes').click();
-await p.waitForTimeout(1300);
+await irA(p, 'Mi semana y mi mes');
 assert.ok((await texto()).includes('Día de la Independencia') ||
           (await p.locator('[aria-label*="Independencia"]').count()) > 0,
   'el feriado no se ve en el calendario');
