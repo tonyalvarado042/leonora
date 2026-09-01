@@ -37,6 +37,10 @@ const MI_CALENDARIO: Sitio = { ruta: '/ciclo', emoji: '🌸', nombre: 'Mi calend
 
 const AJUSTES: Sitio = { ruta: '/ajustes', emoji: '⚙️', nombre: 'Ajustes' };
 
+/** Va abajo del todo, junto a Ajustes: la app se usa sin cuenta, y entrar es
+ *  algo que se hace una vez, no todos los días. */
+const CUENTA: Sitio = { ruta: '/entrar', emoji: '☁️', nombre: 'Mi cuenta' };
+
 interface Props {
   visible: boolean;
   onCerrar: () => void;
@@ -158,6 +162,7 @@ export function MenuLateral({
             {ABAJO.map((s) => <Fila key={s.ruta} sitio={s} />)}
             {conCiclo && <Fila sitio={MI_CALENDARIO} />}
             <View style={[e.raya, { backgroundColor: p.linea }]} />
+            <Fila sitio={CUENTA} />
             <Fila sitio={AJUSTES} />
           </ScrollView>
 

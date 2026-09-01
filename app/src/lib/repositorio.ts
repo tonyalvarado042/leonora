@@ -9,6 +9,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { Propuesta } from './arranque';
+import type { Equipaje } from './equipaje';
 import { generarDia, porcentajeCumplido } from './dia';
 import { faltanEnElDia, tareaDeEncargo } from './encargos';
 import { limpiarCodigo, nuevoCodigo, pareceCorreo } from './invitaciones';
@@ -1089,6 +1090,47 @@ export class RepositorioLocal implements Repositorio {
     this.cache = null;
     await AsyncStorage.multiRemove([CLAVE, CLAVE_V1]);
   }
+
+  /**
+   * La maleta de quien está usando la app, para llevársela a su cuenta nueva.
+   *
+   * Todo sale **copiado** (`{ ...x }`): quien la reciba puede hacer lo que
+   * quiera con ella sin tocar lo que hay guardado aquí (R4).
+   *
+   * Lo que no cabe en la maleta se cuenta en `se_quedan`, con números, para
+   * que la pantalla lo pueda decir antes de subir y no después.
+   */
+  async exportar(): Promise<Equipaje> {
+    const a = await this.cargar();
+    const yo = a.persona_activa;
+    const mios = this.mios(a);
+    const persona = a.personas.find((x) => x.id === yo);
+
+    return {
+      persona: {
+        nombre: persona?.nombre ?? 'Tú',
+        sexo: persona?.sexo,
+        fecha_nacimiento: persona?.fecha_nacimiento ?? null,
+        zona_horaria: persona?.zona_horaria ?? 'America/Guatemala',
+        avatar_tipo: persona?.avatar_tipo ?? 'emoji',
+        avatar_valor: persona?.avatar_valor ?? '🙂',
+      },
+      ajustes: (({ persona_id: _p, ...resto }) => resto)({ ...mios.ajustes }),
+      actividades: mios.actividades.map((x) => ({ ...x })),
+      rutina: mios.rutina.map((x) => ({ ...x })),
+      // Solo los suyos: los de un grupo son del grupo, y el grupo no viaja.
+      eventos: a.eventos.filter((e) => e.persona_id === yo).map((x) => ({ ...x })),
+      ciclo: (mios.ciclo ?? []).map((x) => ({ ...x })),
+      rachas: Object.values(mios.rachas).map((x) => ({ ...x })),
+      logros: [...mios.logros_ganados],
+      se_quedan: {
+        dias: Object.keys(mios.dias).length,
+        personas: a.personas.filter((x) => x.id !== yo).length,
+        grupos: a.grupos.length,
+        encargos: a.encargos.length,
+      },
+    };
+  }
 }
 
 const EMOJI_GRUPO: Record<TipoGrupo, string> = {
@@ -1247,9 +1289,46 @@ function alDia(
 }
 
 /**
- * El repositorio que usa la app.
+ * El repositorio del teléfono. Es el que hay hasta que alguien entra.
  *
- * Sin variables de entorno guarda en el teléfono, para poder abrirla sin
- * montar nada. Con ellas, `RepositorioSupabase` cumple esta misma interfaz.
+ * Se guarda aparte del que usan las pantallas porque es de donde sale la
+ * maleta cuando se crea una cuenta: `exportar()` solo existe aquí.
  */
-export const repositorio: Repositorio = new RepositorioLocal();
+export const enElTelefono = new RepositorioLocal();
+
+/** El que está sirviendo ahora mismo. Cambia al entrar y al salir. */
+let dentro: Repositorio = enElTelefono;
+
+/**
+ * El repositorio que usan las pantallas.
+ *
+ * Es un envoltorio, no el de verdad: por dentro puede ser el teléfono o la
+ * nube, y cambia cuando alguien entra o sale. Las quince pantallas siguen
+ * escribiendo `repositorio.dia(...)` sin enterarse.
+ *
+ * Un envoltorio y no una variable que se reasigna porque `import` se queda
+ * con el valor que había al cargar el módulo: las pantallas seguirían
+ * hablando con el teléfono después de entrar, y sin dar ningún error —solo
+ * datos viejos, que es la peor forma de fallar.
+ */
+export const repositorio: Repositorio = new Proxy({} as Repositorio, {
+  get(_, nombre) {
+    const metodo = (dentro as unknown as Record<string | symbol, unknown>)[nombre];
+    return typeof metodo === 'function' ? metodo.bind(dentro) : metodo;
+  },
+});
+
+/** Contra qué está guardando la app ahora mismo. */
+export function dondeGuarda(): 'telefono' | 'nube' {
+  return dentro === enElTelefono ? 'telefono' : 'nube';
+}
+
+/** A partir de aquí, todo va contra la cuenta. */
+export function guardarEnLaNube(nube: Repositorio): void {
+  dentro = nube;
+}
+
+/** Al salir de la cuenta se vuelve a lo que hay en este teléfono. */
+export function guardarEnElTelefono(): void {
+  dentro = enElTelefono;
+}

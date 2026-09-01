@@ -61,9 +61,9 @@ app/
   app/                       ← las pantallas (expo-router)
   src/lib/                   ← la lógica; lo puro va aparte de la plataforma
   src/componentes/
-  __tests__/                 ← 268 pruebas: la lógica pura y el repositorio entero
+  __tests__/                 ← 312 pruebas: la lógica pura y el repositorio entero
   arrancar.mjs               ← el recorrido de bienvenida y la fecha fija, para las demás pruebas
-  prueba-*.mjs               ← dieciséis pruebas de extremo a extremo sobre el bundle real
+  prueba-*.mjs               ← diecisiete pruebas de extremo a extremo sobre el bundle real
 ```
 
 ## Arrancar
@@ -79,7 +79,7 @@ npm run web        # o en el navegador
 
 ```bash
 cd app
-npm test           # 268 pruebas: la lógica pura y el repositorio
+npm test           # 312 pruebas: la lógica pura y el repositorio
 npm run typecheck  # TypeScript estricto
 
 npx expo export --platform web --output-dir dist
@@ -107,6 +107,16 @@ O todas de una:
 ```bash
 for f in prueba-*.mjs; do echo "--- $f"; node $f; done
 ```
+
+## La cuenta
+
+**La app funciona sin cuenta**, y así se usa el primer día: el asistente, la
+rutina y los días se guardan en el teléfono. Se puede crear una cuenta cuando
+se quiera, desde Ajustes o el menú, y **lo que ya había se sube con la
+persona** — actividades, rutina, eventos propios, ciclo, rachas y logros.
+
+Lo que viaja y lo que se queda **se enseña antes de subir, con números**. Salir
+no borra nada, ni aquí ni allá.
 
 ## La base de datos
 

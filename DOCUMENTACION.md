@@ -525,6 +525,66 @@ oración se ve según su `visibilidad`.
 
 ---
 
+## 3.4 La cuenta: entrar, crear y mudarse
+
+La app **funciona sin cuenta**, y eso no es un modo a medias: es como se usa el
+primer día. Se contesta el asistente, se arma la rutina, se marcan días — todo
+guardado en el teléfono. Entrar es algo que se hace después, desde Ajustes o
+desde el menú, y **lo que ya había se sube con la persona**.
+
+### Qué viaja y qué no
+
+`src/lib/equipaje.ts` lo decide, y se prueba sin red.
+
+| Viaja | Se queda |
+|---|---|
+| La persona: nombre, cumpleaños, sexo, zona horaria, avatar | **Los días ya armados.** Se regeneran solos desde la rutina |
+| Sus ajustes | **Las otras personas del teléfono.** En la nube una persona **es** una cuenta (`personas.id` → `auth.users`) |
+| Su catálogo de actividades | **Los grupos y los recados.** La familia la crea el disparador; un recado necesita a las dos con cuenta |
+| Sus reglas de rutina | |
+| Sus eventos propios (no los de grupo) | |
+| Su ciclo | |
+| Sus rachas y sus logros | |
+
+**Todo esto se enseña antes de subir, con números.** «Se sube contigo: 5
+actividades, 31 bloques de tu rutina, tus rachas (la más larga va por 24)» y
+«Se queda en este teléfono: …». Un «sincronizando…» seguido de un tick verde no
+dice si viajaron las cuatro cosas o las cuarenta.
+
+### El orden de la subida no es un detalle
+
+La rutina apunta a las actividades por su id, y **los ids nuevos los pone
+Postgres**. Así que primero suben las actividades, se recogen sus ids, y solo
+entonces sube la rutina ya traducida (`traducirRutina`). Al revés, la rutina
+apuntaría a la nada y **el día saldría vacío sin que nadie supiera por qué**.
+Un bloque cuya actividad no llegó se cae ahí y se avisa, en vez de guardarse
+roto.
+
+*Comprobado contra la base real: 2 actividades y 6 bloques de rutina subidos,
+los 6 enganchados a su actividad nueva.*
+
+### El interruptor
+
+`repositorio.ts` exporta un **envoltorio**, no el repositorio de verdad: por
+dentro puede ser el teléfono o la nube, y cambia al entrar o al salir. Las
+quince pantallas siguen escribiendo `repositorio.dia(...)` sin enterarse.
+
+Es un envoltorio y no una variable que se reasigna porque `import` se queda con
+el valor que había al cargar el módulo: las pantallas seguirían hablando con el
+teléfono después de entrar, **sin dar ningún error** — solo datos viejos, que
+es la peor forma de fallar.
+
+La sesión se recupera en `_layout.tsx` **antes de pintar nada**. Si se pintara
+antes, quien tiene cuenta vería un segundo el día del teléfono y cambiaría
+solo: ese parpadeo parece un fallo, y con los datos de otra persona sería uno.
+
+### Salir no borra
+
+Ni de la nube ni del teléfono. Salir y borrar son dos cosas distintas, y la app
+no puede hacer la segunda cuando le piden la primera.
+
+---
+
 ## 4. Las funciones del programa
 
 ### 4.1 Lo puro — se prueba sin bundler ni teléfono
@@ -1012,7 +1072,7 @@ entera**.
 | Cobro | Compras dentro de la app (fase 10) | |
 | IA | Claude — cuando entre | Hoy el arranque va con reglas |
 
-**Verificación:** 268 pruebas (`npm test`) — la lógica pura y el repositorio
+**Verificación:** 312 pruebas (`npm test`) — la lógica pura y el repositorio
 entero, con un AsyncStorage en memoria que lo sustituye fuera del teléfono—,
 TypeScript estricto, y **dieciséis pruebas de extremo a extremo** sobre el bundle
 web real, con navegador. Todas **fijan la fecha** antes de abrir la app: una

@@ -15,6 +15,9 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import 'react-native-url-polyfill/auto';
 
 import type { Propuesta } from './arranque';
+import {
+  actividadesParaSubir, eventosParaSubir, traducirRutina, type Equipaje,
+} from './equipaje';
 import { limpiarCodigo, pareceCorreo } from './invitaciones';
 import { generarDia, porcentajeCumplido } from './dia';
 import { duracionMin } from './fechas';
@@ -791,6 +794,83 @@ export class RepositorioSupabase implements Repositorio {
       ultimo_dia: null, gracia_usada_mes: null,
     }).eq('persona_id', persona_id);
     await this.guardarAjustes({ arranque_hecho: false });
+  }
+
+  /**
+   * Recibe la maleta del teléfono, en el orden que hace falta.
+   *
+   * El orden **no** es un detalle: la rutina apunta a las actividades por su
+   * id, y los ids nuevos los pone Postgres. Así que primero suben las
+   * actividades, se recogen sus ids nuevos, y solo entonces sube la rutina ya
+   * traducida (`traducirRutina`). Al revés, la rutina apuntaría a la nada y el
+   * día saldría vacío sin que nadie supiera por qué.
+   *
+   * Si algo falla a mitad **se dice**, con lo que sí llegó: quedarse callado
+   * dejaría a alguien creyendo que tiene su rutina arriba cuando no la tiene.
+   */
+  async recibirEquipaje(e: Equipaje): Promise<void> {
+    const yo = await this.miId();
+
+    await this.guardarPersona(e.persona);
+    await this.guardarAjustes(e.ajustes);
+
+    // 1. Las actividades, y con qué id quedó cada una.
+    const deVieja = new Map<string, string>();
+    if (e.actividades.length) {
+      const nuevas = pedir(
+        await this.sb.from(TABLA.actividades)
+          .insert(actividadesParaSubir(e.actividades, yo)).select('id'),
+        'subir tus actividades',
+      ) as { id: string }[];
+      e.actividades.forEach((vieja, i) => {
+        const nueva = nuevas[i];
+        if (nueva) deVieja.set(vieja.id, nueva.id);
+      });
+    }
+
+    // 2. La rutina, ya reenganchada.
+    const { suben, perdidos } = traducirRutina(e.rutina, deVieja, yo);
+    if (suben.length) {
+      const { error } = await this.sb.from(TABLA.rutina).insert(suben);
+      if (error) throw new Error(`subir tu rutina: ${error.message}`);
+    }
+    if (perdidos > 0) {
+      throw new Error(
+        `Se subieron tus actividades, pero ${perdidos} ${perdidos === 1
+          ? 'bloque de tu rutina se quedó' : 'bloques de tu rutina se quedaron'} `
+        + 'sin su actividad. Revisa Mi rutina antes de seguir.',
+      );
+    }
+
+    // 3. Lo que no depende de nada más.
+    const eventos = eventosParaSubir(e.eventos, yo);
+    if (eventos.length) {
+      const { error } = await this.sb.from(TABLA.eventos).insert(eventos);
+      if (error) throw new Error(`subir tus eventos: ${error.message}`);
+    }
+
+    if (e.ciclo.length) {
+      const { error } = await this.sb.from(TABLA.ciclo)
+        .upsert(e.ciclo.map((d) => ({ ...d, persona_id: yo })), { onConflict: 'persona_id,fecha' });
+      if (error) throw new Error(`subir tu calendario del ciclo: ${error.message}`);
+    }
+
+    // Las rachas ya existen —las creó el disparador de alta en cero—, así que
+    // se actualizan; nunca se insertan.
+    const vivas = e.rachas.filter((r) => r.total_dias > 0);
+    if (vivas.length) {
+      const { error } = await this.sb.from(TABLA.rachas)
+        .upsert(vivas.map((r) => ({ ...r, persona_id: yo })), { onConflict: 'persona_id,via' });
+      if (error) throw new Error(`subir tus rachas: ${error.message}`);
+    }
+
+    if (e.logros.length) {
+      const { error } = await this.sb.from(TABLA.logros_ganados).upsert(
+        e.logros.map((logro_id) => ({ persona_id: yo, logro_id })),
+        { onConflict: 'persona_id,logro_id' },
+      );
+      if (error) throw new Error(`subir tus logros: ${error.message}`);
+    }
   }
 
   private async guardarRacha(racha: Racha, logros: Logro[]): Promise<void> {

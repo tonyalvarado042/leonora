@@ -7,6 +7,44 @@ Lo más nuevo arriba.
 
 ---
 
+## Se puede tener cuenta, y lo del teléfono se va contigo · 2026-09-01
+
+**La app sigue funcionando sin cuenta**, y eso no cambia: es como se usa el
+primer día. Ahora, además, se puede crear una y **lo que ya había se sube**.
+
+**Lo que se sube se enseña antes, con números.** «Se sube contigo: 5
+actividades, 31 bloques de tu rutina, tus rachas (la más larga va por 24)». Y
+lo que **no** viaja se dice igual de claro: los días ya armados se regeneran
+desde la rutina, y las otras personas del teléfono necesitan su propia cuenta
+—en la nube una persona **es** una cuenta— así que se las invita por correo.
+
+**El orden de la subida es lo que la hace funcionar.** La rutina apunta a las
+actividades por su id, y los ids nuevos los pone Postgres: primero las
+actividades, se recogen sus ids, y solo entonces la rutina traducida. Al revés
+la rutina apuntaría a la nada y **el día saldría vacío sin que nadie supiera
+por qué**.
+
+**El repositorio es ahora un envoltorio**, no una variable que se reasigna:
+`import` se queda con el valor que había al cargar el módulo, así que las
+quince pantallas habrían seguido hablando con el teléfono después de entrar,
+**sin dar ningún error** — solo datos viejos, que es la peor forma de fallar.
+
+**Dos columnas que faltaban** (migración 0015). `arranque_hecho` y
+`ocupacion_nombre` estaban en el tipo de TypeScript y no en la tabla: como la
+app siempre había corrido contra el teléfono, nadie lo notó. Sin la primera, la
+nube mandaría a contestar el asistente **cada vez que se abre**. Comprobado uno
+por uno: son los únicos dos campos de toda la app que estaban en el tipo y no
+en su tabla.
+
+**Dos fallos de redacción que solo salen mirando la pantalla**, no las pruebas:
+«Los 1 días que ya viviste», y un «se rehacen con ellas» sin nadie a quien
+referirse cuando no hay más gente en el teléfono.
+
+**Verificado:** 312 pruebas de unidad (44 nuevas), 17 recorridos de navegador
+—uno nuevo para la cuenta—, `typecheck` limpio. Y la subida entera **contra la
+base real**: 2 actividades y 6 bloques de rutina, los 6 bien enganchados; el
+CRM intacto y las filas de prueba borradas.
+
 ## GraceDay se muda al proyecto de Tony, con apellido · 2026-09-01
 
 **No hay base de datos nueva.** GraceDay ahora vive en el mismo proyecto de

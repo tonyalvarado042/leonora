@@ -8,7 +8,7 @@ import { CampoTexto } from '@/componentes/CampoTexto';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { usarPaleta } from '@/lib/tema';
-import { repositorio } from '@/lib/repositorio';
+import { dondeGuarda, repositorio } from '@/lib/repositorio';
 import type { Ajustes as TipoAjustes, Persona } from '@/lib/tipos';
 
 const ICONOS = ['👧', '🧒', '🦊', '🌻', '🦋', '🐢', '🌙', '⭐', '🎸', '🐨', '🍓', '🙂'];
@@ -19,12 +19,15 @@ export default function Ajustes() {
   const p = usarPaleta();
   const router = useRouter();
   const [confirmando, setConfirmando] = useState(false);
+  const [enLaNube, setEnLaNube] = useState(dondeGuarda() === 'nube');
   const [persona, setPersona] = useState<Persona | null>(null);
   const [aj, setAj] = useState<TipoAjustes | null>(null);
 
   const cargar = useCallback(async () => {
     setPersona(await repositorio.persona());
     setAj(await repositorio.ajustes());
+    // Al volver de la pantalla de la cuenta esto puede haber cambiado.
+    setEnLaNube(dondeGuarda() === 'nube');
   }, []);
   useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));
 
@@ -171,6 +174,26 @@ export default function Ajustes() {
         )}
       </Grupo>
 
+      <Grupo titulo="MI CUENTA">
+        <Fila
+          titulo={enLaNube ? 'Estás dentro de tu cuenta' : 'Guardando en este teléfono'}
+          sub={enLaNube
+            ? 'Lo tuyo se guarda en la nube, así que lo tienes en cualquier teléfono.'
+            : 'Funciona así de bien. Con una cuenta, además, lo tuyo te sigue a otro teléfono.'}
+        >
+          <Pressable
+            role="button"
+            aria-label={enLaNube ? 'Ver mi cuenta' : 'Crear cuenta o entrar'}
+            onPress={() => router.push('/entrar')}
+            style={[e.boton, { borderColor: p.alba }]}
+          >
+            <Text style={[e.botonTexto, { color: p.alba }]}>
+              {enLaNube ? 'Ver mi cuenta' : 'Crear cuenta o entrar'}
+            </Text>
+          </Pressable>
+        </Fila>
+      </Grupo>
+
       <Grupo titulo="EMPEZAR DE NUEVO">
         <Fila
           titulo={confirmando ? '¿Seguro? Se borra todo' : 'Volver a contestar el asistente'}
@@ -297,6 +320,10 @@ const e = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   chipTexto: { fontSize: 13, fontWeight: '600' },
+  boton: {
+    borderWidth: 1, borderRadius: 11, paddingHorizontal: 15, paddingVertical: 10,
+  },
+  botonTexto: { fontSize: 14, fontWeight: '700' },
   peligro: {
     paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, borderWidth: 1.5,
   },
