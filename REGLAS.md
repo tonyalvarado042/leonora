@@ -107,6 +107,14 @@ mover sin efecto— **pasaban el typecheck**.
   sirva en una ruta que no sea la raíz.
 - **Los nombres van en español**, igual que las tablas, porque el dominio se
   piensa en español.
+- **Un componente no se define dentro de otro.** React lo da por nuevo en cada
+  render, lo desmonta y lo vuelve a montar, y el teclado pierde el foco a media
+  palabra. Pasó en `SelectorHora`.
+- **Un campo controlado no se sincroniza mientras se escribe.** Si el valor de
+  fuera vuelve en cada tecla, pisa lo tecleado: escribir «07» acababa en «00».
+- **`selectTextOnFocus` no funciona en el navegador.** Hay que llamar a
+  `select()` en el `onFocus`, o se escribe encima de un campo lleno y no pasa
+  nada — que desconcierta más que un error.
 
 ---
 

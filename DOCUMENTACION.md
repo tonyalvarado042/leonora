@@ -686,6 +686,13 @@ toque en el centro caería sobre el cajón en vez de cerrar.
 > obligatorio y aviso en el mismo sitio, así que es más fácil hacerlo bien que
 > mal. `Aviso` va junto al botón.
 >
+> **`SelectorHora` son dos campos, no uno.** Uno solo con «06:30» dentro obliga
+> a pelearse con el cursor y con los dos puntos para cambiar solo los minutos.
+> Salta solo al siguiente cuando la hora ya no puede crecer —dos dígitos, o un
+> primer dígito mayor que 2, porque no hay hora 30—, y al entrar en un campo
+> selecciona lo que hay: `selectTextOnFocus` funciona en el teléfono pero no en
+> el navegador, y sin eso escribías y no pasaba nada.
+>
 > **`Cabecera` es propia y no la del navegador** porque react-navigation **no
 > pinta el botón de volver en web**: la app se quedaba sin salida en el
 > calendario, la rutina y los ajustes. Toda pantalla que no sea Hoy la lleva.
@@ -949,7 +956,7 @@ entera**.
 
 **Verificación:** 268 pruebas (`npm test`) — la lógica pura y el repositorio
 entero, con un AsyncStorage en memoria que lo sustituye fuera del teléfono—,
-TypeScript estricto, y **quince pruebas de extremo a extremo** sobre el bundle
+TypeScript estricto, y **dieciséis pruebas de extremo a extremo** sobre el bundle
 web real, con navegador. Todas **fijan la fecha** antes de abrir la app: una
 prueba que depende del día en que se corre no protege nada.
 
@@ -1051,3 +1058,5 @@ Lo leído entra a `eventos` **sin confirmar**.
 | La media, de los tres últimos ciclos | Un ciclo cambia con los años; una media de hace dos no dice nada de este mes |
 | El ciclo no tiene `cicloDe(personaId)` | Si existiera, alguien acabaría llamándolo |
 | Apagar el calendario no borra lo apuntado | Apagar una cosa y perderla son dos acciones distintas |
+| La hora se escribe, en dos campos | Con botones de ±15, llegar a las 07:15 desde las 06:00 son tres toques; y un campo único obliga a pelearse con los dos puntos |
+| Una hora imposible avisa, no se corrige sola | Corregir en silencio guarda algo que la persona no escribió |

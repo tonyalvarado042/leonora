@@ -23,7 +23,7 @@ await p.getByLabel('Tu nombre').fill('Leonora');
 for (let i = 0; i < 3; i++) { await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(400); }
 
 await p.getByText('🎒 Escuela').click(); await p.waitForTimeout(400);
-await p.getByLabel('Salgo a las: una hora después').click(); await p.waitForTimeout(400);
+await p.getByLabel('Hora de Salgo a las').fill('15'); await p.waitForTimeout(500);
 await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(500);
 await p.getByRole('button', { name: 'Armar mi semana' }).click(); await p.waitForTimeout(900);
 

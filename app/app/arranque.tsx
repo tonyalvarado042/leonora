@@ -419,9 +419,11 @@ export default function Arranque() {
 
         {paso === 2 && (
           <>
-            <Text style={[e.titulo, { color: p.tinta }]}>¿A qué hora vives?</Text>
+            <Text style={[e.titulo, { color: p.tinta }]}>
+              ¿A qué hora te levantas y a qué hora te acuestas?
+            </Text>
             <Text style={[e.ayuda, { color: p.tintaSuave }]}>
-              Entre estas dos horas cabe todo tu día. Nada se pone fuera.
+              Entre esas dos horas cabe todo tu día. Nada se pone fuera.
             </Text>
             <View style={e.horas}>
               <SelectorHora etiqueta="☀️  Me levanto a las"

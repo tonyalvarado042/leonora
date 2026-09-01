@@ -63,7 +63,7 @@ app/
   src/componentes/
   __tests__/                 ← 268 pruebas: la lógica pura y el repositorio entero
   arrancar.mjs               ← el recorrido de bienvenida y la fecha fija, para las demás pruebas
-  prueba-*.mjs               ← quince pruebas de extremo a extremo sobre el bundle real
+  prueba-*.mjs               ← dieciséis pruebas de extremo a extremo sobre el bundle real
 ```
 
 ## Arrancar
@@ -99,6 +99,7 @@ node prueba-invitar.mjs      # añadir por nombre o por correo, y los horarios d
 node prueba-mensajes.mjs     # quién puede mandar qué a quién
 node prueba-menu.mjs         # el menú de las tres rayas
 node prueba-ciclo.mjs        # hombre o mujer, y el calendario del período
+node prueba-hora.mjs         # escribir la hora en dos campos
 ```
 
 O todas de una:

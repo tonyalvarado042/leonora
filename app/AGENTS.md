@@ -21,7 +21,7 @@ Resumen para tenerlo a mano:
 | **R3** | Lo puro va aparte de la plataforma |
 | **R4** | El repositorio nunca entrega su estado interno |
 | **R5** | Se verifica en el navegador, no solo compilando |
-| **R6** | Detalles que ya costaron un rato (`role`/`aria-*`, `<Enlace>`, Modal y navegación, cabecera propia) |
+| **R6** | Detalles que ya costaron un rato (`role`/`aria-*`, `<Enlace>`, Modal y navegación, cabecera propia, campos controlados) |
 | **R7** | Lo que se crea en una base de datos se llama `claude_<proyecto>` |
 
 ## Antes de dar algo por hecho

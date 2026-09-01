@@ -7,6 +7,45 @@ Lo más nuevo arriba.
 
 ---
 
+## La hora se escribe, y la pregunta se lee como se habla · 2026-08-31
+
+**«¿A qué hora vives?»** era una frase de anuncio, no una pregunta. Ahora dice
+lo que pregunta: **«¿A qué hora te levantas y a qué hora te acuestas?»**.
+
+**La hora se escribe.** Antes eran cuatro botones —−1h, −15, +15, +1h— y para
+llegar a las 07:15 desde las 06:00 había que tocar tres veces. Ahora son **dos
+campos separados**: la hora por un lado y los minutos por otro. Uno solo con
+«06:30» dentro obliga a pelearse con el cursor y con los dos puntos para
+cambiar solo los minutos; con dos, se toca el que se quiere cambiar y ya.
+
+**Salta solo al siguiente** en cuanto la hora no puede crecer más: dos dígitos,
+o un primer dígito mayor que 2 —un 3 ya no puede ser 3X, porque no hay hora 30.
+Así se escribe «0715» de corrido. Y quedan los cuatro minutos redondos —:00
+:15 :30 :45— a un toque, que en un teléfono es más rápido que escribir.
+
+Una hora imposible **avisa en vez de corregirse sola** (R2), y al salir del
+campo lo que no vale vuelve a lo último bueno: dejarlo roto sería guardar una
+hora que no existe.
+
+**Tres fallos que solo salen probando, y los tres del mismo sitio:**
+
+1. **El campo se remontaba en cada tecla.** Tenía el componente del campo
+   definido *dentro* del render, así que React lo daba por nuevo cada vez y el
+   teclado perdía el foco.
+2. **El valor de fuera pisaba cada tecla.** Escribir «07» acababa en «00»: el
+   «0» se guardaba, volvía como «00», y el «7» ya no cabía.
+3. **Saltabas a los minutos, escribías, y no pasaba nada.** `selectTextOnFocus`
+   selecciona en el teléfono pero **no en el navegador**, así que los dos
+   dígitos nuevos se caían al recortar a dos. Teclear y que no pase nada es más
+   desconcertante que un error.
+
+*Verificado:* 268 pruebas y **dieciséis** de navegador, una nueva solo para
+esto: que sean dos campos, que salte solo, que un 8 salte ya, que una hora
+pegada imposible avise, que al salir vuelva atrás, que los minutos redondos
+funcionen, y que la hora escrita a mano **llegue de verdad al día**.
+
+---
+
 ## Fase 8 · Hombre o mujer, y el calendario del período · 2026-08-31
 
 **Dónde va la pregunta.** En el primer paso del asistente, junto al nombre y la

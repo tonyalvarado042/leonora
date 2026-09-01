@@ -21,7 +21,8 @@ const antes = await p.getByRole('checkbox').count();
 await p.getByText('+ Añadir una tarea').click();
 await p.waitForTimeout(500);
 await p.getByLabel('¿Qué hay que hacer?').fill('Llamar a la abuela');
-await p.getByLabel('¿A qué hora?: una hora después').click();
+await p.getByLabel('Hora de ¿A qué hora?').fill('20');
+await p.waitForTimeout(300);
 await p.getByText('Añadir a hoy').click();
 await p.waitForTimeout(700);
 

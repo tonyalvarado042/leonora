@@ -40,9 +40,12 @@ await siguiente.click(); await p.waitForTimeout(500);
 
 // 3. Horas
 assert.ok(await p.getByText('Pregunta 2 de 5').count());
-await p.getByLabel('🌙  Me acuesto a las: una hora después').click();
-await p.waitForTimeout(300);
-assert.ok(await p.getByText('22:30').count(), 'no cambió la hora de dormir');
+await p.getByLabel('Hora de 🌙  Me acuesto a las').fill('22');
+await p.waitForTimeout(200);
+await p.getByLabel('🌙  Me acuesto a las: minuto 30').click();
+await p.waitForTimeout(400);
+assert.equal(await p.getByLabel('Hora de 🌙  Me acuesto a las').inputValue(), '22');
+assert.equal(await p.getByLabel('Minutos de 🌙  Me acuesto a las').inputValue(), '30');
 await tiro('3-horas');
 console.log('✓ paso 2: horas de despertar y dormir');
 await siguiente.click(); await p.waitForTimeout(500);
@@ -59,9 +62,10 @@ await siguiente.click(); await p.waitForTimeout(500);
 assert.ok(await p.getByText('Pregunta 4 de 5').count());
 assert.ok(await p.getByRole('button', { name: 'Escanear mi horario' }).count(),
   'falta el botón de escanear el horario');
-await p.getByLabel('Salgo a las: una hora antes').click();
-await p.waitForTimeout(300);
-assert.ok(await p.getByText('13:00').count());
+await p.getByLabel('Hora de Salgo a las').fill('13');
+await p.waitForTimeout(400);
+assert.equal(await p.getByLabel('Hora de Salgo a las').inputValue(), '13');
+assert.equal(await p.getByLabel('Minutos de Salgo a las').inputValue(), '00');
 await tiro('5-colegio');
 console.log('✓ paso 4: colegio de 08:00 a 13:00, lunes a viernes');
 await siguiente.click(); await p.waitForTimeout(500);
