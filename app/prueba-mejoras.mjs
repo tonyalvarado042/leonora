@@ -25,9 +25,9 @@ await p.waitForTimeout(300);
 assert.equal(await p.getByLabel('Escribe tu edad').inputValue(), '14');
 await tiro('1-edad');
 console.log('✓ 1. se puede escribir una edad que no está en la lista');
-await p.getByText('Siguiente').click(); await p.waitForTimeout(400);
-await p.getByText('Siguiente').click(); await p.waitForTimeout(400);
-await p.getByText('Siguiente').click(); await p.waitForTimeout(600);
+await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(400);
+await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(400);
+await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(600);
 
 // 2. Ocupaciones: universidad, escuela, otros — y nombre propio
 const cuerpo = await p.locator('body').innerText();
@@ -57,10 +57,10 @@ console.log('✓ 3. el escaneo mete el horario entero y marca lo borroso');
 
 await p.getByText(/Aceptar · de/).click();
 await p.waitForTimeout(700);
-await p.getByText('Siguiente').click(); await p.waitForTimeout(400);
+await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(400);
 await p.getByText('🧹 Ordenar el cuarto').click();
 await p.getByText('📖 Leer').click();
-await p.getByText('Armar mi semana').click();
+await p.getByRole('button', { name: 'Armar mi semana' }).click();
 await p.waitForTimeout(900);
 
 // 4. Preview editable

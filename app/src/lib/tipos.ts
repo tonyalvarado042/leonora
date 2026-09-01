@@ -9,6 +9,7 @@ export type OrigenTarea = 'rutina' | 'evento' | 'encargo' | 'ia' | 'manual';
 export type Ocupacion =
   | 'colegio' | 'escuela' | 'universidad' | 'trabajo' | 'otro' | 'ninguno';
 export type Tema = 'claro' | 'oscuro' | 'auto';
+export type Sexo = 'mujer' | 'hombre' | 'sin_decir';
 
 /** "HH:MM", 24 horas. */
 export type Hora = string;
@@ -120,6 +121,9 @@ export interface Evento {
 export interface Persona {
   id: string;
   nombre: string;
+  /** Solo se usa para una cosa: ofrecer el calendario del ciclo. No cambia
+   *  nada más de la app, y «prefiero no decir» es una respuesta entera. */
+  sexo?: Sexo;
   /** Solo si se le invitó por correo. Sin correo también se puede añadir a
    *  alguien: entra ya en este teléfono y cambia de usuario desde arriba. */
   email?: string | null;
@@ -149,8 +153,32 @@ export interface Ajustes {
   silencio_hasta: Hora | null;
   tema: Tema;
   celebraciones: boolean;
+  /** El calendario del ciclo. Se ofrece al arrancar y se puede encender o
+   *  apagar cuando sea desde Ajustes. Apagarlo **no borra** lo apuntado. */
+  ciclo_activo: boolean;
   /** false hasta que se contesta el asistente de arranque. */
   arranque_hecho: boolean;
+}
+
+// ------------------------------------------------------------------- ciclo
+
+export type Intensidad = 'poco' | 'normal' | 'mucho';
+
+/**
+ * Un día del ciclo.
+ *
+ * **Es lo único de toda la app que no ve nadie más.** Ni un tutor, ni quien
+ * comparte grupo, ni quien mira el horario: nadie. Un papá puede necesitar ver
+ * el día de su hija; su ciclo no es información suya.
+ */
+export interface DiaCiclo {
+  persona_id: string;
+  fecha: Fecha;
+  /** Si ese día hubo sangrado. Lo demás es opcional. */
+  sangrado: boolean;
+  intensidad: Intensidad | null;
+  animo: string | null;
+  nota: string | null;
 }
 
 export interface Actividad {

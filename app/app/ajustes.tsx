@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { Children, cloneElement, isValidElement, useCallback, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -147,6 +148,29 @@ export default function Ajustes() {
         </Fila>
       </Grupo>
 
+      <Grupo titulo="SOLO TUYO">
+        <Fila
+          titulo="Mi calendario del período"
+          sub={aj.ciclo_activo
+            ? 'Está en el menú. No lo ve nadie más que tú, ni siquiera tus papás.'
+            : 'Marcas los días que te venga y la app te dice cuándo tocaría el siguiente. No lo ve nadie más que tú.'}
+        >
+          <Switch
+            value={aj.ciclo_activo}
+            onValueChange={(v) => guardar({ ciclo_activo: v })}
+            trackColor={{ true: p.rosa, false: p.lineaFuerte }}
+          />
+        </Fila>
+        {aj.ciclo_activo && (
+          <Fila
+            titulo="Si lo apagas"
+            sub="No se borra nada: lo que apuntaste sigue ahí y vuelve si lo enciendes otra vez."
+          >
+            <Text style={[e.valor, { color: p.tintaTenue }]}>🔒</Text>
+          </Fila>
+        )}
+      </Grupo>
+
       <Grupo titulo="EMPEZAR DE NUEVO">
         <Fila
           titulo={confirmando ? '¿Seguro? Se borra todo' : 'Volver a contestar el asistente'}
@@ -193,15 +217,31 @@ function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode
   );
 }
 
+/**
+ * Una fila de ajustes.
+ *
+ * Le pone el nombre **a su interruptor**: un `Switch` no tiene texto dentro, y
+ * sin esto un lector de pantalla leía «casilla» sin decir de qué ajuste.
+ *
+ * Solo al interruptor: un botón ya trae su propio texto, y renombrarlo con el
+ * título de la fila hace que se anuncie una cosa distinta de la que se lee.
+ * Pasó: «Empezar de nuevo» se anunciaba como «Volver a contestar el asistente».
+ */
 function Fila({ titulo, sub, children }: { titulo: string; sub?: string; children: React.ReactNode }) {
   const p = usarPaleta();
+  const conNombre = Children.map(children, (hijo) =>
+    isValidElement(hijo) && hijo.type === Switch
+      && !(hijo.props as { 'aria-label'?: string })['aria-label']
+      ? cloneElement(hijo as ReactElement<{ 'aria-label'?: string }>, { 'aria-label': titulo })
+      : hijo);
+
   return (
     <View style={[e.fila, { borderTopColor: p.linea }]}>
       <View style={e.filaTexto}>
         <Text style={[e.filaTitulo, { color: p.tinta }]}>{titulo}</Text>
         {sub && <Text style={[e.filaSub, { color: p.tintaTenue }]}>{sub}</Text>}
       </View>
-      {children}
+      {conNombre}
     </View>
   );
 }

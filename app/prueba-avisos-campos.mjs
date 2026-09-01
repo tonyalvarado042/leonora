@@ -22,7 +22,7 @@ await p.waitForTimeout(800);
 
 // --- El fallo que reportaste ---
 assert.ok(await p.getByText('obligatorio').count(), 'el campo no dice que es obligatorio');
-await p.getByText('Siguiente').click();
+await p.getByRole('button', { name: 'Siguiente' }).click();
 await p.waitForTimeout(500);
 let txt = await p.locator('body').innerText();
 assert.ok(txt.includes('Falta tu nombre'), 'seguir sin nombre no avisa de nada');
@@ -37,25 +37,25 @@ txt = await p.locator('body').innerText();
 assert.ok(!txt.includes('Falta tu nombre'), 'el aviso no se quita al escribir');
 console.log('✓ y desaparece en cuanto escribes');
 
-await p.getByText('Siguiente').click(); await p.waitForTimeout(500);
+await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(500);
 assert.ok(await p.getByText('Pregunta 2 de 5').count(), 'con nombre no dejó seguir');
 console.log('✓ con el nombre puesto, sigue');
 
 // --- Sin días marcados en el paso 4 ---
-await p.getByText('Siguiente').click(); await p.waitForTimeout(400);
-await p.getByText('Siguiente').click(); await p.waitForTimeout(600);
+await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(400);
+await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(600);
 for (const d of ['L', 'M', 'X', 'J', 'V']) {
   await p.getByLabel(`Día ${d}`).click();
   await p.waitForTimeout(120);
 }
-await p.getByText('Siguiente').click();
+await p.getByRole('button', { name: 'Siguiente' }).click();
 await p.waitForTimeout(500);
 txt = await p.locator('body').innerText();
 assert.ok(txt.includes('No marcaste ningún día'), 'seguir sin días no avisa');
 console.log('✓ sin días marcados también avisa, y dice qué hacer');
 await p.getByLabel('Día L').click();
 await p.waitForTimeout(300);
-await p.getByText('Siguiente').click(); await p.waitForTimeout(500);
+await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(500);
 assert.ok(await p.getByText('Pregunta 5 de 5').count());
 
 // --- Lo opcional se dice ---
@@ -63,7 +63,7 @@ txt = await p.locator('body').innerText();
 assert.ok(txt.includes('puedes no marcar nada'), 'no dice que los quehaceres son opcionales');
 console.log('✓ lo opcional también se dice');
 
-await p.getByText('Armar mi semana').click(); await p.waitForTimeout(900);
+await p.getByRole('button', { name: 'Armar mi semana' }).click(); await p.waitForTimeout(900);
 await p.getByText('Me gusta, empezar').click(); await p.waitForTimeout(1800);
 
 // --- Añadir algo a hoy, sin texto ---

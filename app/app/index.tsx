@@ -17,6 +17,7 @@ import { SelectorHora } from '@/componentes/SelectorHora';
 import { FilaTarea } from '@/componentes/FilaTarea';
 import { TarjetaAhora } from '@/componentes/TarjetaAhora';
 import { TarjetaVersiculo } from '@/componentes/TarjetaVersiculo';
+import { enPalabras as cicloEnPalabras, predecir } from '@/lib/ciclo';
 import { sinLeer } from '@/lib/encargos';
 import { EMOJI_TIPO_EVENTO, enPalabras, eventosDeFecha, proximos } from '@/lib/eventos';
 import { devocionalDelDia, versiculoDelDia } from '@/lib/fe';
@@ -29,7 +30,7 @@ import { OCUPACIONES } from '@/lib/arranque';
 import { preguntarSiTermino, type Marcado, type Racha } from '@/lib/rachas';
 import { repositorio, type DiaCompleto } from '@/lib/repositorio';
 import { usarPaleta } from '@/lib/tema';
-import type { Actividad, Ajustes, Encargo, Evento, Persona } from '@/lib/tipos';
+import type { Actividad, Ajustes, DiaCiclo, Encargo, Evento, Persona } from '@/lib/tipos';
 
 export default function Hoy() {
   const p = usarPaleta();
@@ -41,6 +42,7 @@ export default function Hoy() {
   const [chispas, setChispas] = useState(0);
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [ciclo, setCiclo] = useState<DiaCiclo[]>([]);
   const [cambiando, setCambiando] = useState(false);
   const [menu, setMenu] = useState(false);
   const [personas, setPersonas] = useState<Persona[]>([]);
@@ -79,6 +81,7 @@ export default function Hoy() {
     setChispas(await repositorio.chispasTotales());
     setEncargos(await repositorio.encargos());
     setEventos(await repositorio.eventos());
+    setCiclo(aj.ciclo_activo ? await repositorio.ciclo() : []);
   }, [router]);
 
   // Al volver de Rutina o Ajustes hay que releer: el día pudo cambiar.
@@ -236,6 +239,26 @@ export default function Hoy() {
         <TarjetaAhora foco={foco} avisarAntes={avisarAntes} />
         <AnilloProgreso hechas={avance.hechas} total={avance.total} />
 
+        {ajustes.ciclo_activo && (() => {
+          const c = predecir(ciclo, fecha);
+          // Discreto a propósito: una raya rosa y una frase corta. Es lo único
+          // de la pantalla que no tiene por qué entender nadie que la mire de
+          // reojo, y el detalle está dentro, no aquí.
+          const cerca = c.ahora || (c.enCuantos !== null && c.enCuantos <= 3 && c.enCuantos >= -3);
+          if (!cerca) return null;
+          return (
+            <Enlace
+              href="/ciclo"
+              etiqueta="Mi calendario"
+              estilo={[e.enlace, { borderColor: p.rosa, borderLeftWidth: 4 }]}
+            >
+              <Text style={[e.enlaceTexto, { color: p.rosa }]}>
+                🌸  {cicloEnPalabras(c)}
+              </Text>
+            </Enlace>
+          );
+        })()}
+
         {libra && (
           <View style={[e.libre, { backgroundColor: p.verdePiso, borderColor: p.verde }]}>
             <Text style={[e.libreTitulo, { color: p.verde }]}>
@@ -339,6 +362,7 @@ export default function Hoy() {
         aqui="/"
         persona={persona}
         sinLeer={nuevos}
+        conCiclo={ajustes.ciclo_activo}
         onCambiarPersona={() => setCambiando(true)}
       />
 

@@ -12,6 +12,7 @@ import {
   armarSemana, GUSTOS, OCUPACIONES, QUEHACERES, RESPUESTAS_EN_BLANCO,
   type Propuesta, type Respuestas,
 } from '@/lib/arranque';
+import { seLeOfrece } from '@/lib/ciclo';
 import {
   CONFIANZA_MINIMA, jornada, leerHorario, type MateriaLeida,
 } from '@/lib/horarioFoto';
@@ -97,7 +98,9 @@ export default function Arranque() {
     if (!propuesta) return;
     const persona = await repositorio.persona();
     await repositorio.aplicarArranque(
-      propuesta, r.nombre.trim(), fechaLocal(new Date(), persona.zona_horaria),
+      propuesta,
+      { nombre: r.nombre.trim(), sexo: r.sexo },
+      fechaLocal(new Date(), persona.zona_horaria),
     );
     router.replace('/');
   }
@@ -350,6 +353,67 @@ export default function Arranque() {
                 />
               </View>
             </View>
+
+            <Text style={[e.etiqueta, { color: p.tintaSuave }]}>
+              ¿Eres…?  <Text style={{ color: p.tintaTenue, fontWeight: '400' }}>
+                (solo sirve para una cosa, te la digo abajo)
+              </Text>
+            </Text>
+            <View style={e.opciones}>
+              {([
+                ['mujer', '👧 Mujer'],
+                ['hombre', '👦 Hombre'],
+                ['sin_decir', 'Prefiero no decir'],
+              ] as const).map(([id, texto]) => (
+                <Chip
+                  key={id}
+                  texto={texto}
+                  puesto={r.sexo === id}
+                  onPress={() => cambiar({ sexo: id })}
+                />
+              ))}
+            </View>
+
+            {seLeOfrece(r.sexo, r.edad) ? (
+              <View style={[e.privado, { backgroundColor: p.tarjeta, borderColor: p.rosa }]}>
+                <Text style={[e.privadoTitulo, { color: p.rosa }]}>
+                  🌸  Tu calendario del período
+                </Text>
+                <Text style={[e.privadoTexto, { color: p.tintaSuave }]}>
+                  Si quieres, la app te lleva la cuenta: marcas los días que te
+                  venga y te dice cuándo tocaría el siguiente.
+                  {'\n\n'}
+                  <Text style={{ fontWeight: '700', color: p.tinta }}>
+                    Esto no lo ve nadie más.
+                  </Text>{' '}
+                  Ni tu mamá, ni tu papá, ni nadie de tus grupos —aunque vean tu
+                  horario. Es lo único de toda la app que es solo tuyo.
+                  {'\n\n'}
+                  Puedes encenderlo o apagarlo cuando quieras, en Ajustes.
+                </Text>
+                <Pressable
+                  role="switch"
+                  aria-checked={r.ciclo_activo}
+                  onPress={() => cambiar({ ciclo_activo: !r.ciclo_activo })}
+                  style={[
+                    e.privadoBoton,
+                    {
+                      borderColor: r.ciclo_activo ? p.rosa : p.linea,
+                      backgroundColor: r.ciclo_activo ? p.tarjeta2 : p.tarjeta,
+                    },
+                  ]}
+                >
+                  <Text style={[e.privadoBotonTexto, { color: r.ciclo_activo ? p.rosa : p.tintaSuave }]}>
+                    {r.ciclo_activo ? '☑︎  Sí, quiero llevarlo' : '☐  Sí, quiero llevarlo'}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Text style={[e.ayuda, { color: p.tintaTenue }]}>
+                Solo se usa para ofrecerte el calendario del período, si eres
+                mujer y tienes 12 o más. No cambia nada más de la app.
+              </Text>
+            )}
           </>
         )}
 
@@ -566,6 +630,15 @@ function Chip({ texto, puesto, onPress }: { texto: string; puesto: boolean; onPr
 }
 
 const e = StyleSheet.create({
+  privado: {
+    borderWidth: 1.5, borderRadius: 15, padding: 16, marginTop: 16, gap: 10,
+  },
+  privadoTitulo: { fontSize: 16, fontWeight: '700' },
+  privadoTexto: { fontSize: 13.5, lineHeight: 20 },
+  privadoBoton: {
+    borderWidth: 1.5, borderRadius: 12, paddingVertical: 13, alignItems: 'center',
+  },
+  privadoBotonTexto: { fontSize: 15, fontWeight: '700' },
   cuerpo: {
     padding: 22, paddingTop: 28, paddingBottom: 40,
     maxWidth: 560, width: '100%', alignSelf: 'center',

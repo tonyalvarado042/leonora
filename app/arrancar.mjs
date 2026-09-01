@@ -35,10 +35,10 @@ export async function arrancar(p, { url = 'http://localhost:8123', nombre = 'Leo
   await p.waitForTimeout(700);
   await p.getByLabel('Tu nombre').fill(nombre);
   for (let i = 0; i < 4; i++) {
-    await p.getByText('Siguiente').click();
+    await p.getByRole('button', { name: 'Siguiente' }).click();
     await p.waitForTimeout(400);
   }
-  await p.getByText('Armar mi semana').click();
+  await p.getByRole('button', { name: 'Armar mi semana' }).click();
   await p.waitForTimeout(900);
   await p.getByText('Me gusta, empezar').click();
   await p.waitForTimeout(1800);

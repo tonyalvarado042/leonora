@@ -7,6 +7,60 @@ Lo más nuevo arriba.
 
 ---
 
+## Fase 8 · Hombre o mujer, y el calendario del período · 2026-08-31
+
+**Dónde va la pregunta.** En el primer paso del asistente, junto al nombre y la
+edad. No hace falta un paso nuevo, y hay una razón mejor: la pregunta del
+período depende de **las dos cosas** —ser mujer y tener 12 o más—, y ambas ya
+están en esa pantalla. Puestas ahí, el bloque aparece solo cuando toca.
+
+Tres opciones: mujer, hombre y **prefiero no decir**, que es una respuesta
+entera, no un hueco. El sexo se usa **para una sola cosa** en toda la app: esto.
+Y cuando no se ofrece, la app dice por qué en vez de callarse.
+
+**El calendario.** Marca los días que te venga, y opcionalmente cuánto y cómo
+te sientes. La app calcula cuánto dura su ciclo y cuándo tocaría el siguiente.
+
+**La regla que gobierna el módulo entero: con un solo período no se predice
+nada.** Hace falta un intervalo entre dos, y de verdad hacen falta tres para
+que la media signifique algo. Enseñarle a una niña de 13 años una fecha
+inventada con la misma cara que una calculada es peor que no enseñarle
+ninguna: se organiza confiando en ella. Con un período dice «apunta uno más»;
+con dos dice «más o menos»; con tres deja de decirlo.
+
+Si los ciclos salen muy largos o muy seguidos, lo comenta **sin diagnosticar
+nada** y manda a un adulto: «no suele ser nada, pero cuéntaselo a tu mamá o a
+tu doctora». Una app no le dice a una niña que algo va mal.
+
+**Lo único de toda la app que no ve nadie más.** Ni un tutor, ni quien comparte
+grupo, ni quien mira el horario. La migración `0011_el_ciclo.sql` no tiene
+excepción de tutor, no tiene excepción de grupo, y **no existe un
+`cicloDe(personaId)`** en el repositorio: si existiera, alguien acabaría
+llamándolo. Estaba decidido desde el diseño; aquí se cumple.
+
+Se enciende y se apaga desde Ajustes, y **apagarlo no borra nada**: apagar una
+cosa y perderla son dos acciones distintas.
+
+En Hoy sale una raya rosa discreta, solo los días de alrededor, y solo si ella
+lo encendió.
+
+**Dos fallos de accesibilidad que salieron al probarlo:**
+
+1. **Ningún interruptor de Ajustes tenía nombre.** Un lector de pantalla decía
+   «casilla» sin decir de qué ajuste. Ahora la fila se lo pone.
+2. Al arreglar lo anterior lo pasé de rosca: también renombraba los botones,
+   y «Empezar de nuevo» se anunciaba como «Volver a contestar el asistente».
+   Ahora solo se nombra el interruptor, que es el que no tiene texto propio.
+
+*Verificado:* 268 pruebas —20 nuevas solo del cálculo del ciclo, con el caso de
+un período, dos y tres— y **quince** de navegador: que la pregunta esté en el
+primer paso, que a una niña de 11 y a un hombre no se les ofrezca, que a una
+mujer de 13 sí y con la promesa de privacidad escrita, que con un solo período
+no invente una fecha, que con dos calcule, y que apagarlo lo saque del menú sin
+borrar nada. **Cero avisos del asesor de seguridad.**
+
+---
+
 ## El menú de las tres rayas, y «Recados» pasa a ser «Mensajes» · 2026-08-31
 
 **El menú.** La navegación estaba apilada al final de Hoy: cinco filas que

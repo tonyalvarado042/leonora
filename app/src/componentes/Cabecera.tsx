@@ -35,15 +35,17 @@ export function Cabecera({ titulo, atras, derecha, conMenu = true }: Props) {
   const [menu, setMenu] = useState(false);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [nuevos, setNuevos] = useState(0);
+  const [conCiclo, setConCiclo] = useState(false);
 
   // Solo se lee al abrir el menú: cargarlo en cada pantalla que lleva cabecera
   // sería leer el almacén entero para pintar un botón.
   const cargar = useCallback(async () => {
-    const [pe, encargos] = await Promise.all([
-      repositorio.persona(), repositorio.encargos(),
+    const [pe, encargos, ajustes] = await Promise.all([
+      repositorio.persona(), repositorio.encargos(), repositorio.ajustes(),
     ]);
     setPersona(pe);
     setNuevos(sinLeer(encargos, pe.id));
+    setConCiclo(ajustes.ciclo_activo);
   }, []);
 
   useEffect(() => { if (menu) void cargar(); }, [menu, cargar]);
@@ -74,6 +76,7 @@ export function Cabecera({ titulo, atras, derecha, conMenu = true }: Props) {
         aqui={aqui}
         persona={persona}
         sinLeer={nuevos}
+        conCiclo={conCiclo}
       />
     </View>
   );

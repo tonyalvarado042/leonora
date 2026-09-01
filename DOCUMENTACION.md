@@ -35,7 +35,7 @@ toca la rutina, y regenerar el día con los mismos datos da siempre lo mismo.
 
 ## 2. Las tablas
 
-19 tablas creadas. Las de fases posteriores están en la sección 7.
+20 tablas creadas. Las de fases posteriores están en la sección 7.
 
 ### 2.1 `personas` — quién usa la app
 Una fila por persona. La clave es la misma que la de `auth.users`: una cuenta,
@@ -348,7 +348,29 @@ horario; y la confianza solo la trae lo leído de una foto.
 
 ---
 
-### 2.19 Cómo se relacionan
+### 2.19 `ciclo` — lo único que no ve nadie más
+
+| Campo | Tipo | Qué es |
+|---|---|---|
+| `persona_id` + `fecha` | | Clave compuesta |
+| `sangrado` | booleano | Si ese día hubo. Lo demás es opcional |
+| `intensidad` | `poco` · `normal` · `mucho` | |
+| `animo` | texto ≤40 | Cómo se sintió |
+| `nota` | texto ≤500 | |
+
+**Sin excepción de tutor, sin excepción de grupo.** Las migraciones 0007 y 0009
+abrieron lecturas para el tutor: un papá tiene que poder ver el día de su hija.
+Aquí no. Un papá puede necesitar ver el horario de su hija; su ciclo no es
+información suya. Tampoco existe una función `puedo_ver_ciclo_de`, ni un
+`cicloDe(personaId)` en el repositorio: si existieran, alguien acabaría
+llamándolos.
+
+El interruptor vive en `ajustes.ciclo_activo`. **Apagarlo no borra nada**:
+apagar una cosa y perderla son dos acciones distintas.
+
+---
+
+### 2.20 Cómo se relacionan
 
 ```
 auth.users
@@ -382,7 +404,7 @@ null`), porque el historial no se borra.
 
 ## 3. Seguridad
 
-RLS activo en las 19 tablas. Las reglas:
+RLS activo en las 20 tablas. Las reglas:
 
 1. **Cada quien ve lo suyo y nada más.** `persona_id = auth.uid()`.
 2. `tareas_dia` se filtra por su `dias` padre.
@@ -517,6 +539,22 @@ Estos módulos **no importan nada de React Native ni de Expo** a propósito.
 - `misGrupos` · `invitacionesPendientes` · `invitados` · `activos` ·
   `miRolEn` · `mandaEn` · `conQuienComparto`
 
+**`src/lib/ciclo.ts`** — el calendario del período.
+- `periodos(dias)` — agrupa los días sueltos. **Un hueco de un solo día no
+  parte un período en dos**: un día flojo en medio es normal, y partirlo
+  estropearía la media.
+- `duracionMedia` — de **los tres últimos** intervalos, no de todos: un ciclo
+  cambia con los años, y una media de hace dos no dice nada de este mes.
+- `predecir(dias, hoy)` / `enPalabras(p)` — **con un solo período devuelve
+  `null`, no 28 días.** Hace falta un intervalo entre dos para calcular algo, y
+  tres para que la media signifique algo. Con dos dice «más o menos»; con tres
+  deja de decirlo.
+- `vaLaPenaContarlo(ps)` — señala ciclos muy largos o muy seguidos **sin
+  diagnosticar nada**, y manda a un adulto. Una app no le dice a una niña de 13
+  años que algo va mal.
+- `seLeOfrece(sexo, edad)` — mujer y 12 o más. Es lo único para lo que se usa
+  el sexo en toda la app.
+
 **`src/lib/invitaciones.ts`** — invitar a quien todavía no tiene la app.
 - `nuevoCodigo(tipo)` — `CASA-4F2A`. **Sin letras ni números que se confundan
   al copiarlos a mano**: fuera 0/O y 1/I/L.
@@ -575,6 +613,9 @@ Una interfaz `Repositorio`, dos implementaciones intercambiables:
 **Las invitaciones:** `invitaciones` · `invitarPorCorreo` ·
 `cancelarInvitacion` · `unirseConCodigo`
 
+**El ciclo:** `ciclo` · `marcarCiclo` · `borrarDiaCiclo`. Siempre de quien está
+usando la app. **No hay `cicloDe(personaId)` a propósito.**
+
 **Los recados:** `encargos` · `mandarEncargo` · `verEncargo` ·
 `responderEncargo` · `archivarEncargo`
 
@@ -608,6 +649,7 @@ se pueda leer de ahí lo decide la base de datos, no la app.
 | `mensajes` | Los que me mandan y los que mando, con respuesta |
 | `familia` | Quién usa la app, los grupos, quién ve mi calendario, invitar y entrar con un código |
 | `horario` | El día de otra persona del grupo, solo de mirar |
+| `ciclo` | El calendario del período. Solo sale en el menú si ella lo encendió |
 | `eventos` | Feriados, cumpleaños, exámenes y citas |
 | `calendario` | Semana y mes, hacia atrás y adelante, historial de cumplimiento |
 | `rutina` | Editar la semana: mover, quitar, añadir |
@@ -862,7 +904,23 @@ se pulsa y lo dice.
 > que le mete tareas a una niña sin que ella las vea llegar no es una agenda,
 > es un vigilante.
 
-### 5.15 Las fechas importantes
+### 5.15 El sexo, y el calendario del período
+
+La pregunta va en **el primer paso del asistente**, junto al nombre y la edad.
+No por comodidad: la del período depende de las dos, y así el bloque aparece
+solo cuando toca. Tres opciones, y **«prefiero no decir» es una respuesta
+entera**.
+
+- Se ofrece a una **mujer de 12 o más**. Cuando no se ofrece, la app dice por
+  qué en vez de callarse.
+- **Con un solo período no se predice nada.** Se dice que falta apuntar otro.
+- Con dos, se dice **«más o menos»**. Con tres, ya no.
+- Los ciclos raros se comentan sin diagnosticar, y mandan a un adulto.
+- **No lo ve nadie más**, y la app se lo promete por escrito antes de que
+  encienda nada.
+- Se apaga desde Ajustes, y **apagarlo no borra**.
+
+### 5.16 Las fechas importantes
 
 - **Un evento no borra la rutina, la tapa.** Un feriado libra el día de
   colegio pero deja el devocional y la cena, porque el colegio se cancela y la
@@ -889,9 +947,9 @@ se pulsa y lo dice.
 | Cobro | Compras dentro de la app (fase 10) | |
 | IA | Claude — cuando entre | Hoy el arranque va con reglas |
 
-**Verificación:** 248 pruebas (`npm test`) — la lógica pura y el repositorio
+**Verificación:** 268 pruebas (`npm test`) — la lógica pura y el repositorio
 entero, con un AsyncStorage en memoria que lo sustituye fuera del teléfono—,
-TypeScript estricto, y **catorce pruebas de extremo a extremo** sobre el bundle
+TypeScript estricto, y **quince pruebas de extremo a extremo** sobre el bundle
 web real, con navegador. Todas **fijan la fecha** antes de abrir la app: una
 prueba que depende del día en que se corre no protege nada.
 
@@ -908,7 +966,7 @@ prueba que depende del día en que se corre no protege nada.
 | 5 | La familia y la campanita | +4 | ✅ |
 | 6 | Oraciones | +2 | pendiente |
 | 7 | El Muro público | +1 | pendiente |
-| 8 | Lo privado: calendario de ciclo | +1 | pendiente |
+| 8 | Lo privado: calendario de ciclo | +1 | ✅ |
 | 9 | Amigas: invitar, planear, chatear | +3 | pendiente |
 | 10 | Invitados y cobro | +1 | pendiente |
 | 11 | **Leer el horario de una foto de verdad** | +1 | pendiente |
@@ -921,8 +979,6 @@ prueba que depende del día en que se corre no protege nada.
 **Fase 7 — El Muro.** `reportes`. Página web abierta sin cuenta ni descarga.
 Tres protecciones: publicar sin nombre, revisión automática antes de salir, y
 **permiso de tutor para que un menor publique**.
-
-**Fase 8 — El ciclo.** `ciclo`. **Única tabla sin excepción de tutor.**
 
 **Fase 9 — Amigas.** `invitaciones` (grupo o devocional, por app o WhatsApp),
 `mensajes` (el grupo *es* el chat), `respuestas_evento` (sí/no/tal vez).
@@ -990,3 +1046,8 @@ Lo leído entra a `eventos` **sin confirmar**.
 | La racha y la campanita **fuera** del menú | No son sitios a los que ir; un premio escondido deja de premiar |
 | La pantalla se llama «Mensajes», no «Recados» ni «Chat» | «Recado» cambia de país; «chat» promete una conversación que aún no existe |
 | Por dentro sigue siendo `encargos` | La Fase 9 necesita `mensajes` para el chat de verdad |
+| El sexo se pregunta en el paso 1, no en uno aparte | La pregunta del período depende del sexo **y** de la edad, y las dos ya están ahí |
+| Con un período no se predice nada | Una fecha inventada con la misma cara que una calculada es peor que ninguna: se organiza confiando en ella |
+| La media, de los tres últimos ciclos | Un ciclo cambia con los años; una media de hace dos no dice nada de este mes |
+| El ciclo no tiene `cicloDe(personaId)` | Si existiera, alguien acabaría llamándolo |
+| Apagar el calendario no borra lo apuntado | Apagar una cosa y perderla son dos acciones distintas |

@@ -17,10 +17,10 @@ await p.goto(URL, { waitUntil: 'networkidle' });
 await p.waitForTimeout(1700);
 await p.getByText('Empezar').click(); await p.waitForTimeout(700);
 await p.getByLabel('Tu nombre').fill('Leonora');
-for (let i = 0; i < 4; i++) { await p.getByText('Siguiente').click(); await p.waitForTimeout(400); }
+for (let i = 0; i < 4; i++) { await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(400); }
 await p.getByText('🧹 Ordenar el cuarto').click();
 await p.getByText('⚽ Hacer deporte').click();
-await p.getByText('Armar mi semana').click(); await p.waitForTimeout(900);
+await p.getByRole('button', { name: 'Armar mi semana' }).click(); await p.waitForTimeout(900);
 await p.getByText('Me gusta, empezar').click(); await p.waitForTimeout(1700);
 
 // Marcar un par, para que el calendario tenga qué enseñar.
@@ -51,15 +51,15 @@ for (const [enlace, titulo] of pantallas) {
 }
 
 await irA(p, 'Ajustes');
-assert.ok(await p.getByRole('button', { name: 'Volver' }).count(), 'Ajustes no tiene volver');
-await p.getByRole('button', { name: 'Volver' }).click();
+assert.ok(await p.getByRole('button', { name: 'Volver', exact: true }).count(), 'Ajustes no tiene volver');
+await p.getByRole('button', { name: 'Volver', exact: true }).click();
 await p.waitForTimeout(1000);
 console.log('✓ Ajustes: se abre y se vuelve');
 
 await p.getByText(/chispas →$/).click();
 await p.waitForTimeout(1100);
-assert.ok(await p.getByRole('button', { name: 'Volver' }).count(), 'Rachas no tiene volver');
-await p.getByRole('button', { name: 'Volver' }).click();
+assert.ok(await p.getByRole('button', { name: 'Volver', exact: true }).count(), 'Rachas no tiene volver');
+await p.getByRole('button', { name: 'Volver', exact: true }).click();
 await p.waitForTimeout(1000);
 console.log('✓ Tus rachas: se abre y se vuelve');
 
@@ -69,13 +69,13 @@ await p.getByText('+ Añadir algo a este día').click();
 await p.waitForTimeout(600);
 await p.getByLabel('Crear una cosa nueva').click();
 await p.waitForTimeout(1200);
-assert.ok(await p.getByRole('button', { name: 'Volver' }).count(), 'Actividad no tiene volver');
-await p.getByRole('button', { name: 'Volver' }).click();
+assert.ok(await p.getByRole('button', { name: 'Volver', exact: true }).count(), 'Actividad no tiene volver');
+await p.getByRole('button', { name: 'Volver', exact: true }).click();
 await p.waitForTimeout(1000);
 assert.ok(await p.getByText('Esto es tu semana normal', { exact: false }).count(),
   'volver desde Actividad no llevó a Rutina');
 console.log('✓ Una cosa tuya: se abre y se vuelve a la rutina');
-await p.getByRole('button', { name: 'Volver' }).click();
+await p.getByRole('button', { name: 'Volver', exact: true }).click();
 await p.waitForTimeout(1000);
 
 // --- 2. La vista previa del calendario ---

@@ -9,14 +9,19 @@
  * `armarSemana` y devuelve la misma forma: el resto de la app no se entera.
  */
 
+import { seLeOfrece } from './ciclo';
 import { aHora, aMinutos } from './fechas';
 import type {
-  Actividad, Ajustes, BloqueRutina, Hora, Ocupacion, TipoActividad,
+  Actividad, Ajustes, BloqueRutina, Hora, Ocupacion, Sexo, TipoActividad,
 } from './tipos';
 
 export interface Respuestas {
   nombre: string;
   edad: number | null;
+  /** Se usa para una sola cosa: ofrecer el calendario del ciclo. */
+  sexo: Sexo;
+  /** Si aceptó ese calendario. Solo se pregunta cuando toca. */
+  ciclo_activo: boolean;
   hora_despertar: Hora;
   hora_dormir: Hora;
   devocional_min: number;
@@ -34,6 +39,8 @@ export interface Respuestas {
 export const RESPUESTAS_EN_BLANCO: Respuestas = {
   nombre: '',
   edad: null,
+  sexo: 'sin_decir',
+  ciclo_activo: false,
   hora_despertar: '06:00',
   hora_dormir: '21:30',
   devocional_min: 60,
@@ -233,6 +240,9 @@ export function armarSemana(r: Respuestas, personaId: string): Propuesta {
       ocupacion_nombre: r.ocupacion_nombre,
       hora_fin_ocupacion: r.ocupacion_fin,
       dias_ocupados: r.dias_ocupados,
+      // Solo se enciende si de verdad se le ofreció y dijo que sí: si no, un
+      // «sí» de hace tres preguntas quedaría encendido al cambiar la edad.
+      ciclo_activo: seLeOfrece(r.sexo, r.edad) && r.ciclo_activo,
     },
     resumen,
   };

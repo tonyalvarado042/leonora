@@ -20,12 +20,12 @@ await p.goto(URL, { waitUntil: 'networkidle' });
 await p.waitForTimeout(1700);
 await p.getByText('Empezar').click(); await p.waitForTimeout(700);
 await p.getByLabel('Tu nombre').fill('Leonora');
-for (let i = 0; i < 3; i++) { await p.getByText('Siguiente').click(); await p.waitForTimeout(400); }
+for (let i = 0; i < 3; i++) { await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(400); }
 
 await p.getByText('🎒 Escuela').click(); await p.waitForTimeout(400);
 await p.getByLabel('Salgo a las: una hora después').click(); await p.waitForTimeout(400);
-await p.getByText('Siguiente').click(); await p.waitForTimeout(500);
-await p.getByText('Armar mi semana').click(); await p.waitForTimeout(900);
+await p.getByRole('button', { name: 'Siguiente' }).click(); await p.waitForTimeout(500);
+await p.getByRole('button', { name: 'Armar mi semana' }).click(); await p.waitForTimeout(900);
 
 const prop = await p.locator('body').innerText();
 assert.ok(prop.includes('Escuela de 08:00 a 15:00'), 'la propuesta no recoge las horas');

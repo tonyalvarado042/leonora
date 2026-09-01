@@ -31,7 +31,7 @@ await p.waitForTimeout(900);
 
 // 2. Nombre y edad
 assert.ok(await p.getByText('Pregunta 1 de 5').count());
-const siguiente = p.getByText('Siguiente');
+const siguiente = p.getByRole('button', { name: 'Siguiente' });
 await p.getByLabel('Tu nombre').fill('Leonora');
 await p.getByText('13', { exact: true }).click();
 await tiro('2-nombre');
@@ -74,7 +74,7 @@ for (const x of ['🛏️ Tender la cama', '🧹 Ordenar el cuarto', '📖 Leer'
 }
 await tiro('6-quehaceres');
 console.log('✓ paso 5: dos quehaceres y dos gustos');
-await p.getByText('Armar mi semana').click();
+await p.getByRole('button', { name: 'Armar mi semana' }).click();
 await p.waitForTimeout(900);
 
 // 7. La propuesta

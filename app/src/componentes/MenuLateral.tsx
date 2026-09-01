@@ -31,6 +31,10 @@ const ABAJO: Sitio[] = [
   { ruta: '/versiculo', emoji: '📖', nombre: 'Versículo del día' },
 ];
 
+/** Solo sale si ella lo encendió. No se le enseña a nadie más, y a ella
+ *  tampoco si no lo quiso. */
+const MI_CALENDARIO: Sitio = { ruta: '/ciclo', emoji: '🌸', nombre: 'Mi calendario' };
+
 const AJUSTES: Sitio = { ruta: '/ajustes', emoji: '⚙️', nombre: 'Ajustes' };
 
 interface Props {
@@ -42,6 +46,8 @@ interface Props {
   sinLeer: number;
   /** Abre el selector de persona. Si no se pasa, lleva a Familia. */
   onCambiarPersona?: () => void;
+  /** Si ella encendió el calendario del ciclo. */
+  conCiclo?: boolean;
 }
 
 /**
@@ -56,7 +62,7 @@ interface Props {
  * racha escondida detrás de un botón deja de hacer que vuelvas.
  */
 export function MenuLateral({
-  visible, onCerrar, aqui, persona, sinLeer, onCambiarPersona,
+  visible, onCerrar, aqui, persona, sinLeer, onCambiarPersona, conCiclo = false,
 }: Props) {
   const p = usarPaleta();
   const router = useRouter();
@@ -150,6 +156,7 @@ export function MenuLateral({
             {conCuenta.map((s) => <Fila key={s.ruta} sitio={s} />)}
             <View style={[e.raya, { backgroundColor: p.linea }]} />
             {ABAJO.map((s) => <Fila key={s.ruta} sitio={s} />)}
+            {conCiclo && <Fila sitio={MI_CALENDARIO} />}
             <View style={[e.raya, { backgroundColor: p.linea }]} />
             <Fila sitio={AJUSTES} />
           </ScrollView>

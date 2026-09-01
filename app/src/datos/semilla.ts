@@ -29,7 +29,7 @@ export const ajustesIniciales: Ajustes = {
   silencio_desde: '22:00',
   silencio_hasta: '06:00',
   tema: 'auto',
-  celebraciones: true,
+  celebraciones: true, ciclo_activo: false,
   arranque_hecho: false,
 };
 

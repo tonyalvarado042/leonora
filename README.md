@@ -35,7 +35,8 @@ años y hecha para vendérsela a familias enteras.
 | 4 | Fe: devocionales y versículo del día | ✅ |
 | 5 | La familia, la campanita y las fechas importantes | ✅ |
 | 5b | Invitar por correo y ver los horarios del grupo | ✅ |
-| 6-11 | Oraciones, el Muro, ciclo, amigas, cobro, foto | pendientes |
+| 8 | Lo privado: el calendario del período | ✅ |
+| 6, 7, 9-11 | Oraciones, el Muro, amigas, cobro, foto | pendientes |
 
 Detalle de cada fase, y lo guardado para después (deporte + espíritu,
 entrenamientos, nutrición, widget de iOS): [DOCUMENTACION.md §7](DOCUMENTACION.md).
@@ -54,14 +55,15 @@ docs/dia-de-leonora.html     ← el diseño visual
 
 supabase/migrations/         ← 0001 fase 1 · 0002 fase 2 · 0003 seguridad · 0004 fase 4
                                0005 método · 0006 repeticiones · 0007 fase 5
-                               0008 esquema propio · 0009 invitaciones · 0010 escribir a los tuyos
+                               0008 esquema propio · 0009 invitaciones
+                               0010 escribir a los tuyos · 0011 el ciclo
 app/
   app/                       ← las pantallas (expo-router)
   src/lib/                   ← la lógica; lo puro va aparte de la plataforma
   src/componentes/
-  __tests__/                 ← 248 pruebas: la lógica pura y el repositorio entero
+  __tests__/                 ← 268 pruebas: la lógica pura y el repositorio entero
   arrancar.mjs               ← el recorrido de bienvenida y la fecha fija, para las demás pruebas
-  prueba-*.mjs               ← catorce pruebas de extremo a extremo sobre el bundle real
+  prueba-*.mjs               ← quince pruebas de extremo a extremo sobre el bundle real
 ```
 
 ## Arrancar
@@ -77,7 +79,7 @@ npm run web        # o en el navegador
 
 ```bash
 cd app
-npm test           # 248 pruebas: la lógica pura y el repositorio
+npm test           # 268 pruebas: la lógica pura y el repositorio
 npm run typecheck  # TypeScript estricto
 
 npx expo export --platform web --output-dir dist
@@ -96,6 +98,7 @@ node prueba-fase5.mjs        # la familia, la campanita y las fechas importantes
 node prueba-invitar.mjs      # añadir por nombre o por correo, y los horarios del grupo
 node prueba-mensajes.mjs     # quién puede mandar qué a quién
 node prueba-menu.mjs         # el menú de las tres rayas
+node prueba-ciclo.mjs        # hombre o mujer, y el calendario del período
 ```
 
 O todas de una:
@@ -106,7 +109,7 @@ for f in prueba-*.mjs; do echo "--- $f"; node $f; done
 
 ## La base de datos
 
-Proyecto propio de Supabase, aparte de cualquier otro. Diez migraciones
+Proyecto propio de Supabase, aparte de cualquier otro. Once migraciones
 aplicadas y verificadas contra la base real: los disparadores de alta, las
 restricciones del esquema y que el aislamiento por fila **de verdad aísla** —
 una persona no ve ni puede tocar nada de otra, y sin sesión no se ve nada.
@@ -115,3 +118,7 @@ Desde la Fase 5 un tutor **lee** lo de sus hijos, con políticas que se suman a
 las de antes: mirar no es escribir. Las funciones que deciden quién ve qué
 viven en el esquema `claude_graceday`, fuera de la API pública (regla **R7**).
 **El asesor de seguridad da cero avisos.**
+
+Y una tabla va al revés que todas: `ciclo` **no tiene excepción de tutor**. Un
+papá puede necesitar ver el horario de su hija; su ciclo no es información
+suya.

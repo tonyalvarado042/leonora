@@ -25,8 +25,8 @@ import {
 } from './grupos';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, Encargo, EstadoTarea, Evento, Fecha,
-  Grupo, Invitacion as InvitacionGuardada, MiembroGrupo, Persona, RolGrupo,
-  Tarea, TareaNueva, TipoGrupo, TipoRepeticion,
+  DiaCiclo, Grupo, Invitacion as InvitacionGuardada, MiembroGrupo, Persona,
+  RolGrupo, Tarea, TareaNueva, TipoGrupo, TipoRepeticion,
 } from './tipos';
 import {
   actividadesIniciales, ajustesIniciales, familiaInicial, FAMILIA_LOCAL,
@@ -158,6 +158,17 @@ export interface Repositorio {
   ): Promise<InvitacionGuardada>;
   cancelarInvitacion(id: string): Promise<void>;
 
+  /**
+   * Los días del ciclo de **quien está usando la app**, y de nadie más.
+   *
+   * No hay un `cicloDe(personaId)` a propósito: si existiera, alguien acabaría
+   * llamándolo. Un papá puede necesitar ver el día de su hija; su ciclo no es
+   * información suya.
+   */
+  ciclo(): Promise<DiaCiclo[]>;
+  marcarCiclo(fecha: Fecha, cambios: Partial<Omit<DiaCiclo, 'persona_id' | 'fecha'>>): Promise<DiaCiclo[]>;
+  borrarDiaCiclo(fecha: Fecha): Promise<DiaCiclo[]>;
+
   eventos(): Promise<Evento[]>;
   guardarEvento(e: Evento): Promise<Evento>;
   borrarEvento(id: string): Promise<void>;
@@ -193,7 +204,7 @@ export interface Repositorio {
   /** Suma el día a la racha de abrir la app. Se llama una vez al arrancar. */
   registrarApertura(fecha: Fecha): Promise<Premio>;
   /** Sustituye catálogo y rutina de golpe con lo que armó el asistente. */
-  aplicarArranque(p: Propuesta, nombre: string, fecha: Fecha): Promise<void>;
+  aplicarArranque(p: Propuesta, quien: Partial<Persona>, fecha: Fecha): Promise<void>;
   /** Deja la cuenta como recién instalada. Vuelve a salir la bienvenida. */
   empezarDeNuevo(): Promise<void>;
 }
@@ -221,6 +232,8 @@ const CLAVE_V1 = 'graceday.v1';
  *  entero: el día, la rutina, las rachas y las chispas son suyos. */
 interface DatosPersona {
   ajustes: Ajustes;
+  /** Lo único que no sale de aquí ni para un tutor. */
+  ciclo: DiaCiclo[];
   actividades: Actividad[];
   rutina: BloqueRutina[];
   dias: Record<Fecha, DiaCompleto>;
@@ -264,6 +277,7 @@ function rachasVacias(): Record<Via, Racha> {
 function datosIniciales(personaId: string): DatosPersona {
   return {
     ajustes: { ...ajustesIniciales, persona_id: personaId },
+    ciclo: [],
     actividades: actividadesIniciales.map((a) => ({ ...a, persona_id: personaId })),
     rutina: rutinaInicial().map((b) => ({ ...b, persona_id: personaId })),
     dias: {},
@@ -296,6 +310,7 @@ function desdeV1(v: AlmacenV1): Almacen {
     por_persona: {
       [persona.id]: {
         ajustes: { ...ajustesIniciales, ...v.ajustes, persona_id: persona.id },
+        ciclo: [],
         actividades: v.actividades ?? [],
         rutina: v.rutina ?? [],
         dias: v.dias ?? {},
@@ -366,6 +381,39 @@ export class RepositorioLocal implements Repositorio {
   async miembros() { return (await this.cargar()).miembros.map((m) => ({ ...m })); }
   async encargos() { return (await this.cargar()).encargos.map((e) => ({ ...e })); }
   async eventos() { return (await this.cargar()).eventos.map((e) => ({ ...e })); }
+
+  async ciclo() {
+    const a = await this.cargar();
+    return (this.mios(a).ciclo ?? []).map((x) => ({ ...x }));
+  }
+
+  marcarCiclo(fecha: Fecha, cambios: Partial<Omit<DiaCiclo, 'persona_id' | 'fecha'>>) {
+    return this.escribir((a) => {
+      const mios = this.mios(a);
+      const antes = (mios.ciclo ?? []).find((x) => x.fecha === fecha);
+      const dia: DiaCiclo = {
+        persona_id: a.persona_activa,
+        fecha,
+        sangrado: cambios.sangrado ?? antes?.sangrado ?? false,
+        intensidad: cambios.intensidad !== undefined ? cambios.intensidad : antes?.intensidad ?? null,
+        animo: cambios.animo !== undefined ? cambios.animo : antes?.animo ?? null,
+        nota: cambios.nota !== undefined ? cambios.nota : antes?.nota ?? null,
+      };
+      mios.ciclo = [
+        ...(mios.ciclo ?? []).filter((x) => x.fecha !== fecha),
+        dia,
+      ].sort((x, y) => x.fecha.localeCompare(y.fecha));
+      return mios.ciclo.map((x) => ({ ...x }));
+    });
+  }
+
+  borrarDiaCiclo(fecha: Fecha) {
+    return this.escribir((a) => {
+      const mios = this.mios(a);
+      mios.ciclo = (mios.ciclo ?? []).filter((x) => x.fecha !== fecha);
+      return mios.ciclo.map((x) => ({ ...x }));
+    });
+  }
 
   guardarPersona(cambios: Partial<Persona>) {
     return this.escribir((a) => {
@@ -842,11 +890,11 @@ export class RepositorioLocal implements Repositorio {
     });
   }
 
-  aplicarArranque(p: Propuesta, nombre: string, fecha: Fecha) {
+  aplicarArranque(p: Propuesta, quien: Partial<Persona>, fecha: Fecha) {
     return this.escribir<void>((a) => {
       const id = a.persona_activa;
       const mios = this.mios(a);
-      a.personas = a.personas.map((x) => (x.id === id ? { ...x, nombre } : x));
+      a.personas = a.personas.map((x) => (x.id === id ? { ...x, ...quien, id } : x));
       mios.ajustes = { ...mios.ajustes, ...p.ajustes, persona_id: id, arranque_hecho: true };
       // Se sustituye entero, no se mezcla: mezclar con la rutina de fábrica
       // dejaría bloques que la persona nunca pidió.

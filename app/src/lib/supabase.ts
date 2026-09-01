@@ -29,8 +29,8 @@ import type {
 } from './repositorio';
 import type {
   Actividad, Ajustes, BloqueRutina, Dia, Encargo, EstadoTarea, Evento, Fecha,
-  Grupo, Invitacion as InvitacionGuardada, MiembroGrupo, Persona, RolGrupo,
-  Tarea, TipoGrupo,
+  DiaCiclo, Grupo, Invitacion as InvitacionGuardada, MiembroGrupo, Persona,
+  RolGrupo, Tarea, TipoGrupo,
 } from './tipos';
 
 const VIAS = ['devocional', 'dia', 'apertura', 'oracion'] as const;
@@ -420,7 +420,7 @@ export class RepositorioSupabase implements Repositorio {
     };
   }
 
-  async aplicarArranque(p: Propuesta, nombre: string, fecha: Fecha): Promise<void> {
+  async aplicarArranque(p: Propuesta, quien: Partial<Persona>, fecha: Fecha): Promise<void> {
     const persona_id = await this.miId();
     // Se borra lo anterior y se pone lo nuevo: `rutina.actividad_id` cae en
     // cascada, así que basta con quitar las actividades.
@@ -435,7 +435,7 @@ export class RepositorioSupabase implements Repositorio {
     const e2 = (await this.sb.from('rutina').insert(conDueno(p.rutina))).error;
     if (e2) throw new Error(`guardar la rutina: ${e2.message}`);
 
-    await this.guardarPersona({ nombre });
+    await this.guardarPersona(quien);
     await this.guardarAjustes({ ...p.ajustes, arranque_hecho: true });
     await this.dia(fecha);
   }
@@ -692,6 +692,37 @@ export class RepositorioSupabase implements Repositorio {
   }
 
   // ---------------------------------------------------------- los eventos
+
+  // ------------------------------------------------------------ el ciclo
+  //
+  // Siempre con `miId()`, nunca con `aQuienMiro()`: mirar el día de una hija
+  // es una cosa y mirar su ciclo es otra. La política de la migración 0011 dice
+  // lo mismo, y ese es el sitio donde de verdad se cumple.
+
+  async ciclo(): Promise<DiaCiclo[]> {
+    return pedir(
+      await this.sb.from('ciclo').select('*')
+        .eq('persona_id', await this.miId()).order('fecha'),
+      'leer tu calendario',
+    );
+  }
+
+  async marcarCiclo(
+    fecha: Fecha, cambios: Partial<Omit<DiaCiclo, 'persona_id' | 'fecha'>>,
+  ): Promise<DiaCiclo[]> {
+    const { error } = await this.sb.from('ciclo').upsert({
+      persona_id: await this.miId(), fecha, ...cambios,
+    });
+    if (error) throw new Error(`guardar el día: ${error.message}`);
+    return this.ciclo();
+  }
+
+  async borrarDiaCiclo(fecha: Fecha): Promise<DiaCiclo[]> {
+    const { error } = await this.sb.from('ciclo').delete()
+      .eq('persona_id', await this.miId()).eq('fecha', fecha);
+    if (error) throw new Error(`quitar el día: ${error.message}`);
+    return this.ciclo();
+  }
 
   async eventos(): Promise<Evento[]> {
     return pedir(
