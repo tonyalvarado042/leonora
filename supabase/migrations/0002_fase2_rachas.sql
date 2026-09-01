@@ -8,13 +8,13 @@
 -- tabla. Con cuatro vías, niveles y día de gracia ya no aplica: se leen en
 -- CADA apertura de la app, y hay que guardar cuándo se ganó cada insignia.
 
-create type via_racha as enum ('apertura', 'dia', 'devocional', 'oracion');
+create type graceday_via_racha as enum ('apertura', 'dia', 'devocional', 'oracion');
 
 -- ---------------------------------------------------------------- rachas
 
-create table rachas (
-  persona_id       uuid not null references personas (id) on delete cascade,
-  via              via_racha not null,
+create table graceday_rachas (
+  persona_id       uuid not null references graceday_personas (id) on delete cascade,
+  via              graceday_via_racha not null,
   racha_actual     integer not null default 0 check (racha_actual >= 0),
   racha_mejor      integer not null default 0 check (racha_mejor >= 0),
   total_dias       integer not null default 0 check (total_dias >= 0),
@@ -32,9 +32,9 @@ create table rachas (
 -- El catálogo de insignias: cuatro escaleras iguales, de 3 días a un año.
 -- Está en datos y no en código para que cambiar un nombre o mover un umbral
 -- sea editar una fila.
-create table logros (
+create table graceday_logros (
   id              text primary key,
-  via             via_racha not null,
+  via             graceday_via_racha not null,
   dias_requeridos integer not null check (dias_requeridos > 0),
   nombre          text not null,
   emoji           text not null,
@@ -42,9 +42,9 @@ create table logros (
   unique (via, dias_requeridos)
 );
 
-create table logros_ganados (
-  persona_id uuid not null references personas (id) on delete cascade,
-  logro_id   text not null references logros (id) on delete cascade,
+create table graceday_logros_ganados (
+  persona_id uuid not null references graceday_personas (id) on delete cascade,
+  logro_id   text not null references graceday_logros (id) on delete cascade,
   ganado_en  timestamptz not null default now(),
   -- null = todavía no se le enseñó la celebración a la persona.
   visto_en   timestamptz,
@@ -56,11 +56,11 @@ create table logros_ganados (
 
 -- Qué vías se contaron ya hoy. Un día contado no se descuenta: si lo hiciste,
 -- lo hiciste, aunque después desmarques algo.
-alter table dias add column vias_contadas via_racha[] not null default '{}';
+alter table graceday_dias add column vias_contadas graceday_via_racha[] not null default '{}';
 
 -- --------------------------------------------------------------- semilla
 
-insert into logros (id, via, dias_requeridos, nombre, emoji) values
+insert into graceday_logros (id, via, dias_requeridos, nombre, emoji) values
   ('fe-3',    'devocional', 3,   'Semilla', '🌱'),
   ('fe-7',    'devocional', 7,   'Raíz',    '🪴'),
   ('fe-14',   'devocional', 14,  'Brote',   '🌿'),
@@ -94,33 +94,33 @@ insert into logros (id, via, dias_requeridos, nombre, emoji) values
 
 -- ------------------------------------------------------------------- RLS
 
-alter table rachas         enable row level security;
-alter table logros         enable row level security;
-alter table logros_ganados enable row level security;
+alter table graceday_rachas         enable row level security;
+alter table graceday_logros         enable row level security;
+alter table graceday_logros_ganados enable row level security;
 
-create policy propias on rachas
+create policy propias on graceday_rachas
   for all using (persona_id = (select auth.uid())) with check (persona_id = (select auth.uid()));
 
-create policy propios on logros_ganados
+create policy propios on graceday_logros_ganados
   for all using (persona_id = (select auth.uid())) with check (persona_id = (select auth.uid()));
 
 -- El catálogo lo puede leer cualquiera con sesión; nadie lo escribe desde la app.
-create policy lectura on logros for select to authenticated using (true);
+create policy lectura on graceday_logros for select to authenticated using (true);
 
 -- Las rachas nacen en cero junto con la persona.
-create or replace function crear_rachas_al_registrarse()
+create or replace function claude_graceday.crear_rachas_al_registrarse()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
 begin
-  insert into rachas (persona_id, via)
-  select new.id, v from unnest(enum_range(null::via_racha)) as v;
+  insert into graceday_rachas (persona_id, via)
+  select new.id, v from unnest(enum_range(null::graceday_via_racha)) as v;
   return new;
 end;
 $$;
 
 create trigger al_crear_persona
-  after insert on personas
-  for each row execute function crear_rachas_al_registrarse();
+  after insert on graceday_personas
+  for each row execute function claude_graceday.crear_rachas_al_registrarse();

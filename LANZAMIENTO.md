@@ -3,6 +3,44 @@
 Lo que hace falta de verdad para que la app esté en el iPhone y en Android,
 con números y tiempos. Nada de esto se puede saltar.
 
+## Lo primero: hoy nadie puede crear una cuenta
+
+GraceDay comparte el proyecto de Supabase con el CRM de Tony. Ese CRM tiene un
+disparador propio, `cta_validar_alta`, que corre **antes de cada alta de todo el
+proyecto** y rechaza el correo que no esté en su lista de invitaciones:
+
+> «CRM Tony Alvarado: ese correo no esta autorizado. Pedile al administrador que
+> te agregue.»
+
+La lista está vacía, así que **hoy solo `aalvarado@gmail.com` puede registrarse
+ahí**. Ni Leonora, ni su mamá, ni una familia que compre la app.
+
+No se tocó, porque es la puerta de otra aplicación y esa decisión no es de la
+app: es tuya. Hay dos maneras de resolverlo, y **el orden importa**.
+
+**A) Dejar entrar a los de GraceDay, cerrando antes el reparto de permisos.**
+Son dos cambios, y hacerlos al revés abre el CRM de par en par:
+
+1. **Primero** `cta_alta_usuario`. Hoy, a quien pasa el filtro y no tiene
+   invitación le crea una fila en `cta_usuarios` con rol `lectura`, y ese rol
+   **lee todo el CRM**: contactos, oportunidades, pagos, correos, documentos.
+   Tiene que dejar de crear fila cuando no hay invitación.
+2. **Después** `cta_validar_alta`, para que solo valide las altas del CRM y deje
+   pasar las de GraceDay.
+
+   Con ese orden, el control de acceso del CRM pasa a ser lo que ya es de
+   verdad —tener fila y rol en `cta_usuarios`— y deja de depender de que nadie
+   pueda registrarse. Si se hiciera al revés, cualquiera podría registrarse
+   diciendo que viene de GraceDay —los metadatos del alta los manda el
+   teléfono, no el servidor— y saldría con permiso de lectura sobre los 872
+   contactos.
+
+**B) GraceDay se registra en su propio proyecto de Supabase** y deja este solo
+para el CRM. Es lo que había antes; el proyecto viejo sigue vacío y en pie.
+
+Mientras no se elija, la app funciona **guardando en el teléfono**, que es como
+está funcionando ahora. Lo que no se puede todavía es tener cuenta en la nube.
+
 ## Antes de nada: probar sin publicar
 
 **Expo Go** — se instala Expo Go (gratis) en el teléfono, se corre

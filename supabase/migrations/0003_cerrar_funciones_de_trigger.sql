@@ -12,5 +12,5 @@
 --
 -- Deja el asesor de seguridad del proyecto en cero avisos.
 
-revoke execute on function crear_persona_al_registrarse() from public, anon, authenticated;
-revoke execute on function crear_rachas_al_registrarse()  from public, anon, authenticated;
+revoke execute on function claude_graceday.crear_persona_al_registrarse() from public, anon, authenticated;
+revoke execute on function claude_graceday.crear_rachas_al_registrarse()  from public, anon, authenticated;

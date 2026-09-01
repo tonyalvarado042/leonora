@@ -37,6 +37,27 @@ toca la rutina, y regenerar el día con los mismos datos da siempre lo mismo.
 
 20 tablas creadas. Las de fases posteriores están en la sección 7.
 
+### 2.0 Dónde viven, y por qué llevan `graceday_` delante
+
+GraceDay **no tiene base de datos propia**: vive en el mismo proyecto de
+Supabase que el CRM de Tony Alvarado. Para que dos proyectos en la misma base
+de datos no se hagan un enredo, **todo lo de GraceDay lleva `graceday_`
+delante**: las 20 tablas, los 25 tipos y los 38 índices. En `public` se ve de
+un vistazo qué es de quién.
+
+Lo que no se llama desde la app —las funciones de las políticas y las de
+disparador— vive en el esquema **`claude_graceday`**, que PostgREST no publica
+(regla **R7**).
+
+En este documento las tablas se nombran sin prefijo, que es como se leen: la
+tabla `personas` es `graceday_personas` en la base de datos. En el código el
+prefijo aparece **una sola vez**, en el mapa `TABLA` de
+`src/lib/supabase.ts`, y no repetido en las sesenta y siete consultas.
+
+**Nada del CRM se tocó.** Las cinco tablas que ya estaban siguen exactamente
+igual, con sus filas y sus políticas. Lo único que cambió fuera de GraceDay es
+que su disparador de alta ahora lleva condición — ver 3.3.
+
 ### 2.1 `personas` — quién usa la app
 Una fila por persona. La clave es la misma que la de `auth.users`: una cuenta,
 una persona.
@@ -427,6 +448,25 @@ RLS activo en las 20 tablas. Las reglas:
 9. **Una invitación solo se ve desde el correo al que va**, o desde quien la
    mandó. No hay forma de listar invitaciones ajenas ni de ir probando
    códigos.
+
+### 3.0 El alta, en un proyecto compartido
+
+`auth.users` es de todo el proyecto, no de GraceDay. Un disparador que corriera
+en **cada** alta le crearía una persona de GraceDay a alguien que se registró
+en otra app —y, peor, si algo fallara ahí dentro, la transacción se cae y nadie
+podría registrarse en ninguna.
+
+Por eso el disparador lleva condición (migración 0012): solo corre si el alta
+viene marcada como de GraceDay.
+
+```ts
+supabase.auth.signUp({ email, password,
+  options: { data: { app: 'graceday', nombre } } })
+```
+
+Quien ya tenía cuenta en el proyecto y un día abre GraceDay no pasa por ahí:
+**entra, no se registra**. Esa fila la crea la app al entrar —la política de
+`personas` deja que cada quien cree la suya—, no el disparador.
 
 ### 3.1 Quién ve el calendario de quién
 

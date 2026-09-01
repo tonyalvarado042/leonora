@@ -10,37 +10,37 @@
 --
 -- Se decidió así desde el diseño, en la Fase 0, y se cumple aquí.
 
-create type intensidad_ciclo as enum ('poco', 'normal', 'mucho');
+create type graceday_intensidad_ciclo as enum ('poco', 'normal', 'mucho');
 
-create table ciclo (
-  persona_id   uuid not null references personas (id) on delete cascade,
+create table graceday_ciclo (
+  persona_id   uuid not null references graceday_personas (id) on delete cascade,
   fecha        date not null,
   -- Si ese día hubo sangrado. Lo demás es opcional: apuntar es de ella.
   sangrado     boolean not null default true,
-  intensidad   intensidad_ciclo,
+  intensidad   graceday_intensidad_ciclo,
   animo        text check (animo is null or length(animo) <= 40),
   nota         text check (nota is null or length(nota) <= 500),
   creado_en    timestamptz not null default now(),
   primary key (persona_id, fecha)
 );
 
-alter table ciclo enable row level security;
+alter table graceday_ciclo enable row level security;
 
 -- Sin tutor, sin grupo, sin nadie. Solo ella.
-create policy solo_mio on ciclo
+create policy solo_mio on graceday_ciclo
   for all using (persona_id = (select auth.uid()))
   with check (persona_id = (select auth.uid()));
 
-comment on table ciclo is
+comment on table graceday_ciclo is
   'El calendario del ciclo. Única tabla sin excepción de tutor: un papá puede
    necesitar ver el horario de su hija, su ciclo no es información suya.';
 
 -- El interruptor vive en los ajustes, junto a los demás. Apagarlo **no borra**
 -- lo apuntado: apagar una cosa y perderla son dos acciones distintas, y la app
 -- no puede hacer la segunda cuando le piden la primera.
-alter table ajustes add column ciclo_activo boolean not null default false;
+alter table graceday_ajustes add column ciclo_activo boolean not null default false;
 
 -- El sexo ya existía en `personas` desde la Fase 1, y sigue sirviendo para una
 -- sola cosa: decidir si se le ofrece este calendario.
-comment on column personas.sexo is
+comment on column graceday_personas.sexo is
   'Solo se usa para ofrecer el calendario del ciclo. No cambia nada más.';

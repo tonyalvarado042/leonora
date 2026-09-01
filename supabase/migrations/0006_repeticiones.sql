@@ -6,12 +6,12 @@
 --
 -- Las reglas viejas eran todas semanales, así que la conversión es directa.
 
-create type tipo_repeticion as enum (
+create type graceday_tipo_repeticion as enum (
   'diaria', 'semanal', 'cada_n_dias', 'mensual', 'anual'
 );
 
-alter table rutina
-  add column repeticion tipo_repeticion not null default 'semanal',
+alter table graceday_rutina
+  add column repeticion graceday_tipo_repeticion not null default 'semanal',
   -- Solo en `cada_n_dias`. Se cuenta desde `desde`.
   add column cada_n smallint check (cada_n between 1 and 366),
   -- En `mensual` y `anual`. Si el mes es más corto, cae en su último día:
@@ -23,9 +23,9 @@ alter table rutina
   add column hasta date;
 
 -- `dia_semana` deja de ser obligatorio: solo lo usa la repetición semanal.
-alter table rutina alter column dia_semana drop not null;
+alter table graceday_rutina alter column dia_semana drop not null;
 
-alter table rutina
+alter table graceday_rutina
   add constraint rango_ordenado check (hasta is null or hasta >= desde),
   -- Cada repetición necesita lo suyo y nada más. Sin esto se pueden guardar
   -- reglas que no significan nada, y el generador las ignora en silencio.
@@ -40,5 +40,5 @@ alter table rutina
   );
 
 -- El índice viejo solo servía para lo semanal.
-drop index if exists rutina_busqueda_idx;
-create index rutina_busqueda_idx on rutina (persona_id, modo, repeticion) where activo;
+drop index if exists graceday_rutina_busqueda_idx;
+create index graceday_rutina_busqueda_idx on graceday_rutina (persona_id, modo, repeticion) where activo;

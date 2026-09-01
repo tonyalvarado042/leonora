@@ -20,16 +20,16 @@ set search_path = public
 as $$
   select exists (
     select 1
-    from miembros_grupo yo
-    join miembros_grupo suyo on suyo.grupo_id = yo.grupo_id
+    from graceday_miembros_grupo yo
+    join graceday_miembros_grupo suyo on suyo.grupo_id = yo.grupo_id
     where yo.persona_id = (select auth.uid()) and yo.estado = 'activo'
       and suyo.persona_id = otra and suyo.estado = 'activo'
   )
 $$;
 
-drop policy mando_a_los_mios on encargos;
+drop policy mando_a_los_mios on graceday_encargos;
 
-create policy mando_a_los_mios on encargos
+create policy mando_a_los_mios on graceday_encargos
   for insert with check (
     de_persona_id = (select auth.uid())
     and claude_graceday.comparto_grupo_con(para_persona_id)

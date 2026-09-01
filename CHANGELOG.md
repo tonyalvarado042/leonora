@@ -7,6 +7,48 @@ Lo más nuevo arriba.
 
 ---
 
+## GraceDay se muda al proyecto de Tony, con apellido · 2026-09-01
+
+**No hay base de datos nueva.** GraceDay ahora vive en el mismo proyecto de
+Supabase que el CRM de Tony Alvarado, y para que no se haga un enredo **todo lo
+suyo lleva `graceday_` delante**: 20 tablas, 25 tipos y 38 índices. Lo que no
+se llama desde la app sigue en el esquema `claude_graceday` (R7).
+
+**Las cinco tablas que ya estaban no se tocaron.** Se comprobó antes y después:
+872 contactos, 17 prospectos, 5 suscriptores, 2 reservas — y el esquema del CRM
+con sus 1.377 contactos y su usuario. Ni una fila, ni una política, ni un
+índice de nadie más.
+
+**El prefijo se puso con un guion, no a mano**, y el guion respeta lo que no es
+código: no tocó ni un comentario ni una cadena entre comillas. Dio dos sustos
+que valía la pena mirar:
+
+- Una **columna que se llama igual que su tipo** —`tipo_cuenta tipo_cuenta`, y
+  también `metodo_devocional`— salía renombrada por los dos lados. El tipo
+  lleva prefijo; la columna no, o la app pediría una columna que no existe.
+- `tareas_dia.metodo_devocional` renombraba **lo que va detrás del punto**, que
+  es la columna. Ahora lo de detrás de un punto no se toca.
+
+**El disparador de alta ahora lleva condición** (migración 0012). `auth.users`
+es de todo el proyecto: sin condición, cualquiera que se registrara en otra app
+nacería con una persona de GraceDay, y si algo fallara ahí dentro **nadie podría
+registrarse en ninguna**. Ahora solo corre si el alta trae `app: 'graceday'`.
+
+**Los nombres de tabla, en un solo sitio.** Estaban repetidos en 67 consultas;
+ahora hay un mapa `TABLA` en `src/lib/supabase.ts` y cambiar el prefijo es
+cambiar una línea. Las dos consultas anidadas usan **alias** (`tareas:`, `dia:`)
+para que la clave de la respuesta no dependa del prefijo.
+
+**Verificado:** 268 pruebas de unidad, 16 recorridos de navegador, `typecheck`
+limpio, y el **asesor de seguridad de Supabase sin un solo aviso de GraceDay**
+—los cuatro que salen son de antes y son a propósito.
+
+**Queda una cosa por decidir, y es tuya:** el CRM tiene un disparador
+(`cta_validar_alta`) que **rechaza cualquier alta** cuyo correo no esté en su
+lista de invitaciones. Esa lista está vacía, así que hoy **solo
+`aalvarado@gmail.com` puede crear una cuenta en ese proyecto** — ni Leonora, ni
+su mamá, ni una familia que compre la app. Está explicado en `LANZAMIENTO.md`.
+
 ## La hora se escribe, y la pregunta se lee como se habla · 2026-08-31
 
 **«¿A qué hora vives?»** era una frase de anuncio, no una pregunta. Ahora dice

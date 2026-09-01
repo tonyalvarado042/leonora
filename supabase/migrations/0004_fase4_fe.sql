@@ -8,7 +8,7 @@
 -- Por eso `versiculos_versiones` es una tabla aparte y no una columna: añadir
 -- una versión licenciada es meter filas, sin tocar la app ni el esquema.
 
-create table devocionales (
+create table graceday_devocionales (
   id         text primary key,
   titulo     text not null,
   pasaje     text not null,
@@ -24,7 +24,7 @@ create table devocionales (
   constraint edades_ordenadas check (edad_max > edad_min)
 );
 
-create table versiculos (
+create table graceday_versiculos (
   id          text primary key,
   referencia  text not null,
   tema        text not null,
@@ -36,8 +36,8 @@ create table versiculos (
   unique (dia_del_anio)
 );
 
-create table versiculos_versiones (
-  versiculo_id text not null references versiculos (id) on delete cascade,
+create table graceday_versiculos_versiones (
+  versiculo_id text not null references graceday_versiculos (id) on delete cascade,
   -- 'RV1909' es la que se distribuye. Las demás, con licencia.
   version      text not null,
   texto        text not null check (length(trim(texto)) > 5),
@@ -45,31 +45,31 @@ create table versiculos_versiones (
   primary key (versiculo_id, version)
 );
 
-create table versiculos_guardados (
-  persona_id   uuid not null references personas (id) on delete cascade,
-  versiculo_id text not null references versiculos (id) on delete cascade,
+create table graceday_versiculos_guardados (
+  persona_id   uuid not null references graceday_personas (id) on delete cascade,
+  versiculo_id text not null references graceday_versiculos (id) on delete cascade,
   guardado_en  timestamptz not null default now(),
 
   primary key (persona_id, versiculo_id)
 );
 
 -- Qué devocional le tocó a cada tarea de fe, para poder mirar atrás.
-alter table tareas_dia add column devocional_id text references devocionales (id) on delete set null;
+alter table graceday_tareas_dia add column devocional_id text references graceday_devocionales (id) on delete set null;
 
 -- ------------------------------------------------------------------- RLS
 
-alter table devocionales          enable row level security;
-alter table versiculos            enable row level security;
-alter table versiculos_versiones  enable row level security;
-alter table versiculos_guardados  enable row level security;
+alter table graceday_devocionales          enable row level security;
+alter table graceday_versiculos            enable row level security;
+alter table graceday_versiculos_versiones  enable row level security;
+alter table graceday_versiculos_guardados  enable row level security;
 
 -- El contenido es catálogo: lo lee cualquiera con sesión, nadie lo escribe
 -- desde la app.
-create policy lectura on devocionales         for select to authenticated using (activo);
-create policy lectura on versiculos           for select to authenticated using (activo);
-create policy lectura on versiculos_versiones for select to authenticated using (true);
+create policy lectura on graceday_devocionales         for select to authenticated using (activo);
+create policy lectura on graceday_versiculos           for select to authenticated using (activo);
+create policy lectura on graceday_versiculos_versiones for select to authenticated using (true);
 
 -- Los guardados sí son de cada quien.
-create policy propios on versiculos_guardados
+create policy propios on graceday_versiculos_guardados
   for all using (persona_id = (select auth.uid()))
   with check (persona_id = (select auth.uid()));
