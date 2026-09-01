@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "permissions": {
+    "allow": [
+      "mcp__Supabase__list_projects",
+      "mcp__Supabase__get_project",
+      "mcp__Supabase__get_project_url",
+      "mcp__Supabase__get_publishable_keys",
+      "mcp__Supabase__list_tables",
+      "mcp__Supabase__list_extensions",
+      "mcp__Supabase__list_migrations",
+      "mcp__Supabase__execute_sql",
+      "mcp__Supabase__apply_migration",
+      "mcp__Supabase__get_advisors",
+      "mcp__Supabase__get_logs",
+      "mcp__Supabase__query_logs",
+      "mcp__Supabase__generate_typescript_types",
+      "mcp__Supabase__search_docs",
+      "Bash(npm test)",
+      "Bash(npm run typecheck)",
+      "Bash(npx expo export *)",
+      "Bash(node prueba-*)",
+      "Bash(node servidor.mjs*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(cat *)",
+      "Bash(sed -n *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(ls *)",
+      "Bash(grep *)",
+      "Bash(wc *)"
+    ],
+    "deny": [
+      "mcp__Supabase__delete_branch",
+      "mcp__Supabase__pause_project",
+      "mcp__Supabase__create_project"
+    ]
+  }
+}

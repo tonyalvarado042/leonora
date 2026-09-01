@@ -23,6 +23,7 @@ Resumen para tenerlo a mano:
 | **R5** | Se verifica en el navegador, no solo compilando |
 | **R6** | Detalles que ya costaron un rato (`role`/`aria-*`, `<Enlace>`, Modal y navegación, cabecera propia, campos controlados, `export const` no se actualiza, `--clear` al cambiar `.env`) |
 | **R7** | Lo que se crea en una base de datos se llama `claude_<proyecto>` |
+| **R8** | Enseñar dónde está la base de datos —y su enlace— **antes** de decidir sobre ella |
 
 ## Antes de dar algo por hecho
 

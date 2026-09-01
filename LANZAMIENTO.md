@@ -3,45 +3,23 @@
 Lo que hace falta de verdad para que la app esté en el iPhone y en Android,
 con números y tiempos. Nada de esto se puede saltar.
 
-## El alta, en un proyecto compartido
+## La cuenta, y lo único que falta probar
 
-GraceDay comparte proyecto de Supabase con el CRM de Tony, y `auth.users` es de
-los dos. Eso se arregló en dos pasos, **y el orden era lo importante**:
-
-1. **`cta_alta_usuario` (migración 0013).** A quien pasara el filtro sin
-   invitación le creaba igual una fila en `cta_usuarios` con rol `lectura`, y
-   ese rol **lee todo el CRM**. Ahora sin invitación no crea fila.
-2. **`cta_validar_alta` (migración 0014).** Rechazaba **cada** alta del
-   proyecto cuyo correo no estuviera en su lista —vacía—, así que solo el dueño
-   podía registrarse. Ahora solo valida las altas del CRM.
-
-Haciéndolo al revés cualquiera podría registrarse diciendo que viene de
-GraceDay y salir leyendo los 872 contactos. En este orden, el CRM queda **más
-cerrado que antes**: su control de acceso ya no depende de que nadie pueda
-registrarse, sino de tener fila y rol en `cta_usuarios`, que es lo que mira
-`cta_es`.
-
-**Comprobado contra la base real:** un alta de GraceDay entra y sale con su
-persona, sus ajustes, sus cuatro rachas y su familia, y con **cero** filas en el
-CRM; un alta sin marca y sin invitación **sigue rechazada**. Las cuentas de
-prueba se borraron.
+GraceDay tiene **su propio proyecto de Supabase**
+(`vnjiwlauuezhuoalacwu`), así que `auth.users` es solo suyo: quien se registra
+en la app nace con su persona, sus ajustes, sus rachas y su familia.
 
 La pantalla de entrar y crear cuenta ya está, y registra con
-`options: { data: { app: 'graceday', nombre } }`. Al no pasar por la puerta del
-CRM, el correo **no se confirma solo**: Supabase manda su correo, y la pantalla
-lo dice («Te mandamos un correo a …») en vez de quedarse callada.
+`options: { data: { app: 'graceday', nombre } }`.
 
-### Lo único que falta probar, y hace falta tu máquina
-
-**La llamada de red de verdad.** El entorno donde se desarrolla no deja salir a
-`supabase.co` —el proxy contesta 403—, así que `signUp` y `signInWithPassword`
-no se han podido probar contra el servidor. Todo lo demás sí:
+**Lo único que falta probar, y hace falta tu máquina:** la llamada de red de
+verdad. El entorno donde se desarrolla no deja salir a `supabase.co` —el proxy
+contesta 403—, así que `signUp` y `signInWithPassword` no se han podido probar
+contra el servidor. Todo lo demás sí:
 
 - La subida entera **contra la base real**, con las mismas filas y en el mismo
   orden que hace el código: 2 actividades y 6 bloques de rutina, los 6 bien
   enganchados a su actividad nueva.
-- El disparador de alta, la puerta del CRM y que una cuenta de GraceDay sale
-  con cero acceso al CRM.
 - La pantalla entera, y que **cuando la red falla lo dice bien**: «No se pudo
   conectar. Mira que tengas internet y vuelve a probar.» — se vio de verdad.
 

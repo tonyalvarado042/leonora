@@ -120,16 +120,17 @@ no borra nada, ni aquí ni allá.
 
 ## La base de datos
 
-Comparte proyecto de Supabase con el CRM de Tony Alvarado, así que **todo lo
-de GraceDay lleva `graceday_` delante** —20 tablas, 25 tipos, 38 índices— y en
-`public` se ve de un vistazo qué es de quién. En el código el prefijo aparece
-una sola vez, en el mapa `TABLA` de `src/lib/supabase.ts`.
+**Proyecto propio de Supabase**, aparte del CRM: `vnjiwlauuezhuoalacwu`
+([panel](https://supabase.com/dashboard/project/vnjiwlauuezhuoalacwu)).
+
+Todo lo suyo lleva `graceday_` delante —20 tablas, 25 tipos, 38 índices— para
+que estas migraciones valgan en cualquier proyecto sin tocar nada. En el código
+el prefijo aparece una sola vez, en el mapa `TABLA` de `src/lib/supabase.ts`.
 
 Trece migraciones aplicadas y verificadas contra la base real: los disparadores
 de alta, las restricciones del esquema y que el aislamiento por fila **de verdad
 aísla** — una persona no ve ni puede tocar nada de otra, y sin sesión no se ve
-nada. El disparador de alta lleva condición (`app: 'graceday'`): `auth.users` es
-de todo el proyecto, no solo de esta app.
+nada.
 
 Desde la Fase 5 un tutor **lee** lo de sus hijos, con políticas que se suman a
 las de antes: mirar no es escribir. Las funciones que deciden quién ve qué

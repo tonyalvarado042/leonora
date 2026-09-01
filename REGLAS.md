@@ -149,3 +149,38 @@ nombre no. Se renombró a `claude_graceday` en la migración 0008.
 
 Las tablas de dentro **no** llevan prefijo: ya están dentro del esquema del
 proyecto, y `claude_graceday.claude_graceday_grupos` no ayuda a nadie.
+
+---
+
+## R8 · Enseñar dónde está la base de datos antes de decidir sobre ella
+*Acordada el 2026-09-01*
+
+**Antes de mover, unir, separar o borrar una base de datos, se enseña primero
+cómo está todo.** No un resumen: el estado de verdad —qué proyectos hay, qué
+tablas tiene cada uno, cuántas filas, cuántas cuentas— y el enlace para verlo.
+La decisión la toma quien manda, y no puede tomarla a ciegas.
+
+También, en cada respuesta que toque datos: **decir dónde vive lo que se está
+tocando**. «La tabla X» no dice nada si hay dos proyectos.
+
+Y `DOCUMENTACION.md` lleva siempre al día la sección de arquitectura y de dónde
+vive cada cosa, en el mismo commit (R1). Un documento que va por detrás de la
+base de datos es peor que no tenerlo: se decide sobre algo que ya no es así.
+
+**Pasó el 2026-09-01, y costó una mudanza entera.** Se pidió meter GraceDay en
+el proyecto del CRM «porque GraceDay no tenía proyecto propio». Sí lo tenía
+—`vnjiwlauuezhuoalacwu`, creado dos días antes, con sus veinte tablas— y yo lo
+sabía. No lo enseñé antes de mover: apliqué quince migraciones, toqué dos
+disparadores del CRM, y solo al final salió que la premisa era falsa. Con una
+tabla de dos líneas enseñada al principio, la decisión habría sido otra desde
+el minuto uno.
+
+**Lo que hay que enseñar, siempre, antes de decidir:**
+
+| | |
+|---|---|
+| Qué proyectos hay | nombre, id, para qué es cada uno |
+| Qué tiene cada uno | tablas, filas, cuentas |
+| Qué se va a tocar | y qué **no** se toca |
+| Qué no tiene vuelta atrás | borrar, y cualquier cambio de permisos |
+| El enlace | `https://supabase.com/dashboard/project/<id>` |

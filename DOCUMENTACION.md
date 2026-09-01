@@ -37,26 +37,38 @@ toca la rutina, y regenerar el día con los mismos datos da siempre lo mismo.
 
 20 tablas creadas. Las de fases posteriores están en la sección 7.
 
-### 2.0 Dónde viven, y por qué llevan `graceday_` delante
+### 2.0 Dónde vive la base de datos
 
-GraceDay **no tiene base de datos propia**: vive en el mismo proyecto de
-Supabase que el CRM de Tony Alvarado. Para que dos proyectos en la misma base
-de datos no se hagan un enredo, **todo lo de GraceDay lleva `graceday_`
-delante**: las 20 tablas, los 25 tipos y los 38 índices. En `public` se ve de
-un vistazo qué es de quién.
+**GraceDay tiene su propio proyecto de Supabase.** No comparte con nada.
 
-Lo que no se llama desde la app —las funciones de las políticas y las de
-disparador— vive en el esquema **`claude_graceday`**, que PostgREST no publica
-(regla **R7**).
+| | |
+|---|---|
+| **Proyecto** | GraceDay |
+| **id** | `vnjiwlauuezhuoalacwu` |
+| **Panel** | https://supabase.com/dashboard/project/vnjiwlauuezhuoalacwu |
+| **Región** | us-east-1 · Postgres 17 |
+| **Qué tiene** | 20 tablas `graceday_*`, 25 tipos, el esquema `claude_graceday` |
+| **Qué NO tiene** | nada de ningún otro proyecto |
 
-En este documento las tablas se nombran sin prefijo, que es como se leen: la
-tabla `personas` es `graceday_personas` en la base de datos. En el código el
-prefijo aparece **una sola vez**, en el mapa `TABLA` de
-`src/lib/supabase.ts`, y no repetido en las sesenta y siete consultas.
+El otro proyecto de la cuenta —**CRM Tony Alvarado**
+(`mlhhhwbgymobcxiklnoz`)— no tiene ni una tabla de GraceDay. Son dos mundos
+separados, y así se quedan.
 
-**Nada del CRM se tocó.** Las cinco tablas que ya estaban siguen exactamente
-igual, con sus filas y sus políticas. Lo único que cambió fuera de GraceDay es
-que su disparador de alta ahora lleva condición — ver 3.3.
+**Todo lo de GraceDay lleva `graceday_` delante** aunque el proyecto sea suyo:
+así estas mismas migraciones valen en cualquier proyecto sin cambiar nada, y no
+hay dos versiones del esquema que mantener. En este documento las tablas se
+nombran sin prefijo, que es como se leen: la tabla `personas` es
+`graceday_personas` en la base de datos. En el código el prefijo aparece **una
+sola vez**, en el mapa `TABLA` de `src/lib/supabase.ts`.
+
+Lo que no se llama desde la app —las funciones de los disparadores y las que
+deciden quién ve el calendario de quién— vive en el esquema
+**`claude_graceday`**, que PostgREST no publica (regla **R7**).
+
+> **Antes de mover, unir o borrar cualquiera de estos dos proyectos, se enseña
+> primero cómo están** (regla **R8**). En agosto de 2026 GraceDay se mudó al
+> proyecto del CRM sobre la premisa de que no tenía proyecto propio; sí lo
+> tenía. Se deshizo entero.
 
 ### 2.1 `personas` — quién usa la app
 Una fila por persona. La clave es la misma que la de `auth.users`: una cuenta,
@@ -449,42 +461,23 @@ RLS activo en las 20 tablas. Las reglas:
    mandó. No hay forma de listar invitaciones ajenas ni de ir probando
    códigos.
 
-### 3.0 El alta, en un proyecto compartido
+### 3.0 El alta
 
-`auth.users` es de todo el proyecto, no de GraceDay. Un disparador que corriera
-en **cada** alta le crearía una persona de GraceDay a alguien que se registró
-en otra app —y, peor, si algo fallara ahí dentro, la transacción se cae y nadie
-podría registrarse en ninguna.
+`auth.users` es solo de GraceDay —el proyecto es suyo— así que **toda alta es
+una alta de GraceDay**: el disparador corre sin condición y crea la persona,
+sus ajustes, sus cuatro rachas y su familia.
 
-Por eso el disparador lleva condición (migración 0012): solo corre si el alta
-viene marcada como de GraceDay.
+La app se registra marcando de dónde viene:
 
 ```ts
 supabase.auth.signUp({ email, password,
   options: { data: { app: 'graceday', nombre } } })
 ```
 
-Quien ya tenía cuenta en el proyecto y un día abre GraceDay no pasa por ahí:
-**entra, no se registra**. Esa fila la crea la app al entrar —la política de
-`personas` deja que cada quien cree la suya—, no el disparador.
-
-El proyecto se comparte en los dos sentidos, así que el CRM también tuvo que
-mirar sus propios disparadores (migraciones 0013 y 0014), **en ese orden**:
-
-1. `cta_alta_usuario` le daba rol `lectura` —que lee todo el CRM— a cualquiera
-   que se registrara sin invitación. Ahora sin invitación no crea fila.
-2. `cta_validar_alta` rechazaba **cada** alta del proyecto que no estuviera en
-   su lista. Ahora solo valida las del CRM.
-
-Al revés habría sido un agujero: los metadatos del alta los manda el teléfono,
-no el servidor, así que `app: 'graceday'` **no es una credencial** — lo único
-que consigue es saltarse una validación que no es suya. Con la 0013 puesta
-primero, quien mienta ahí sale con una cuenta de GraceDay y **cero** acceso al
-CRM, que es exactamente lo que tiene que pasar.
-
-Efecto secundario a favor: un alta de GraceDay ya no queda confirmada sola —lo
-hacía `cta_validar_alta`—, así que Supabase manda su correo de confirmación,
-que es lo que corresponde a una app que se vende a familias.
+El `nombre` es lo que lee el disparador para saludar bien desde el primer día.
+El `app: 'graceday'` no hace falta aquí, y se manda igual: si algún día esta
+app compartiera proyecto con otra, es lo que dejaría poner condición al
+disparador sin tocar la app.
 
 ### 3.1 Quién ve el calendario de quién
 

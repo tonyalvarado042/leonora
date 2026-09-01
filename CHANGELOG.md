@@ -7,6 +7,45 @@ Lo más nuevo arriba.
 
 ---
 
+## GraceDay vuelve a su propio proyecto · 2026-09-01
+
+**Se deshace la mudanza, y la premisa era falsa.** Se movió GraceDay al
+proyecto del CRM porque «no tenía proyecto propio». Sí lo tenía:
+`vnjiwlauuezhuoalacwu`, creado dos días antes, con sus veinte tablas dentro.
+Nunca lo enseñé antes de mover.
+
+**Dónde está cada cosa ahora:**
+
+| Proyecto | id | Qué tiene |
+|---|---|---|
+| **GraceDay** | `vnjiwlauuezhuoalacwu` | sus 20 tablas `graceday_*`, 25 tipos, `claude_graceday` |
+| **CRM Tony Alvarado** | `mlhhhwbgymobcxiklnoz` | lo suyo de siempre, **cero** tablas de GraceDay |
+
+El prefijo `graceday_` se queda aunque el proyecto sea suyo: así estas
+migraciones valen en cualquier proyecto sin cambiar una línea, y no hay dos
+versiones del esquema que mantener.
+
+**Lo que se deshizo en el proyecto del CRM:** sus 20 tablas, sus 25 tipos, el
+esquema `claude_graceday`, el disparador de alta, y la excepción que dejaba
+pasar las altas de GraceDay por su puerta. Comprobado después: las cinco
+tablas de siempre intactas, 872 contactos, 1.377 en el esquema del CRM, su
+usuario, y sus dos disparadores donde estaban.
+
+**Una cosa NO se deshizo, a propósito:** `cta_alta_usuario` sigue sin repartir
+el rol `lectura` a quien se registre sin invitación. Ese rol lee todo el CRM
+—contactos, pagos, correos, documentos— y lo único que lo tapaba era que nadie
+pudiera registrarse. No cambia nada para quien usa el CRM (un usuario de verdad
+siempre llega con su invitación) y es estrictamente más seguro.
+
+**Regla nueva, R8: enseñar dónde está la base de datos antes de decidir sobre
+ella.** No un resumen: los proyectos que hay, qué tiene cada uno, qué se va a
+tocar, qué no tiene vuelta atrás, y el enlace para verlo. Con una tabla de dos
+líneas al principio, esto no habría pasado.
+
+**Verificado:** 312 pruebas de unidad, 17 recorridos de navegador, `typecheck`
+limpio, el bundle apuntando al proyecto correcto, y **cero avisos** del asesor
+de seguridad en el proyecto de GraceDay.
+
 ## Se puede tener cuenta, y lo del teléfono se va contigo · 2026-09-01
 
 **La app sigue funcionando sin cuenta**, y eso no cambia: es como se usa el
