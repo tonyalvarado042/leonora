@@ -21,13 +21,13 @@ Resumen para tenerlo a mano:
 | **R3** | Lo puro va aparte de la plataforma |
 | **R4** | El repositorio nunca entrega su estado interno |
 | **R5** | Se verifica en el navegador, no solo compilando |
-| **R6** | Detalles que ya costaron un rato (`role`/`aria-*`, `<Enlace>`, Modal y navegación, cabecera propia, campos controlados) |
+| **R6** | Detalles que ya costaron un rato (`role`/`aria-*`, `<Enlace>`, Modal y navegación, cabecera propia, campos controlados, `export const` no se actualiza, `--clear` al cambiar `.env`) |
 | **R7** | Lo que se crea en una base de datos se llama `claude_<proyecto>` |
 
 ## Antes de dar algo por hecho
 
 ```bash
 npm test && npm run typecheck
-npx expo export --platform web --output-dir dist
+npx expo export --platform web --output-dir dist --clear
 node servidor.mjs & node prueba-navegador.mjs
 ```

@@ -115,6 +115,16 @@ mover sin efecto— **pasaban el typecheck**.
 - **`selectTextOnFocus` no funciona en el navegador.** Hay que llamar a
   `select()` en el `onFocus`, o se escribe encima de un campo lleno y no pasa
   nada — que desconcierta más que un error.
+- **Un `export const` no se actualiza para quien ya lo importó.** `import` se
+  queda con el valor que había al cargar el módulo, así que reasignarlo deja a
+  las pantallas hablando con el objeto viejo **sin dar ningún error**. Para algo
+  que cambia en caliente —el repositorio al entrar en la cuenta— hace falta un
+  envoltorio.
+- **Expo cachea las variables `EXPO_PUBLIC_*` del build.** Cambiar `.env` y
+  volver a exportar deja el valor viejo dentro del bundle: compila, arranca, y
+  habla con la base de datos equivocada. Hay que exportar con `--clear`. Se
+  comprueba mirando el bundle:
+  `grep -o "https://[a-z0-9]*\.supabase\.co" dist/_expo/static/js/web/*.js`.
 
 ---
 

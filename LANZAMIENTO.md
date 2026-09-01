@@ -26,11 +26,29 @@ persona, sus ajustes, sus cuatro rachas y su familia, y con **cero** filas en el
 CRM; un alta sin marca y sin invitación **sigue rechazada**. Las cuentas de
 prueba se borraron.
 
-**Lo que falta para tener cuenta en la nube:** la pantalla de entrar y crear
-cuenta, que debe registrar con `options: { data: { app: 'graceday', nombre } }`.
-Al no pasar ya por la puerta del CRM, el correo **no se confirma solo**:
-Supabase manda su correo de confirmación, así que la pantalla tiene que decir
-«te mandamos un correo» en vez de quedarse callada.
+La pantalla de entrar y crear cuenta ya está, y registra con
+`options: { data: { app: 'graceday', nombre } }`. Al no pasar por la puerta del
+CRM, el correo **no se confirma solo**: Supabase manda su correo, y la pantalla
+lo dice («Te mandamos un correo a …») en vez de quedarse callada.
+
+### Lo único que falta probar, y hace falta tu máquina
+
+**La llamada de red de verdad.** El entorno donde se desarrolla no deja salir a
+`supabase.co` —el proxy contesta 403—, así que `signUp` y `signInWithPassword`
+no se han podido probar contra el servidor. Todo lo demás sí:
+
+- La subida entera **contra la base real**, con las mismas filas y en el mismo
+  orden que hace el código: 2 actividades y 6 bloques de rutina, los 6 bien
+  enganchados a su actividad nueva.
+- El disparador de alta, la puerta del CRM y que una cuenta de GraceDay sale
+  con cero acceso al CRM.
+- La pantalla entera, y que **cuando la red falla lo dice bien**: «No se pudo
+  conectar. Mira que tengas internet y vuelve a probar.» — se vio de verdad.
+
+Para cerrarlo: `cd app && npm start`, crear una cuenta con un correo tuyo, y
+mirar que llegue el correo de confirmación y que al entrar esté la rutina.
+Si Supabase pide confirmar el correo y no quieres eso mientras pruebas, se
+apaga en el panel: Authentication → Sign In / Providers → Confirm email.
 
 ## Antes de nada: probar sin publicar
 

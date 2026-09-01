@@ -40,10 +40,21 @@ en su tabla.
 «Los 1 días que ya viviste», y un «se rehacen con ellas» sin nadie a quien
 referirse cuando no hay más gente en el teléfono.
 
+**El `.env` apuntaba al proyecto vacío**, y el bundle se lo quedó: Expo cachea
+las variables del build, así que cambiar el archivo y volver a exportar deja el
+valor viejo dentro. Compila, arranca, y habla con la base de datos equivocada.
+Hay que exportar con `--clear`, y se comprueba mirando el bundle. Va a R6.
+
 **Verificado:** 312 pruebas de unidad (44 nuevas), 17 recorridos de navegador
 —uno nuevo para la cuenta—, `typecheck` limpio. Y la subida entera **contra la
 base real**: 2 actividades y 6 bloques de rutina, los 6 bien enganchados; el
 CRM intacto y las filas de prueba borradas.
+
+**Lo que no se pudo probar aquí:** la llamada de red de verdad. El proxy de
+este entorno deniega `supabase.co`, así que `signUp` y `signInWithPassword` no
+se han probado contra el servidor. Lo que sí se vio es el camino del error
+haciendo lo correcto: «No se pudo conectar. Mira que tengas internet y vuelve a
+probar.» Queda anotado en `LANZAMIENTO.md` cómo cerrarlo en un minuto.
 
 ## GraceDay se muda al proyecto de Tony, con apellido · 2026-09-01
 
